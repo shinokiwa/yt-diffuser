@@ -1,0 +1,74 @@
+:root {
+    --color-bg-back: #e2e2e2;
+    --color-bg-base: #ffffff;
+    --color-bg-header: #001166;
+    --color-bg-menu: #000322;
+    --color-bg-focus: #0033ff;
+
+    --color-border-window: #cccccc;
+
+    --color-shadow: rgba(0, 51, 102, 0.2);
+
+    --font-color-base: #333333;
+    --font-color-gray: #cccccc;
+    --font-color-light: #eeeeee;
+    --font-size-base: 16px;
+
+    --size-header-height: 30px;
+}
+
+/**
+ * タグ
+ */
+* {
+    outline: none;
+    margin:0; padding:0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'ヒラギノ角ゴ ProN W3', 'Hiragino Kaku Gothic ProN', 'YuGothic', '游ゴシック', 'メイリオ', 'Meiryo', 'ＭＳ Ｐゴシック', 'MS PGothic', Avenir, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--font-color-base);
+    background-color: var(--color-bg-back);
+}
+
+ul, ol {
+    list-style: none;
+}
+
+/**
+ * グローバル
+ */
+div#app {
+    height: 100vh;
+    width: 100vw;
+}
+
+/**
+ * ビュー
+ */
+.content-view {
+    padding: 10px;
+    width: 100%; height: 100%;
+}
+
+.content-view .window {
+    background-color: var(--color-bg-base);
+    border: 1px solid var(--color-border-window);
+    border-radius: 4px;
+}
+
+.content-view .main.window {
+    width: 100%; height: 100%;
+    padding: 10px;
+}
+
+.content-view .window.main h2 {
+    margin: -5px -10px 10px -10px;
+    border-bottom: 1px solid var(--color-border-window);
+    text-indent: 10px;
+    font-size: 16px;
+}

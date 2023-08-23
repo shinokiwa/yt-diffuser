@@ -1,0 +1,73 @@
+# DevContainer構成用docker-compose
+
+version: '3.6'
+
+services:
+    # リバースプロキシサーバー
+    nginx:
+        container_name: nginx
+        image: nginx:1.25.2
+        ports:
+            - target: 80
+              published: 20080
+              protocol: tcp
+              mode: host
+        volumes:
+            - type: bind
+              source: ./nginx/etc/nginx/nginx.conf
+              target: /etc/nginx/nginx.conf
+        depends_on:
+            - backend
+            - frontend
+        restart: "no"
+
+    # フロントエンド用コンテナ 容量が大きいので兼業
+    frontend:
+        container_name: frontend
+        build:
+            context: ../
+            dockerfile: .devcontainer/frontend/Dockerfile
+        volumes:
+            - type: bind 
+              source: ../src/frontend/
+              target: /src/frontend/
+            - type: volume
+              source: dev_npm_volume
+              target: /src/frontend/node_modules
+        depends_on:
+            - backend
+        restart: "no"
+
+    # バックエンド兼作業用コンテナ 容量が大きいので兼業
+    backend:
+        container_name: backend
+        build:
+            context: ../
+            dockerfile: .devcontainer/backend/Dockerfile
+        tty: true
+        volumes:
+            - type: bind 
+              source: ../
+              target: /workspace/
+            - type: volume
+              source: dev_data_volume
+              target: /workspace/data
+            - type: volume
+              source: dev_npm_volume
+              target: /workspace/src/frontend/node_modules
+        environment:
+            LANG: ja_JP.UTF-8
+            LANGUAGE: ja_JP:ja
+            LC_ALL: ja_JP.UTF-8
+            TZ: JST-9
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - capabilities: [gpu]
+
+volumes:
+    # データファイル用ボリューム
+    dev_data_volume:
+    # node_modules用ボリューム DevContainerとFrontendで共有するためボリューム化
+    dev_npm_volume:

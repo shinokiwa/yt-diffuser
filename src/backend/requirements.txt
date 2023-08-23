@@ -1,0 +1,25 @@
+git+https://github.com/huggingface/diffusers.git@v0.14.0
+transformers>=4.25.1
+safetensors>=0.2,<0.3
+scipy
+ftfy
+
+xformers==0.0.18
+
+lark
+
+flask>=2.2,<2.3
+flask-socketio>=5.3,<5.4
+gevent>=22.10,<22.11
+gevent-websocket>=0.10,<0.11
+pydantic>=1.10,<1.11
+
+accelerate>=0.16,<0.17
+datasets>=2.9,<2.10
+
+bitsandbytes==0.37.0
+
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch>=2.0,<2.1
+torchvision
+torchaudio

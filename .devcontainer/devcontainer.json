@@ -1,0 +1,16 @@
+{
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		"vue.volar",
+		"ms-python.python",
+		"GitHub.copilot"
+	] 
+    }
+  }
+}
