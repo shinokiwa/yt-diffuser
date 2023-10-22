@@ -36,10 +36,10 @@ describe('App アプリルート', () => {
         const { currentView } = useGlobals()
 
         await nextTick()
-        expect(com.find('#ContentWrapper > *').html()).toContain('initializing-view-stub');
+        expect(com.find('.main > *').html()).toContain('initializing-view-stub');
 
         currentView.value = 'modelmanage'
         await nextTick()
-        expect(com.find('#ContentWrapper > *').html()).toContain('model-manage-view-stub');
+        expect(com.find('.main > *').html()).toContain('model-manage-view-stub');
     })
 })

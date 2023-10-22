@@ -27,22 +27,23 @@ function changeView(view) {
 </template>
 
 <style scoped>
-ul {
-    position: fixed;
-    top: 30px; left: 0; bottom: 0; right: 0;
-    width: 50px;
-    height: 100%;
+nav {
     background-color: var(--color-bg-menu);
     color: var(--font-color-light);
     padding-top: 10px;
 }
 
+ul {
+    position: fixed;
+    z-index: 100;
+}
+
 li {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
+
     padding: 5px 10px;
-    margin-bottom: 5px;
-    margin-left: 5px;
+    margin: 0 0 5px 5px;
+
     width: 40px;
     transition: width 0.5s ease;
     overflow: hidden;

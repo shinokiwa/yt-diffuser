@@ -6,6 +6,7 @@ venv
 # local cache files
 __pycache__
 .coverage
+.vite
 
 # Log files
 npm-debug.log*
@@ -15,11 +16,9 @@ pnpm-debug.log*
 
 # local strage
 .DS_Store
-/docker/*/volumes
 node_modules
 /data/
 /userdata/
-/frontend/dist
 
 # Editor directories and files
 .idea

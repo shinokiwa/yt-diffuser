@@ -5,6 +5,9 @@ import { ref } from 'vue'
 
 import { useModel } from '@/composables/model'
 
+/**
+ * 現在のビュー
+ */
 const currentView = ref('initialize')
 
 /**

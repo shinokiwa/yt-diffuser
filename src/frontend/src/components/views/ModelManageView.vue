@@ -1,38 +1,46 @@
 <script setup>
-import Overlay from '@/components/elements/Overlay.vue'
-
 import { ref } from 'vue'
+import WindowArea from '@/components/elements/WindowArea.vue'
+import Overlay from '@/components/elements/Overlay.vue'
+import FormGrid from '@/components/elements/FormGrid.vue'
+import InputText from '@/components/elements/InputText.vue'
+
 import { useGlobals } from '@/composables/global';
 const { currentView } = useGlobals()
 
-const overlay = ref(null)
+const addModel = ref(null)
 
 function edit () {
-    overlay.value.show()
+    addModel.value.show()
 }
 
 </script>
 
 <template>
-<div id="ModelManageView" class="content-view">
-    <div class="main window">
-        <h2>モデル一覧</h2>
-        <div id="ModelList">
-            <div class="model-card new-model" @click="edit()">
-                <span class="add-button">
-                    <i class="bi-plus"></i>
-                </span>
-            </div>
+<WindowArea id="ModelManageView" window-title="モデル一覧">
+    <div id="ModelList">
+        <div class="model-card new-model" @click="edit()">
+            <span class="add-button">
+                <i class="bi-plus"></i>
+            </span>
         </div>
     </div>
-    <Overlay ref="overlay"></Overlay>
-</div>
+    <Overlay ref="addModel">
+        <WindowArea id="AddModelView" window-title="モデル追加" v-bind:close-button="addModel.hide">
+            <FormGrid>
+                <InputText label="モデルID" placeholder="モデルIDを入力" />
+                <InputText label="リビジョン" placeholder="リビジョンを入力" />
+            </FormGrid>
+            <button>ダウンロード</button>
+            <button>閉じる</button>
+        </WindowArea>
+    </Overlay>
+</WindowArea>
 </template>
 
 <style scoped>
 #ModelList {
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;

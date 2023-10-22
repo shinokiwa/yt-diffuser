@@ -5,7 +5,6 @@ version: '3.6'
 services:
     # リバースプロキシサーバー
     nginx:
-        container_name: nginx
         image: nginx:1.25.2
         ports:
             - target: 80
@@ -21,9 +20,8 @@ services:
             - frontend
         restart: "no"
 
-    # フロントエンド用コンテナ 容量が大きいので兼業
+    # フロントエンド用コンテナ
     frontend:
-        container_name: frontend
         build:
             context: ../
             dockerfile: .devcontainer/frontend/Dockerfile
@@ -34,16 +32,43 @@ services:
             - type: volume
               source: dev_npm_volume
               target: /src/frontend/node_modules
+        tty: true
         depends_on:
-            - backend
+            - devcontainer
         restart: "no"
 
-    # バックエンド兼作業用コンテナ 容量が大きいので兼業
+    # バックエンド用コンテナ
     backend:
-        container_name: backend
         build:
             context: ../
-            dockerfile: .devcontainer/backend/Dockerfile
+            dockerfile: .devcontainer/Dockerfile
+            target: backend
+        volumes:
+            - type: bind 
+              source: ../src/backend/
+              target: /workspace/src/backend/
+            - type: volume
+              source: dev_data_volume
+              target: /workspace/data
+        environment:
+            LANG: ja_JP.UTF-8
+            LANGUAGE: ja_JP:ja
+            LC_ALL: ja_JP.UTF-8
+            TZ: JST-9
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - capabilities: [gpu]
+        depends_on:
+            - devcontainer
+        restart: "no"
+
+    # 開発作業用コンテナ
+    devcontainer:
+        build:
+            context: ../
+            dockerfile: .devcontainer/Dockerfile
         tty: true
         volumes:
             - type: bind 

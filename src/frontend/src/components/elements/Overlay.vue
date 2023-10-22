@@ -1,5 +1,10 @@
 <script setup>
-// オーバーレイ
+/**
+ * オーバーレイ
+ * 
+ * スロット内のコンテンツを残したまま、背景を暗くする
+ * 背景部分をクリックすると、スロットコンテンツおよびオーバーレイを閉じる
+ */ 
 import { ref } from 'vue';
 
 const isShow = ref(false)
@@ -40,11 +45,6 @@ defineExpose({
     box-sizing: content-box;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    margin: auto;
-    padding: 20px;
-    background-color: var(--color-bg-window);
-    border: 1px solid var(--color-border-window);
-    border-radius: 5px;
+    min-width: 50%;
 }
-
 </style>

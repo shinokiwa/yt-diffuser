@@ -1,7 +1,7 @@
 {
   "dockerComposeFile": "./docker-compose.yml",
-  "service": "backend",
-  "workspaceFolder": "/workspace",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace/",
   "customizations": {
     "vscode": {
       "extensions": [

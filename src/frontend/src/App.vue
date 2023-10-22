@@ -1,4 +1,9 @@
 <script setup>
+/**
+ * アプリ内の各エリアの配置を行うコンポーネント
+ * 
+ * メインビューの切り替えも行う。
+ */
 import { shallowRef, watchEffect } from 'vue'
 import HeaderView from '@/components/views/HeaderView.vue'
 import MenuView from '@/components/views/MenuView.vue'
@@ -27,15 +32,11 @@ watchEffect(()=>{
 
 <template>
 <div id="AppWrapper">
-    <div id="HeaderWrapper">
-        <HeaderView />
-    </div>
-    <div id="MainWrapper">
-        <div id="MenuWrapper">
-            <MenuView />
-        </div>
-        <div id="ContentWrapper">
-            <component ref="content" v-bind:is="selectedView"></component>
+    <HeaderView class="header-view"></HeaderView>
+    <div class="main-wrapper">
+        <MenuView class="menu-view"></MenuView>
+        <div class="main">
+            <component class="main-view" ref="content" v-bind:is="selectedView"></component>
         </div>
     </div>
 </div>
@@ -43,25 +44,36 @@ watchEffect(()=>{
 
 <style scoped>
 #AppWrapper {
-    position: relative;
+    display: flex; flex-direction: column;
+    margin: 0;
     width: 100%;
     height: 100%;
 }
 
-#HeaderWrapper {
-    position: relative;
-}
-#MainWrapper {
-    position: relative;
-    top: var(--size-header-height);
-    display: flex;
-    flex-direction: row;
+.header-view {
     width: 100%;
-    height: calc(100% - 30px);
+    height: var(--size-header-height);
 }
 
-#ContentWrapper {
-    padding-left: 50px;
+.main-wrapper {
+    display: flex; flex-direction: row;
+    height: 100%;
+}
+
+.menu-view {
+    display: flex; flex-direction: row;
+    width: var(--size-menu-width);
+    height: 100%;
+}
+
+.main {
+    display: flex; flex-direction: column;
+    width: calc(100% - var(--size-menu-width));
+    height: 100%;
+    padding: 10px;
+}
+
+.main-view {
     width: 100%;
     height: 100%;
 }
