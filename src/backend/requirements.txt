@@ -11,6 +11,7 @@ lark
 flask>=2.2,<2.3
 gevent>=22.10,<22.11
 pydantic>=1.10,<1.11
+watchdog==3.0.0
 
 accelerate>=0.16,<0.17
 datasets>=2.9,<2.10

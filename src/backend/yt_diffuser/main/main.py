@@ -1,7 +1,6 @@
 """ メインプロセスのメイン処理
 """
 from typing import Callable
-import os , sys, subprocess
 from multiprocessing import Process, Pipe
 from logging import getLogger; logger = getLogger(__name__)
 
@@ -20,13 +19,16 @@ def process (web_main:Callable, processing_main:Callable) -> None:
 
     # Webプロセスを起動
     web_proc = Process(target=web_main, args=(shared_conn1, child_conn))
+    web_proc.daemon = True
     web_proc.start()
 
     # データ処理プロセスを起動
     processing_proc = Process(target=processing_main, args=(shared_conn2, child_conn))
+    processing_proc.daemon = True
     processing_proc.start()
 
     # サブプロセスからparent_queueを通して終了要求があるまでは、サブプロセスを監視し、停止している場合再起動する。
+    # 再起動要求も可能
     while True:
         try:
             if parent_conn.poll(timeout=1):
@@ -36,23 +38,15 @@ def process (web_main:Callable, processing_main:Callable) -> None:
 
             if not web_proc.is_alive():
                 logger.warning('Web process is dead. Restarting...')
-                if os.environ.get('MODE') == 'PRODUCTION':
-                    web_proc = Process(target=web_main, args=(shared_conn1, child_conn))
-                    web_proc.start()
-                else:
-                    # デバッグモードの場合、自プロセスを再起動する
-                    subprocess.Popen([sys.executable, sys.argv[0]])
-                    sys.exit()
+                web_proc = Process(target=web_main, args=(shared_conn1, child_conn))
+                web_proc.daemon = True
+                web_proc.start()
 
             if not processing_proc.is_alive():
                 logger.warning('Processing process is dead. Restarting...')
-                if os.environ.get('MODE') == 'PRODUCTION':
-                    processing_proc = Process(target=processing_main, args=(shared_conn2, child_conn))
-                    processing_proc.start()
-                else:
-                    # デバッグモードの場合、自プロセスを再起動する
-                    subprocess.Popen([sys.executable, sys.argv[0]])
-                    sys.exit()
+                processing_proc = Process(target=processing_main, args=(shared_conn2, child_conn))
+                processing_proc.daemon = True
+                processing_proc.start()
 
         except EOFError:
             pass
