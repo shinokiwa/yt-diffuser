@@ -12,10 +12,10 @@ logging.getLogger('watchdog').setLevel(logging.INFO)
 class WatchdogDebugHandler(FileSystemEventHandler):
     """ ファイル変更を監視し、変更があった場合にアプリケーションを再起動する
     """
-    def __init__(self, main:Callable, web_main:Callable, processing_main:Callable):
+    def __init__(self, procedure:Callable, args:tuple=()):
         super().__init__()
-        self.main = main
-        self.args = (web_main, processing_main)
+        self.procedure = procedure
+        self.args = args
         self.process = None
 
     def on_modified(self, event):
@@ -27,14 +27,15 @@ class WatchdogDebugHandler(FileSystemEventHandler):
             logger.debug("Terminate yt_diffuser")
             self.process.terminate()
             self.process.join()
+            self.process = None
 
         logger.debug("Start yt_diffuser with watchdog")
-        self.process = multiprocessing.Process(target=self.main, args=self.args)
+        self.process = multiprocessing.Process(target=self.procedure, args=self.args)
         self.process.start()
 
-def watchdog_process(main:Callable, web_main:Callable, processing_main:Callable):
+def watchdog_process(procedure:Callable, args:tuple=()):
     observer = PollingObserver()
-    handler = WatchdogDebugHandler(main, web_main, processing_main)
+    handler = WatchdogDebugHandler(procedure, args)
     handler.start()
 
     observer.schedule(handler, path='./yt_diffuser', recursive=True)

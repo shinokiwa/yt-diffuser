@@ -4,20 +4,17 @@ from unittest.mock import MagicMock, patch
 from yt_diffuser.main.watchdog import WatchdogDebugHandler, watchdog_process
 
 class TestWatchdogDebugHandler:
-    """describe: WatchdogDebugHandler ファイル変更を監視し、変更があった場合にアプリケーションを再起動する"""
+    """describe: WatchdogDebugHandler ファイル変更監視"""
 
     def test_on_modified(self, monkeypatch):
-        """it: ファイル変更があった場合にメインプロセスを再起動する"""
+        """it: on_modified ファイル変更があった場合にメインプロセスを再起動する"""
 
-        main_mock = MagicMock()
-        web_main_mock = MagicMock()
-        processing_main_mock = MagicMock()
-        
-        handler = WatchdogDebugHandler(main_mock, web_main_mock, processing_main_mock)
+        procedure = MagicMock()
+        handler = WatchdogDebugHandler(procedure, ('arg1', 'arg2'))
         
         with patch('multiprocessing.Process') as process_mock:
             handler.on_modified(FileModifiedEvent('test'))
-            process_mock.assert_called_once_with(target=main_mock, args=(web_main_mock, processing_main_mock))
+            process_mock.assert_called_once_with(target=procedure, args=('arg1', 'arg2'))
 
 class TestWatchdogProcess:
     """describe: watchdog_process 開発用 ファイル変更監視と再起動のためのモジュール"""
@@ -25,14 +22,12 @@ class TestWatchdogProcess:
     def test_watchdog_process(self, monkeypatch):
         """it: ファイル変更を監視し、変更があった場合にアプリケーションを再起動する"""
     
-        main_mock = MagicMock()
-        web_main_mock = MagicMock()
-        processing_main_mock = MagicMock()
+        procedure = MagicMock()
         
         with patch('yt_diffuser.main.watchdog.PollingObserver') as observer_mock, \
             patch('multiprocessing.Process') as process_mock:
             
-            watchdog_process(main_mock, web_main_mock, processing_main_mock)
+            watchdog_process(procedure, ('arg1', 'arg2'))
             
             observer_mock.return_value.schedule.assert_called_once()
             observer_mock.return_value.start.assert_called_once()
