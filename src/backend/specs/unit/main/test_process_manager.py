@@ -2,12 +2,9 @@
 import pytest
 from unittest.mock import patch
 import time
-import signal
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
 from yt_diffuser.main import process_manager
-
-
 
 class TestStopAll:
     """ describe: stop_all 停止処理 """
@@ -98,7 +95,7 @@ class TestStartAll:
         assert process_manager.start_all(dummy_proc_conn_send_stop, dummy_proc_conn_recv_twice_exit) is None
         assert process_manager.start_all(dummy_proc_conn_recv_twice_exit, dummy_proc_conn_send_stop) is None
 
-@pytest.mark.dependency(depends=["TestStartAll::test_start_all", "TestStartAll::test_start_all"])
+@pytest.mark.dependency(depends=["TestStartAll::test_start_all"])
 class TestQuit:
     """ test: プロセス終了処理の確認 """
 
@@ -130,6 +127,10 @@ def dummy_proc_conn_send_recv_exit(shared_conn:Connection, parent_conn:Connectio
     """ ダミープロシージャ メッセージ送信後、返信を受け取ったら終了要求
     """
     shared_conn.send("hi")
+
+    if shared_conn.poll(timeout=5) == False:
+        raise Exception("timeout")
+    
     msg = shared_conn.recv()
     if msg == "hello":
         parent_conn.send("exit")
@@ -137,9 +138,15 @@ def dummy_proc_conn_send_recv_exit(shared_conn:Connection, parent_conn:Connectio
 def dummy_proc_conn_recv(shared_conn:Connection, parent_conn:Connection):
     """ ダミープロシージャ メッセージ受信
     """    
+    if shared_conn.poll(timeout=5) == False:
+        raise Exception("timeout")
+
     msg = shared_conn.recv()
     if msg == "hi":
+        print("send hello")
         shared_conn.send("hello")
+    while True:
+        time.sleep(1)
 
 def dummy_proc_conn_send_stop (shared_conn:Connection, parent_conn:Connection):
     """ ダミープロシージャ メッセージ送信後、プロセス終了
@@ -150,9 +157,16 @@ def dummy_proc_conn_send_stop (shared_conn:Connection, parent_conn:Connection):
 def dummy_proc_conn_recv_twice_exit(shared_conn:Connection, parent_conn:Connection):
     """ ダミープロシージャ メッセージを2回受信したら終了要求
     """
+    if shared_conn.poll(timeout=5) == False:
+        raise Exception("timeout")
+
     msg = shared_conn.recv()
     if msg == "hi":
         shared_conn.send("hello")
+
+    if shared_conn.poll(timeout=5) == False:
+        raise Exception("timeout")
+
     msg = shared_conn.recv()
     if msg == "hi":
         parent_conn.send("exit")

@@ -11,7 +11,7 @@ const upscaleModels = ref([])
 const { api } = useApi()
 
 async function loadModels () {
-    const response = await api.get('/api/model')
+    const response = await api.get('/api/res/model')
     const list = response.data
     baseModels.value = list.base || []
     loraModels.value = list.lora || []

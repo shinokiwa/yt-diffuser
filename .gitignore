@@ -6,7 +6,6 @@ venv
 # local cache files
 __pycache__
 .pytest_cache
-.coverage
 .vite
 
 # Log files
@@ -20,6 +19,11 @@ pnpm-debug.log*
 node_modules
 /data/
 /userdata/
+
+# coverage files
+htmlcov/
+.coverage
+.coverage.*
 
 # Editor directories and files
 .idea

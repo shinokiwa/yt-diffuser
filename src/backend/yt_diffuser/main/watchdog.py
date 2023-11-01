@@ -19,6 +19,8 @@ class WatchdogDebugHandler(FileSystemEventHandler):
         self.process = None
 
     def on_modified(self, event):
+        if event.is_directory:
+            return
         logger.debug(f"File modified: {event.src_path}")
         self.start()
     

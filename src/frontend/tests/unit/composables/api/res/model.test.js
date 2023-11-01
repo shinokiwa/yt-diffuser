@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest'
 
-import { useModel } from '@/composables/model'
+import { useModel } from '@/composables/api/res/model'
 import { useApi } from '@/composables/api'
 
 vi.mock('@/composables/api', () => {
@@ -32,7 +32,7 @@ describe ('loadModels', async () => {
         })
 
         await loadModels()
-        expect(api.get).toHaveBeenCalledWith('/api/model')
+        expect(api.get).toHaveBeenCalledWith('/api/res/model')
         expect(baseModels.value).toEqual(['base1', 'base2'])
         expect(loraModels.value).toEqual(['lora1', 'lora2'])
         expect(upscaleModels.value).toEqual(['upscale1', 'upscale2'])
@@ -44,7 +44,7 @@ describe ('loadModels', async () => {
         })
 
         await loadModels()
-        expect(api.get).toHaveBeenCalledWith('/api/model')
+        expect(api.get).toHaveBeenCalledWith('/api/res/model')
         expect(baseModels.value).toEqual([])
         expect(loraModels.value).toEqual([])
         expect(upscaleModels.value).toEqual([])

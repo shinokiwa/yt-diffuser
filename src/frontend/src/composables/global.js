@@ -3,7 +3,7 @@
  */
 import { ref } from 'vue'
 
-import { useModel } from '@/composables/model'
+import { useModel } from '@/composables/api/res/model'
 
 /**
  * 現在のビュー

@@ -13,8 +13,8 @@ let sseSource = null
 function startSse () {
     sseSource = new EventSource('/api/sse/status')
     sseSource.onmessage = (event) => {
-        const data = JSON.parse(event.data)
-        status.value = data.status
+        const data = event.data
+        status.value = data
     }
 }
 

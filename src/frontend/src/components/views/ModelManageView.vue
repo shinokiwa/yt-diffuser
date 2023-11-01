@@ -5,6 +5,8 @@ import Overlay from '@/components/elements/Overlay.vue'
 import FormGrid from '@/components/elements/FormGrid.vue'
 import InputText from '@/components/elements/InputText.vue'
 
+import { useApi } from '@/composables/api';
+
 import { useGlobals } from '@/composables/global';
 const { currentView } = useGlobals()
 
@@ -12,6 +14,12 @@ const addModel = ref(null)
 
 function edit () {
     addModel.value.show()
+}
+
+const { api } = useApi()
+
+function download () {
+    api.post('/api/worker/download', {})
 }
 
 </script>
@@ -31,7 +39,7 @@ function edit () {
                 <InputText label="モデルID" placeholder="モデルIDを入力" />
                 <InputText label="リビジョン" placeholder="リビジョンを入力" />
             </FormGrid>
-            <button>ダウンロード</button>
+            <button @click="download">ダウンロード</button>
             <button>閉じる</button>
         </WindowArea>
     </Overlay>

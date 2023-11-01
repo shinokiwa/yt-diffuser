@@ -2,7 +2,7 @@
  * status.jsのテスト
  */
 import { describe, it, expect, vi } from 'vitest'
-import { useStatus } from '@/composables/status'
+import { useStatus } from '@/composables/api/sse/status'
 
 // EventSourceのモックを作成
 const mockEventSource = vi.fn(function() {
@@ -23,7 +23,7 @@ describe('プロセスステータスを取得するSSEのコンポーザブル'
     it('useStatusを呼び出すとSSEに接続して、ステータスを取得できる。', () => {
         const { status } = useStatus()
 
-        expect(mockEventSource).toHaveBeenCalledWith('/api/status')
+        expect(mockEventSource).toHaveBeenCalledWith('/api/sse/status')
         expect(status.value).toEqual('')
     })
 
@@ -33,9 +33,7 @@ describe('プロセスステータスを取得するSSEのコンポーザブル'
         console.log(mockEventSource.mock.instances[0].onmessage)
 
         const event = {
-            data: {
-                status: 'test'
-            }
+            data: 'test'
         }
 
         mockEventSource.mock.instances[0].onmessage(event)

@@ -1,21 +1,13 @@
 """ Flaskのアプリ定義
 """
 from flask import Flask
-from multiprocessing.connection import Connection
 
-from .api import regist_api
+from yt_diffuser.web.route import init_routes
 
-app = Flask(__name__)
-""" Flaskのインスタンス
-"""
+def create_app ():
+    """ Flaskのアプリを作成する
+    """
+    app = Flask(__name__)
+    init_routes(app)
 
-shared_conn:Connection = None
-""" データ処理プロセスとの共有コネクション
-"""
-
-@app.route('/send_message/<message>')
-def send_message(message):
-    #queue.put(message)
-    return f'Sent message: {message}'
-
-regist_api(app)
+    return app

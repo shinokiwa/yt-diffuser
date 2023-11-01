@@ -3,7 +3,7 @@
  * ヘッダーのコンポーネント
  */
 
-import { useStatus } from '@/composables/status'
+import { useStatus } from '@/composables/api/sse/status'
 const { status } = useStatus()
 
 </script>

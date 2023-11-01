@@ -97,10 +97,7 @@ def start_all(web_procedure:Callable, worker_procedure:Callable) -> None:
                 pass
             
             for key in _processes.keys():
-                if _processes[key]["process"] is None:
-                    break
-
-                if _processes[key]["process"].is_alive() == False:
+                if _processes[key]["process"] is None or _processes[key]["process"].is_alive() == False:
                     logger.warning(f'{key} process is dead. Restarting...')
                     _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=(_processes[key]["shared_conn"], _child_conn))
                     _processes[key]["process"].daemon = True

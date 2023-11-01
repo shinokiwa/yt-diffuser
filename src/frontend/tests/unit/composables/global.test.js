@@ -6,9 +6,9 @@ import { ref } from 'vue'
 
 import { useGlobals } from '@/composables/global'
 
-import { useModel } from '@/composables/model'
+import { useModel } from '@/composables/api/res/model'
 
-vi.mock('@/composables/model', () => {
+vi.mock('@/composables/api/res/model', () => {
     const loadModels = vi.fn()
     const baseModels = ref([])
 
