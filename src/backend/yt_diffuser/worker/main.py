@@ -9,7 +9,7 @@ from multiprocessing.connection import Connection
 from yt_diffuser.worker.connection import set_shared_conn
 from yt_diffuser.worker.worker import dispatch
 
-def worker_procedure(shared_conn:Connection, parent_conn:Connection):
+def worker_procedure(shared_conn:Connection):
     if os.environ.get('DEBUG') == '1':
         import logging; logging.basicConfig(level=logging.DEBUG)
     

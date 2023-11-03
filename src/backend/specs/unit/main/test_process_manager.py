@@ -2,8 +2,11 @@
 import pytest
 from unittest.mock import patch
 import time
+
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
+from multiprocessing.context import SpawnProcess
+
 from yt_diffuser.main import process_manager
 
 class TestStopAll:
@@ -13,13 +16,11 @@ class TestStopAll:
     def test_stop_all(self):
         """ it: 登録されている全プロセスを終了し、クリーンアップする。 """
 
-        process_manager._parent_conn, process_manager._child_conn = Pipe()
-
         process_manager._processes["Web"]["shared_conn"], process_manager._processes["Worker"]["shared_conn"] = Pipe()
 
         ps = []
         for key, p in process_manager._processes.items():
-            ps.append(Process(target=dummy_proc, args=(p["shared_conn"], process_manager._child_conn)))
+            ps.append(Process(target=dummy_proc_loop, args=[p["shared_conn"]]))
             p["process"] = ps[-1]
             p["process"].start() 
 
@@ -46,127 +47,115 @@ class TestSignalHandler:
 
         mock_stop_all.assert_called_once()
 
-class TestStartAll:
-    """ describe: start_all プロセス開始 """
+class TestStartProcesses:
+    """ describe: start_processes サブプロセス初期化 """
 
-    @pytest.mark.dependency
-    def test_start_all(self, monkeypatch):
-        """ it: サブプロセスが起動され、サブプロセスから終了要求があると終了する。
-            終了要求はどちらからでも出せる。
-            ワーカープロセス側から終了要求を出すパターンは実態としては存在しないが、処理の簡素化のために実装している。
+    def test_default (self, mocker):
+        """ it: サブプロセスを初期化する。
         """
+        with patch('yt_diffuser.main.process_manager._processes', {
+            "Web": {"process": None, "shared_conn": None, "target": None}, "Worker": {"process": None, "shared_conn": None, "target": None}
+        }) as _processes:
 
-        assert process_manager.start_all(web_procedure=dummy_proc_exit, worker_procedure=dummy_proc) is None
-        assert process_manager.start_all(web_procedure=dummy_proc, worker_procedure=dummy_proc_exit) is None
+            process_manager.start_processes(dummy_proc, dummy_proc)
 
-    def test_init(self):
-        """ it: プロセス開始時に初期化処理を行う。
-            プロセス終了時に子プロセスを終了するためのシグナルハンドラ等を登録する。
-        """
+            assert _processes["Web"]["target"] == dummy_proc
+            assert _processes["Worker"]["target"] == dummy_proc
 
-        with patch('yt_diffuser.main.process_manager.atexit.register') as mock_atexit_register ,\
-            patch('yt_diffuser.main.process_manager.signal.signal') as mock_signal:
+            assert type(_processes["Web"]["shared_conn"]) == Connection
+            assert type(_processes["Worker"]["shared_conn"]) == Connection
 
-            process_manager.start_all(dummy_proc_exit, dummy_proc_exit)
-        
-        assert mock_atexit_register.call_count == 1
-        assert mock_signal.call_count == 2
+            assert type(_processes["Web"]["process"] ) == SpawnProcess
+            assert type(_processes["Worker"]["process"] ) == SpawnProcess
  
     def test_conn(self, monkeypatch):
         """ it: サブプロセス同士はConnectionを使って通信できる。
         """
 
-        # テストの説明：
-        # dummy_proc_conn_send_recv_exit は dummy_proc_conn_recv にメッセージを送る。
-        # dummy_proc_conn_recv はメッセージを受け取ると、dummy_proc_conn_send_recv_exit にメッセージを返す。
-        # dummy_proc_conn_send_recv_exit はメッセージを受け取ると終了要求を出す。
-        # そのため、メインがエラーなく終了した場合、サブプロセス同士が通信できていることが確認できる。
-        assert process_manager.start_all(dummy_proc_conn_send_recv_exit, dummy_proc_conn_recv) is None
-        assert process_manager.start_all(dummy_proc_conn_recv, dummy_proc_conn_send_recv_exit) is None
+        with patch('yt_diffuser.main.process_manager._processes', {
+            "Web": {"process": None, "shared_conn": None, "target": None}, "Worker": {"process": None, "shared_conn": None, "target": None}
+        }) as _processes:
 
-    def test_restart(self, monkeypatch):
-        """ it: サブプロセスがメインプロセスへの終了要求をせずに終了した場合、メインプロセスはサブプロセスを再起動する。
+            process_manager.start_processes(dummy_proc_send, dummy_proc_recv)
+            assert type( _processes["Worker"]["process"] ) == SpawnProcess
+            assert _processes["Web"]["shared_conn"].recv() == "dummy reply"
+
+            process_manager.start_processes(dummy_proc_recv, dummy_proc_send)
+            assert type( _processes["Web"]["process"] ) == SpawnProcess
+            assert _processes["Worker"]["shared_conn"].recv() == "dummy reply"
+
+
+class TestCheckProcesses:
+    """ describe: check_processes プロセス監視 """
+
+    def test_default (self, mocker):
+        """ it: プロセスが停止していた場合、再起動する。
+        """
+        shared_conn1, shared_conn2 = Pipe()
+
+        with patch('yt_diffuser.main.process_manager._processes', {
+            "Web": {"process": None, "shared_conn": shared_conn1, "target": dummy_proc_loop},
+            "Worker": {"process": None, "shared_conn": shared_conn2, "target": dummy_proc_loop}
+        }) as _processes:
+
+            process_manager.check_processes()
+
+            assert type(_processes["Web"]["process"] ) == SpawnProcess
+            assert type(_processes["Worker"]["process"] ) == SpawnProcess
+            assert _processes["Web"]["process"].is_alive() == True
+            assert _processes["Worker"]["process"].is_alive() == True
+
+
+            _processes["Web"]["process"].kill()
+            _processes["Web"]["process"].join()
+            assert _processes["Web"]["process"].is_alive() == False
+
+            process_manager.check_processes()
+
+            assert type(_processes["Web"]["process"] ) == SpawnProcess
+            assert _processes["Web"]["process"].is_alive() == True
+
+class TestStartLoop:
+    """ describe: start_loop プロセス起動と監視開始 """
+
+    def test_start_all(self, mocker):
+        """ it: サブプロセスが起動され、監視が開始される。
         """
 
-        # テストの説明：
-        # dummy_proc_conn_send_stop は dummy_proc_conn_recv にメッセージを送り、そのまま終了する。
-        # dummy_proc_conn_recv_twice_exit はメッセージを2回受け取ると終了要求を出す。
-        # これにより、メインがエラーなく終了した場合、dummy_proc_conn_recv_twice_exit が2回メッセージを受け取った＝ dummy_proc_conn_send_stop が2回起動したことが確認できる。
-        assert process_manager.start_all(dummy_proc_conn_send_stop, dummy_proc_conn_recv_twice_exit) is None
-        assert process_manager.start_all(dummy_proc_conn_recv_twice_exit, dummy_proc_conn_send_stop) is None
+        mock_atexit_unregister = mocker.patch('yt_diffuser.main.process_manager.atexit.unregister')
+        mock_atexit_register = mocker.patch('yt_diffuser.main.process_manager.atexit.register')
+        mock_signal = mocker.patch('yt_diffuser.main.process_manager.signal.signal')
+        mock_start_processes = mocker.patch('yt_diffuser.main.process_manager.start_processes')
+        mock_check_processes = mocker.patch('yt_diffuser.main.process_manager.check_processes')
+        mock_loop_listener = mocker.patch('yt_diffuser.main.process_manager.loop_listener')
 
-@pytest.mark.dependency(depends=["TestStartAll::test_start_all"])
-class TestQuit:
-    """ test: プロセス終了処理の確認 """
+        process_manager.start_loop(dummy_proc, dummy_proc)
 
-    def test_quit(self):
-        """ it: 終了要求を受け取ると、子プロセスを終了し、メインプロセスを終了する。 """
+        assert mock_atexit_unregister.call_count == 1
+        assert mock_atexit_register.call_count == 1
+        assert mock_signal.call_count == 2
+        assert mock_start_processes.call_count == 1
+        assert mock_loop_listener.call_count == 1
+        assert mock_loop_listener.call_args[1]["loop_callback"] == mock_check_processes
 
-        p = Process(target=process_manager.start_all, args=(dummy_proc, dummy_proc))
-        p.start()
+def dummy_proc(shared_conn:Connection):
+    """ ダミープロシージャ 即終了
+    """
+    return
 
-        time.sleep(1)
-        # エラーなく終了できればOK
-        p.terminate()
-        p.join()
-
-        assert p.exitcode == 0
-
-def dummy_proc(shared_conn:Connection, parent_conn:Connection):
+def dummy_proc_loop(shared_conn:Connection):
     """ ダミープロシージャ 無限ループ
     """
     while True:
         time.sleep(1)
 
-def dummy_proc_exit(shared_conn:Connection, parent_conn:Connection):
-    """ ダミープロシージャ 終了要求
+def dummy_proc_send(shared_conn:Connection):
+    """ ダミープロシージャ メッセージ送信
     """
-    parent_conn.send("exit")
+    shared_conn.send("dummy")
 
-def dummy_proc_conn_send_recv_exit(shared_conn:Connection, parent_conn:Connection):
-    """ ダミープロシージャ メッセージ送信後、返信を受け取ったら終了要求
-    """
-    shared_conn.send("hi")
-
-    if shared_conn.poll(timeout=5) == False:
-        raise Exception("timeout")
-    
-    msg = shared_conn.recv()
-    if msg == "hello":
-        parent_conn.send("exit")
-
-def dummy_proc_conn_recv(shared_conn:Connection, parent_conn:Connection):
+def dummy_proc_recv(shared_conn:Connection):
     """ ダミープロシージャ メッセージ受信
-    """    
-    if shared_conn.poll(timeout=5) == False:
-        raise Exception("timeout")
-
-    msg = shared_conn.recv()
-    if msg == "hi":
-        print("send hello")
-        shared_conn.send("hello")
-    while True:
-        time.sleep(1)
-
-def dummy_proc_conn_send_stop (shared_conn:Connection, parent_conn:Connection):
-    """ ダミープロシージャ メッセージ送信後、プロセス終了
     """
-    shared_conn.send("hi")
-    return
-
-def dummy_proc_conn_recv_twice_exit(shared_conn:Connection, parent_conn:Connection):
-    """ ダミープロシージャ メッセージを2回受信したら終了要求
-    """
-    if shared_conn.poll(timeout=5) == False:
-        raise Exception("timeout")
-
-    msg = shared_conn.recv()
-    if msg == "hi":
-        shared_conn.send("hello")
-
-    if shared_conn.poll(timeout=5) == False:
-        raise Exception("timeout")
-
-    msg = shared_conn.recv()
-    if msg == "hi":
-        parent_conn.send("exit")
+    shared_conn.recv()
+    shared_conn.send("dummy reply")

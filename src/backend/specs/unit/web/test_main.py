@@ -17,11 +17,11 @@ class TestWebProcedure:
 
         mock_create_app = mocker.patch('yt_diffuser.web.main.create_app', return_value=app)
         mock_set_shared_conn = mocker.patch('yt_diffuser.web.main.set_shared_conn')
-        mock_start_greenlets = mocker.patch('yt_diffuser.web.main.start_greenlets')
+        mock_start_greenlets = mocker.patch('yt_diffuser.web.main.start_listener')
         mock_WSGIServer = mocker.patch('yt_diffuser.web.main.WSGIServer')
 
         c, p = Pipe()
-        web_procedure(shared_conn=c, parent_conn=None)
+        web_procedure(shared_conn=c)
 
         assert mock_create_app.call_count == 1
         assert mock_set_shared_conn.call_count == 1
@@ -39,10 +39,10 @@ class TestWebProcedure:
 
         mocker.patch('yt_diffuser.web.main.create_app', return_value=app)
         mocker.patch('yt_diffuser.web.main.set_shared_conn')
-        mocker.patch('yt_diffuser.web.main.start_greenlets')
+        mocker.patch('yt_diffuser.web.main.start_listener')
         mock_WSGIServer = mocker.patch('yt_diffuser.web.main.WSGIServer')
 
         c, p = Pipe()
-        web_procedure(shared_conn=c, parent_conn=None)
+        web_procedure(shared_conn=c)
 
         assert mock_WSGIServer.call_args[0][1].debug == True

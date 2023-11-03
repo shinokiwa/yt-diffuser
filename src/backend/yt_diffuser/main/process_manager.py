@@ -1,3 +1,7 @@
+""" プロセス管理モジュール
+
+基本 start_loop() を呼び出すだけでよい。
+"""
 from typing import Callable
 import atexit
 import signal
@@ -5,7 +9,10 @@ from multiprocessing import get_context
 
 from logging import getLogger; logger = getLogger(__name__)
 
+from yt_diffuser.util.loop import loop_listener
+
 context = get_context('spawn')
+
 _processes = {
     "Web": {
         "target": None,
@@ -19,15 +26,10 @@ _processes = {
     }
 }
 
-_parent_conn = None
-_child_conn = None
-
 def stop_all():
     """ 登録されたプロセスをすべて終了する
     通常は本モジュール外から呼び出す必要はない
     """
-    global _parent_conn, _child_conn
-
     logger.debug("Cleaning up processes...")
 
     for key in _processes.keys():
@@ -39,9 +41,6 @@ def stop_all():
         _processes[key]["shared_conn"] = None
         _processes[key]["target"] = None
     
-    _parent_conn = None
-    _child_conn = None
-    
     logger.debug("Cleanup completed.")
 
 def signal_handler(signal_num, frame):
@@ -51,8 +50,33 @@ def signal_handler(signal_num, frame):
     stop_all()
     exit(0)
 
+def start_processes(web_procedure:Callable, worker_procedure:Callable) -> None:
+    """ サブプロセスを初期化する
+    """
+    # プロシージャ登録
+    _processes["Web"]["target"] = web_procedure
+    _processes["Worker"]["target"] = worker_procedure
 
-def start_all(web_procedure:Callable, worker_procedure:Callable) -> None:
+    _processes["Web"]["shared_conn"], _processes["Worker"]["shared_conn"] = context.Pipe()
+
+    for key in _processes.keys():
+        _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=[_processes[key]["shared_conn"]])
+        _processes[key]["process"].daemon = True
+        _processes[key]["process"].start()
+
+def check_processes() -> None:
+    """ サブプロセスを監視し、停止している場合再起動する。
+    """
+    for key in _processes.keys():
+        if _processes[key]["process"] is None or _processes[key]["process"].is_alive() == False:
+
+            logger.warning(f'{key} process is dead. Restarting...')
+
+            _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=[_processes[key]["shared_conn"]])
+            _processes[key]["process"].daemon = True
+            _processes[key]["process"].start()
+
+def start_loop(web_procedure:Callable, worker_procedure:Callable) -> None:
     """ プロセスをすべて起動し、監視を開始する。
     登録するプロシージャはラムダ式やローカル関数ではなく、グローバルから参照できる関数である必要がある。
 
@@ -60,8 +84,6 @@ def start_all(web_procedure:Callable, worker_procedure:Callable) -> None:
         web_procedure: Webプロセスのメインロジック
         worker_procedure: データ処理プロセスのメインロジック
     """
-    global _parent_conn, _child_conn
-
     try:
         # 初期化
         atexit.unregister(stop_all)
@@ -70,38 +92,10 @@ def start_all(web_procedure:Callable, worker_procedure:Callable) -> None:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-        # プロシージャ登録
-        _processes["Web"]["target"] = web_procedure
-        _processes["Worker"]["target"] = worker_procedure
+        start_processes(web_procedure, worker_procedure)
 
-        _parent_conn, _child_conn = context.Pipe()
-        _processes["Web"]["shared_conn"], _processes["Worker"]["shared_conn"] = context.Pipe()
-
-        for key in _processes.keys():
-            _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=(_processes[key]["shared_conn"], _child_conn))
-            _processes[key]["process"].daemon = True
-            _processes[key]["process"].start()
-
-        # サブプロセスからparent_queueを通して終了要求があるまでは、サブプロセスを監視し、停止している場合再起動する。
-        # 再起動要求も可能
         logger.debug("Start main loop.")
-        while True:
-            try:
-                if _parent_conn.poll(timeout=1):
-                    msg = _parent_conn.recv()
-                    logger.debug(f"Received pipe signal {msg}")
-                    if msg == "exit":
-                        return
-
-            except EOFError:
-                pass
-            
-            for key in _processes.keys():
-                if _processes[key]["process"] is None or _processes[key]["process"].is_alive() == False:
-                    logger.warning(f'{key} process is dead. Restarting...')
-                    _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=(_processes[key]["shared_conn"], _child_conn))
-                    _processes[key]["process"].daemon = True
-                    _processes[key]["process"].start()
+        loop_listener(loop_callback=check_processes)
 
     except KeyboardInterrupt:
         logger.debug("KeyboardInterrupt")

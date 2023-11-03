@@ -6,6 +6,7 @@ import gevent
 from gevent.queue import Queue, Empty
 
 from yt_diffuser.web.connection import get_shared_conn
+from yt_diffuser.util.loop import loop_listener
 
 _subscribers = {}
 _latest_messages = {}
@@ -53,66 +54,57 @@ def unsubscribe(event, subscriber:Subscriber):
     if subscriber in _subscribers[event]:
         _subscribers[event].remove(subscriber)
 
-def start_listener():
-    """ メッセージ受信を開始する
+def msg_callback(msg):
+    """ メッセージ受信コールバック
     """
-    worker_conn = get_shared_conn()
-    logger.debug("Start worker listener")
+    (event, data) = msg
+    _latest_messages[event] = data
 
-    while True:
-        try:
-            if worker_conn.closed:
-                gevent.sleep(1)
-                continue
+    for subscriber in _subscribers.get(event, []):
+        subscriber.queue.put(data)
 
-            if worker_conn.poll(timeout=1):
-                (event, data) = worker_conn.recv()
-                _latest_messages[event] = data
 
-                for subscriber in _subscribers.get(event, []):
-                    subscriber.queue.put(data)
-
-        except EOFError:
-            pass
-
-        gevent.sleep(0)
-
-def start_heartbeat():
+def heartbeat(timeout:int=1):
     """ サブスクライバーの生存確認のため、ハートビートを送信する
     サブスクライバーは"hb"の文字列を受信したら、"hb"を返すことで生存確認を行う。
     生存確認が取れない場合は、サブスクライバーを削除する。
+
+    param:
+        timeout: int ハートビートのタイムアウト時間 ほぼテスト用
     """
-    logger.debug("Start worker listener heartbeat checker")
-    while True:
-        for event in _subscribers.keys():
-            # unsubscribeされる可能性があるので、コピーを作成する
-            subscribers = _subscribers[event]
 
-            for subscriber in subscribers:
-                try:
-                    # キューが満杯の場合失敗とみなし、サブスクライバーを削除する
-                    if subscriber.hb_recv.full():
-                        unsubscribe(event, subscriber)
-                        continue
+    # 非同期にunsubscribeされる可能性があるので、コピーを作成する
+    subscribers = _subscribers
 
-                    subscriber.hb_recv.put("hb")
+    for event in subscribers.keys():
+        for subscriber in subscribers[event]:
 
-                    msg = subscriber.hb_send.get(timeout=1)
-                    if msg != "hb":
-                        unsubscribe(event, subscriber)
+            # キューが満杯の場合失敗とみなし、サブスクライバーを削除する
+            if subscriber.hb_recv.full():
+                unsubscribe(event, subscriber)
+                continue
 
-                except Empty:
-                    pass
+            subscriber.hb_recv.put("hb")
 
-        gevent.sleep(10)
+            try:
+                msg = subscriber.hb_send.get(timeout=timeout)
+                if msg != "hb":
+                    unsubscribe(event, subscriber)
 
-def start_greenlets ():
-    """ Greenletを起動する
+            except Empty:
+                pass
+
+def start_listener ()->[gevent.Greenlet]:
+    """ リスナーを起動する
     """
     logger.debug("Start worker listener greenlets")
 
-    listener = gevent.spawn(start_listener)
+    conn = get_shared_conn()
+
+    listener = gevent.spawn(loop_listener, conn=conn, msg_callback=msg_callback)
     listener.start()
 
-    heartbeat_checker = gevent.spawn(start_heartbeat)
+    heartbeat_checker = gevent.spawn(loop_listener, loop_callback=heartbeat, timeout=10)
     heartbeat_checker.start()
+
+    return [listener, heartbeat_checker]

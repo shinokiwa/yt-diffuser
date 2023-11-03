@@ -10,9 +10,9 @@ from multiprocessing.connection import Connection
 
 from yt_diffuser.web.app import create_app
 from yt_diffuser.web.connection import set_shared_conn
-from yt_diffuser.web.worker_listener import start_greenlets
+from yt_diffuser.web.worker_listener import start_listener
 
-def web_procedure(shared_conn:Connection, parent_conn:Connection) -> None:
+def web_procedure(shared_conn:Connection) -> None:
     """ Webメイン処理
 
     Flaskを使ったWeb APIを起動する
@@ -27,7 +27,7 @@ def web_procedure(shared_conn:Connection, parent_conn:Connection) -> None:
     set_shared_conn(shared_conn)
 
     app = create_app()
-    start_greenlets()
+    start_listener()
 
     if os.environ.get('DEBUG') == '1':
         app.debug = True

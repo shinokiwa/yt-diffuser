@@ -2,17 +2,39 @@
 import pytest
 from unittest.mock import patch
 
-from multiprocessing import Pipe
-from multiprocessing.connection import Connection
 import gevent
-from gevent.queue import Queue, Full
+from gevent.queue import Queue
 
 from yt_diffuser.web.worker_listener import (
+    get_latest_message,
     Subscriber,
     subscribe,
     unsubscribe,
+    msg_callback,
+    heartbeat,
     start_listener
 )
+
+class TestGetLatestMessage:
+    """ describe: get_latest_message 最新のメッセージを取得する """
+
+    def test_get_latest_message(self):
+        """ it: 最新のメッセージを取得する """
+
+        with patch("yt_diffuser.web.worker_listener._latest_messages", {'test': 'message'}):
+            assert get_latest_message("test") == "message"
+    
+    def test_get_latest_message_no_message(self):
+        """ it: メッセージがない場合はNoneを返す """
+
+        with patch("yt_diffuser.web.worker_listener._latest_messages", {'test': 'message'}):
+            assert get_latest_message("test2") == None
+    
+    def test_get_latest_message_other_event(self):
+        """ it: 他のイベントのメッセージは取得しない """
+
+        with patch("yt_diffuser.web.worker_listener._latest_messages", {'test': 'message', 'other': 'message'}):
+            assert get_latest_message("test") == 'message'
 
 class TestSubscriber:
     """ describe: Subscriber サブスクライバーを表すクラス """
@@ -96,26 +118,88 @@ class TestUnsubscribe:
             unsubscribe("test", s)
             assert len(_subscribers) == 0
 
-class TestStartListener:
-    """ describe: start_listener メッセージ受信を開始する """
+class TestMsgCallback:
+    """ describe: msg_callback メッセージリスナーのコールバック """
 
-    def test_start_listener(self):
-        """ it: メッセージ受信を開始する。 """
-        with patch("yt_diffuser.web.worker_listener.get_shared_conn") as get_shared_conn, \
-            patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
-            parent_conn, child_conn = Pipe()
-            get_shared_conn.return_value = child_conn
+    def test_default(self):
+        """ it: 受信したメッセージを処理する。 """
+
+        # Pytestでは変数パッチができないので、unittest.mock.patchを使う
+        with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
 
             s = Subscriber()
             _subscribers["test"].append(s)
 
-            gl = gevent.spawn(start_listener)
-            gl.start()
-            gevent.sleep(0)
-            assert get_shared_conn.call_count == 1
+            msg_callback(("test", "message"))
 
-            parent_conn.send(("test", "message"))
-            gevent.sleep(0)
-            assert s.queue.get(timeout=5) == "message"
+            assert s.queue.get() == "message"
 
-            gl.kill()
+class TestHeartbeat:
+    """ describe: heartbeat サブスクライバーの生存確認のため、ハートビートを送信する """
+
+    def test_heartbeat(self, mocker):
+        """ it: サブスクライバーに対してハートビートを送信する """
+
+        with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
+            s = Subscriber()
+            _subscribers["test"].append(s)
+
+            mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
+            heartbeat(0)
+
+            assert s.hb_recv.get() == "hb"
+            assert mock_unsubscribe.call_count == 0
+
+    def test_heartbeat_other(self, mocker):
+        """ it: サブスクライバーが指定のハートビート以外を返した場合は削除する """
+
+        with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
+            s = Subscriber()
+            _subscribers["test"].append(s)
+
+            mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
+            s.hb_send.put("other")
+            heartbeat(0)
+
+            assert mock_unsubscribe.call_count == 1
+    
+    def test_heartbeat_full(self, mocker):
+        """ it: サブスクライバーのハートビートの応答キューは5回でいっぱいになり、それでも応答がない場合は削除する """
+
+        with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
+            s = Subscriber()
+            _subscribers["test"].append(s)
+
+            mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
+            heartbeat(0)
+            heartbeat(0)
+            heartbeat(0)
+            heartbeat(0)
+            heartbeat(0)
+
+            assert mock_unsubscribe.call_count == 0
+
+            heartbeat(0)
+            assert mock_unsubscribe.call_count == 1
+
+
+class TestStartListener:
+    """ describe: start_listener メッセージリスナーを起動する """
+
+    def test_start_listener(self, mocker):
+        """ it: メッセージリスナーを起動する """
+
+        mock_get_shared_conn = mocker.patch("yt_diffuser.web.worker_listener.get_shared_conn")
+        mock_loop_listener = mocker.patch("yt_diffuser.web.worker_listener.loop_listener")
+        mock_msg_callback = mocker.patch("yt_diffuser.web.worker_listener.msg_callback")
+        mock_heartbeat = mocker.patch("yt_diffuser.web.worker_listener.heartbeat")
+
+        greenlets = start_listener()
+        gevent.joinall(greenlets)
+
+        assert mock_get_shared_conn.call_count == 1
+
+        assert mock_loop_listener.call_count == 2
+        assert mock_loop_listener.call_args_list[0][1]["conn"] == mock_get_shared_conn.return_value
+        assert mock_loop_listener.call_args_list[0][1]["msg_callback"] == mock_msg_callback
+        assert mock_loop_listener.call_args_list[1][1]["loop_callback"] == mock_heartbeat
