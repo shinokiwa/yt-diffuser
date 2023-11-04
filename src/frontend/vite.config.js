@@ -17,6 +17,7 @@ export default defineConfig({
         // Dockerのバインドマウントでは監視が働かないっぽいのでプーリングを使う
         watch: {
             usePolling: true,
+            interval: 1000,
         },
     },
     test: {

@@ -6,6 +6,7 @@ from typing import Callable
 import atexit
 import signal
 from multiprocessing import get_context
+import asyncio
 
 from logging import getLogger; logger = getLogger(__name__)
 
@@ -64,7 +65,7 @@ def start_processes(web_procedure:Callable, worker_procedure:Callable) -> None:
         _processes[key]["process"].daemon = True
         _processes[key]["process"].start()
 
-def check_processes() -> None:
+async def check_processes() -> None:
     """ サブプロセスを監視し、停止している場合再起動する。
     """
     for key in _processes.keys():
@@ -75,6 +76,8 @@ def check_processes() -> None:
             _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=[_processes[key]["shared_conn"]])
             _processes[key]["process"].daemon = True
             _processes[key]["process"].start()
+    
+    await asyncio.sleep(1)
 
 def start_loop(web_procedure:Callable, worker_procedure:Callable) -> None:
     """ プロセスをすべて起動し、監視を開始する。
@@ -95,7 +98,7 @@ def start_loop(web_procedure:Callable, worker_procedure:Callable) -> None:
         start_processes(web_procedure, worker_procedure)
 
         logger.debug("Start main loop.")
-        loop_listener(loop_callback=check_processes)
+        asyncio.run(loop_listener(loop_callback=check_processes))
 
     except KeyboardInterrupt:
         logger.debug("KeyboardInterrupt")

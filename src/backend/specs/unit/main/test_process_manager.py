@@ -88,7 +88,8 @@ class TestStartProcesses:
 class TestCheckProcesses:
     """ describe: check_processes プロセス監視 """
 
-    def test_default (self, mocker):
+    @pytest.mark.asyncio
+    async def test_default (self, mocker):
         """ it: プロセスが停止していた場合、再起動する。
         """
         shared_conn1, shared_conn2 = Pipe()
@@ -98,7 +99,7 @@ class TestCheckProcesses:
             "Worker": {"process": None, "shared_conn": shared_conn2, "target": dummy_proc_loop}
         }) as _processes:
 
-            process_manager.check_processes()
+            await process_manager.check_processes()
 
             assert type(_processes["Web"]["process"] ) == SpawnProcess
             assert type(_processes["Worker"]["process"] ) == SpawnProcess
@@ -110,7 +111,7 @@ class TestCheckProcesses:
             _processes["Web"]["process"].join()
             assert _processes["Web"]["process"].is_alive() == False
 
-            process_manager.check_processes()
+            await process_manager.check_processes()
 
             assert type(_processes["Web"]["process"] ) == SpawnProcess
             assert _processes["Web"]["process"].is_alive() == True

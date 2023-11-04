@@ -7,55 +7,50 @@
 """
 from typing import Callable
 from multiprocessing.connection import Connection
-import gevent
+import asyncio
 
-def listener(conn:Connection, msg_callback:Callable, timeout:int = 1) -> bool:
+async def listener(conn:Connection, msg_callback:Callable, timeout:int = 1) -> bool:
     """ メッセージリスナー
 
     param:
         conn: Connection メッセージ受信用のコネクション
-        msg_callback: Callable メッセージ受信時のコールバック
+        msg_callback: Callable メッセージ受信時のasyncコールバック
         timeout: int メッセージ受信待ちのタイムアウト時間 ほぼテスト用
     """
     try:
-        if conn.closed:
-            gevent.sleep(timeout)
-            return
-
         if conn.poll(timeout=timeout):
             msg = conn.recv()
-            return not msg_callback(msg) == False
+            return not await msg_callback(msg) == False
     except (EOFError, BrokenPipeError):
-        gevent.sleep(timeout)
+        pass
     
     return True
 
-def loop_listener(conn:Connection = None, msg_callback:Callable = None, loop_callback:Callable = None, timeout:int = 1):
+async def loop_listener(conn:Connection = None, msg_callback:Callable = None, loop_callback:Callable = None, timeout:int = 1):
     """ メッセージ受信を開始する
     各コールバックは非同期に実行され、いずれかがFalseを返した場合はループを終了する。
 
     param:
         conn: Connection メッセージ受信用のコネクション
-        msg_callback: Callable メッセージ受信時のコールバック
+        msg_callback: Callable メッセージ受信時のasyncコールバック
         loop_callback: Callable 毎回のループで呼び出されるコールバック
         timeout: int メッセージ受信待ちのタイムアウト時間 ほぼテスト用
     """
 
     while True:
-        greenlets = []
+        tasks = []
         if conn is not None and msg_callback is not None:
-            greenlets.append(gevent.spawn(listener, conn, msg_callback, timeout))
+            tasks.append(listener(conn, msg_callback, timeout))
         
         if loop_callback is not None:
-            greenlets.append(gevent.spawn(loop_callback))
+            tasks.append(loop_callback())
         
-        if len(greenlets) == 0:
+        if len(tasks) == 0:
             return
 
-        gevent.joinall(greenlets)
+        results = await asyncio.gather(*tasks)
 
-        for greenlet in greenlets:
-            if greenlet.value == False:
+        for result in results:
+            if result == False:
                 return
         
-        gevent.sleep(timeout)

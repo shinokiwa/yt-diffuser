@@ -2,8 +2,7 @@
 import pytest
 from unittest.mock import patch
 
-import gevent
-from gevent.queue import Queue
+import asyncio
 
 from yt_diffuser.web.worker_listener import (
     get_latest_message,
@@ -42,16 +41,16 @@ class TestSubscriber:
     def test_subscriber(self):
         """ it: サブスクライバーを作成する """
         s = Subscriber()
-        assert isinstance(s.queue, Queue)
-        assert isinstance(s.hb_recv, Queue)
-        assert isinstance(s.hb_send, Queue)
+        assert isinstance(s.queue, asyncio.Queue)
+        assert isinstance(s.hb_recv, asyncio.Queue)
+        assert isinstance(s.hb_send, asyncio.Queue)
 
     def test_heartbeat(self):
         """ it: ハートビートに対して応答する """
         s = Subscriber()
-        s.hb_recv.put("hb")
+        s.hb_recv.put_nowait("hb")
         s.heartbeat()
-        assert s.hb_send.get() == "hb"
+        assert s.hb_send.get_nowait() == "hb"
     
     def test_heartbeat_timeout(self):
         """ it: ハートビートが来ていない時は何もしない """
@@ -62,20 +61,20 @@ class TestSubscriber:
     def test_heartbeat_other_message(self):
         """ it: ハートビート以外のメッセージが来ている時は何もしない """
         s = Subscriber()
-        s.hb_recv.put("other")
+        s.hb_recv.put_nowait("other")
         s.heartbeat()
         assert s.hb_send.empty()
     
     def test_heartbeat_full(self):
         """ it: ハートビートの応答キューは5回でいっぱいになる """
         s = Subscriber()
-        s.hb_recv.put("hb")
-        s.hb_recv.put("hb")
-        s.hb_recv.put("hb")
-        s.hb_recv.put("hb")
+        s.hb_recv.put_nowait("hb")
+        s.hb_recv.put_nowait("hb")
+        s.hb_recv.put_nowait("hb")
+        s.hb_recv.put_nowait("hb")
         assert s.hb_recv.full() == False
 
-        s.hb_recv.put("hb")
+        s.hb_recv.put_nowait("hb")
         assert s.hb_recv.full() == True
 
 class TestSubscribe:
@@ -121,7 +120,8 @@ class TestUnsubscribe:
 class TestMsgCallback:
     """ describe: msg_callback メッセージリスナーのコールバック """
 
-    def test_default(self):
+    @pytest.mark.asyncio
+    async def test_default(self):
         """ it: 受信したメッセージを処理する。 """
 
         # Pytestでは変数パッチができないので、unittest.mock.patchを使う
@@ -130,14 +130,15 @@ class TestMsgCallback:
             s = Subscriber()
             _subscribers["test"].append(s)
 
-            msg_callback(("test", "message"))
+            await msg_callback(("test", "message"))
 
-            assert s.queue.get() == "message"
+            assert s.queue.get_nowait() == "message"
 
 class TestHeartbeat:
     """ describe: heartbeat サブスクライバーの生存確認のため、ハートビートを送信する """
 
-    def test_heartbeat(self, mocker):
+    @pytest.mark.asyncio
+    async def test_heartbeat(self, mocker):
         """ it: サブスクライバーに対してハートビートを送信する """
 
         with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
@@ -145,12 +146,13 @@ class TestHeartbeat:
             _subscribers["test"].append(s)
 
             mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
-            heartbeat(0)
+            await heartbeat(0)
 
-            assert s.hb_recv.get() == "hb"
+            assert s.hb_recv.get_nowait() == "hb"
             assert mock_unsubscribe.call_count == 0
 
-    def test_heartbeat_other(self, mocker):
+    @pytest.mark.asyncio
+    async def test_heartbeat_other(self, mocker):
         """ it: サブスクライバーが指定のハートビート以外を返した場合は削除する """
 
         with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
@@ -158,12 +160,13 @@ class TestHeartbeat:
             _subscribers["test"].append(s)
 
             mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
-            s.hb_send.put("other")
-            heartbeat(0)
+            s.hb_send.put_nowait("other")
+            await heartbeat(0.1)
 
             assert mock_unsubscribe.call_count == 1
     
-    def test_heartbeat_full(self, mocker):
+    @pytest.mark.asyncio
+    async def test_heartbeat_full(self, mocker):
         """ it: サブスクライバーのハートビートの応答キューは5回でいっぱいになり、それでも応答がない場合は削除する """
 
         with patch("yt_diffuser.web.worker_listener._subscribers", {"test": []}) as _subscribers:
@@ -171,22 +174,23 @@ class TestHeartbeat:
             _subscribers["test"].append(s)
 
             mock_unsubscribe = mocker.patch("yt_diffuser.web.worker_listener.unsubscribe")
-            heartbeat(0)
-            heartbeat(0)
-            heartbeat(0)
-            heartbeat(0)
-            heartbeat(0)
+            await heartbeat(0)
+            await heartbeat(0)
+            await heartbeat(0)
+            await heartbeat(0)
+            await heartbeat(0)
 
             assert mock_unsubscribe.call_count == 0
 
-            heartbeat(0)
+            await heartbeat(0)
             assert mock_unsubscribe.call_count == 1
 
 
 class TestStartListener:
     """ describe: start_listener メッセージリスナーを起動する """
 
-    def test_start_listener(self, mocker):
+    @pytest.mark.asyncio
+    async def test_start_listener(self, mocker):
         """ it: メッセージリスナーを起動する """
 
         mock_get_shared_conn = mocker.patch("yt_diffuser.web.worker_listener.get_shared_conn")
@@ -194,8 +198,8 @@ class TestStartListener:
         mock_msg_callback = mocker.patch("yt_diffuser.web.worker_listener.msg_callback")
         mock_heartbeat = mocker.patch("yt_diffuser.web.worker_listener.heartbeat")
 
-        greenlets = start_listener()
-        gevent.joinall(greenlets)
+        tasks = await start_listener()
+        await asyncio.gather(*tasks)
 
         assert mock_get_shared_conn.call_count == 1
 

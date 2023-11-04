@@ -2,8 +2,8 @@
 Pub-Subパターンで実装する。
 """
 from logging import getLogger; logger = getLogger(__name__)
-import gevent
-from gevent.queue import Queue, Empty
+import asyncio
+from asyncio import Queue
 
 from yt_diffuser.web.connection import get_shared_conn
 from yt_diffuser.util.loop import loop_listener
@@ -15,8 +15,8 @@ class Subscriber:
     """ サブスクライバーを表すクラス
     """
 
-    def __init__(self):
-        self.queue = Queue()
+    def __init__(self, receiver):
+        self.receiver = receiver
         self.hb_recv = Queue(maxsize=5)
         self.hb_send = Queue()
     
@@ -28,7 +28,7 @@ class Subscriber:
 
         msg = self.hb_recv.get_nowait()
         if msg == "hb":
-            self.hb_send.put("hb")
+            self.hb_send.put_nowait("hb")
 
 def get_latest_message(event):
     """ 最後のメッセージを取得する
@@ -54,23 +54,23 @@ def unsubscribe(event, subscriber:Subscriber):
     if subscriber in _subscribers[event]:
         _subscribers[event].remove(subscriber)
 
-def msg_callback(msg):
+async def msg_callback(msg):
     """ メッセージ受信コールバック
     """
     (event, data) = msg
     _latest_messages[event] = data
 
     for subscriber in _subscribers.get(event, []):
-        subscriber.queue.put(data)
+        subscriber.receiver(data)
 
 
-def heartbeat(timeout:int=1):
+async def heartbeat(timeout:float=10.0):
     """ サブスクライバーの生存確認のため、ハートビートを送信する
     サブスクライバーは"hb"の文字列を受信したら、"hb"を返すことで生存確認を行う。
     生存確認が取れない場合は、サブスクライバーを削除する。
 
     param:
-        timeout: int ハートビートのタイムアウト時間 ほぼテスト用
+        timeout: float ハートビートのタイムアウト時間 ほぼテスト用
     """
 
     # 非同期にunsubscribeされる可能性があるので、コピーを作成する
@@ -84,27 +84,26 @@ def heartbeat(timeout:int=1):
                 unsubscribe(event, subscriber)
                 continue
 
-            subscriber.hb_recv.put("hb")
+            subscriber.hb_recv.put_nowait("hb")
 
             try:
-                msg = subscriber.hb_send.get(timeout=timeout)
+                msg = await asyncio.wait_for(subscriber.hb_send.get(), timeout=timeout)
                 if msg != "hb":
                     unsubscribe(event, subscriber)
 
-            except Empty:
+            except asyncio.TimeoutError:
                 pass
 
-def start_listener ()->[gevent.Greenlet]:
+async def start_listener ()->[]:
     """ リスナーを起動する
     """
     logger.debug("Start worker listener greenlets")
 
     conn = get_shared_conn()
 
-    listener = gevent.spawn(loop_listener, conn=conn, msg_callback=msg_callback)
-    listener.start()
+    tasks = [
+        asyncio.create_task(loop_listener(conn=conn, msg_callback=msg_callback)),
+        asyncio.create_task(loop_listener(loop_callback=heartbeat))
+    ]
 
-    heartbeat_checker = gevent.spawn(loop_listener, loop_callback=heartbeat, timeout=10)
-    heartbeat_checker.start()
-
-    return [listener, heartbeat_checker]
+    return tasks

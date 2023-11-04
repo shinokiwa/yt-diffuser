@@ -2,8 +2,8 @@
 """
 from logging import getLogger; logger = getLogger(__name__)
 from flask import Blueprint, Response
-from gevent import sleep
-from gevent.queue import Empty
+import asyncio
+import time
 
 from yt_diffuser.web.worker_listener import subscribe, unsubscribe, Subscriber, get_latest_message
 
@@ -13,6 +13,20 @@ sse_bp = Blueprint('api_res_sse', __name__)
 def get_status ():
     """プロセスの状態を取得する
     """
+
+    status = get_latest_message('status')
+
+    def receiver(data):
+        """ メッセージ受信コールバック
+        """
+        nonlocal status
+        status = data
+
+    subscriber = Subscriber()
+    subscribe('status', subscriber)
+    if status is None:
+        status = ''
+
     return Response(status_stream(), mimetype='text/event-stream')
 
 def status_stream():
@@ -28,13 +42,14 @@ def status_stream():
     try:
         while True:
             subscriber.heartbeat()
-            yield f"data: {status}\n\n"
 
             try:
-                status = subscriber.queue.get(timeout=5)
-            except Empty:
+                status = subscriber.queue.get_nowait()
+            except asyncio.QueueEmpty:
                 pass
 
+            yield f"data: {status}\n\n"
+            time.sleep(1)
 
     except GeneratorExit:
         unsubscribe('status', subscriber)

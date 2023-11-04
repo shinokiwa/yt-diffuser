@@ -3,8 +3,9 @@
 from logging import getLogger; logger = getLogger(__name__)
 
 import os
+import asyncio
 
-from gevent.pywsgi import WSGIServer
+from waitress import serve
 
 from multiprocessing.connection import Connection
 
@@ -18,7 +19,6 @@ def web_procedure(shared_conn:Connection) -> None:
     Flaskを使ったWeb APIを起動する
     """
 
-    from gevent import monkey; monkey.patch_all()
     if os.environ.get('DEBUG') == '1':
         import logging; logging.basicConfig(level=logging.DEBUG)
 
@@ -27,10 +27,9 @@ def web_procedure(shared_conn:Connection) -> None:
     set_shared_conn(shared_conn)
 
     app = create_app()
-    start_listener()
+    asyncio.run(start_listener())
 
     if os.environ.get('DEBUG') == '1':
         app.debug = True
 
-    http_server = WSGIServer(('0.0.0.0', 8000), app)
-    http_server.serve_forever()
+    serve(app, host='0.0.0.0', port=8000)
