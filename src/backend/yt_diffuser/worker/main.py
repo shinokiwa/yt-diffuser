@@ -3,30 +3,20 @@
 from logging import getLogger; logger = getLogger(__name__)
 import os
 
-import gevent
-from multiprocessing.connection import Connection
+from multiprocessing.queues import Queue
 
-from yt_diffuser.worker.connection import set_shared_conn
+from yt_diffuser.util.loop import infinite_loop
+from yt_diffuser.worker.web_sender import set_send_queue
 from yt_diffuser.worker.worker import dispatch
 
-def worker_procedure(shared_conn:Connection):
+def worker_procedure(send_queue:Queue, recv_queue:Queue):
     if os.environ.get('DEBUG') == '1':
         import logging; logging.basicConfig(level=logging.DEBUG)
     
-    from gevent import monkey; monkey.patch_all()
-
     logger.debug('Worker process started...')
 
-    set_shared_conn(shared_conn)
+    set_send_queue(send_queue)
 
-    while True:
-        if shared_conn.closed:
-            gevent.sleep(1)
-            continue
+    send_queue.put(('status', 'empty'))
 
-        try:
-            if shared_conn.poll(timeout=1):
-                msg = shared_conn.recv()
-                dispatch(msg[0], msg[1])
-        except EOFError:
-            pass
+    infinite_loop(recv_queue, dispatch)

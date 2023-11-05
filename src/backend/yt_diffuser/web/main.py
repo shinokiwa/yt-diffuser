@@ -7,13 +7,13 @@ import asyncio
 
 from waitress import serve
 
-from multiprocessing.connection import Connection
+from multiprocessing.queues import Queue
 
 from yt_diffuser.web.app import create_app
-from yt_diffuser.web.connection import set_shared_conn
 from yt_diffuser.web.worker_listener import start_listener
+from yt_diffuser.web.worker_sender import set_send_queue
 
-def web_procedure(shared_conn:Connection) -> None:
+def web_procedure(send_queue:Queue, recv_queue:Queue) -> None:
     """ Webメイン処理
 
     Flaskを使ったWeb APIを起動する
@@ -24,10 +24,10 @@ def web_procedure(shared_conn:Connection) -> None:
 
     logger.debug('Start Web API')
 
-    set_shared_conn(shared_conn)
 
     app = create_app()
-    asyncio.run(start_listener())
+    start_listener(recv_queue)
+    set_send_queue(send_queue)
 
     if os.environ.get('DEBUG') == '1':
         app.debug = True

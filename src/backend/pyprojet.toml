@@ -1,3 +1,0 @@
-[tool.coverage.run]
-omit =
-    specs/*

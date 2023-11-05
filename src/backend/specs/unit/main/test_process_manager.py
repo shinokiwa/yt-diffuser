@@ -3,8 +3,8 @@ import pytest
 from unittest.mock import patch
 import time
 
-from multiprocessing import Process, Pipe
-from multiprocessing.connection import Connection
+import multiprocessing
+from multiprocessing.queues import Queue
 from multiprocessing.context import SpawnProcess
 
 from yt_diffuser.main import process_manager
@@ -12,26 +12,26 @@ from yt_diffuser.main import process_manager
 class TestStopAll:
     """ describe: stop_all 停止処理 """
     
-    @pytest.mark.dependency
-    def test_stop_all(self):
+    def test_stop_all(self, mocker):
         """ it: 登録されている全プロセスを終了し、クリーンアップする。 """
 
-        process_manager._processes["Web"]["shared_conn"], process_manager._processes["Worker"]["shared_conn"] = Pipe()
+        web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_loop)
+        worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_loop)
 
-        ps = []
-        for key, p in process_manager._processes.items():
-            ps.append(Process(target=dummy_proc_loop, args=[p["shared_conn"]]))
-            p["process"] = ps[-1]
-            p["process"].start() 
+        process_manager.web_send_queue = multiprocessing.Queue
+        process_manager.worker_send_queue = multiprocessing.Queue()
+
+        process_manager.web_process = multiprocessing.Process(target=web_procedure, args=[process_manager.web_send_queue, process_manager.worker_send_queue])
+        process_manager.worker_process = multiprocessing.Process(target=worker_procedure, args=[process_manager.worker_send_queue, process_manager.web_send_queue])
+        process_manager.web_process.start()
+        process_manager.worker_process.start()
 
         process_manager.stop_all()
-
-        for key, p in process_manager._processes.items():
-            assert p["process"] == None
-            assert p["shared_conn"] == None
         
-        for p in ps:
-            assert p.is_alive() == False
+        assert process_manager.web_process is None
+        assert process_manager.worker_process is None
+        assert process_manager.web_send_queue is None
+        assert process_manager.worker_send_queue is None
 
 class TestSignalHandler:
     """ describe: signal_handler 終了シグナルハンドラ """
@@ -53,68 +53,78 @@ class TestStartProcesses:
     def test_default (self, mocker):
         """ it: サブプロセスを初期化する。
         """
-        with patch('yt_diffuser.main.process_manager._processes', {
-            "Web": {"process": None, "shared_conn": None, "target": None}, "Worker": {"process": None, "shared_conn": None, "target": None}
-        }) as _processes:
+        web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_loop)
+        worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_loop)
 
-            process_manager.start_processes(dummy_proc, dummy_proc)
+        process_manager.start_processes()
 
-            assert _processes["Web"]["target"] == dummy_proc
-            assert _processes["Worker"]["target"] == dummy_proc
+        assert type(process_manager.web_send_queue) == Queue
+        assert type(process_manager.worker_send_queue) == Queue
 
-            assert type(_processes["Web"]["shared_conn"]) == Connection
-            assert type(_processes["Worker"]["shared_conn"]) == Connection
+        assert type(process_manager.web_process) == SpawnProcess
+        assert process_manager.web_process.is_alive() == True
 
-            assert type(_processes["Web"]["process"] ) == SpawnProcess
-            assert type(_processes["Worker"]["process"] ) == SpawnProcess
+        assert type(process_manager.worker_process) == SpawnProcess
+        assert process_manager.worker_process.is_alive() == True
+
+        process_manager.web_process.terminate()
+        process_manager.web_process.join()
+        process_manager.worker_process.terminate()
+        process_manager.worker_process.join()
  
-    def test_conn(self, monkeypatch):
-        """ it: サブプロセス同士はConnectionを使って通信できる。
+    def test_queue(self, mocker):
+        """ it: サブプロセス同士はQueueを使って通信できる。
+        送信用、受信用それぞれで渡される。
         """
+        web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_send)
+        worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_recv)
 
-        with patch('yt_diffuser.main.process_manager._processes', {
-            "Web": {"process": None, "shared_conn": None, "target": None}, "Worker": {"process": None, "shared_conn": None, "target": None}
-        }) as _processes:
+        process_manager.start_processes()
 
-            process_manager.start_processes(dummy_proc_send, dummy_proc_recv)
-            assert type( _processes["Worker"]["process"] ) == SpawnProcess
-            assert _processes["Web"]["shared_conn"].recv() == "dummy reply"
+        assert process_manager.worker_send_queue.get(timeout=5) == "dummy reply"
 
-            process_manager.start_processes(dummy_proc_recv, dummy_proc_send)
-            assert type( _processes["Web"]["process"] ) == SpawnProcess
-            assert _processes["Worker"]["shared_conn"].recv() == "dummy reply"
+        web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_recv)
+        worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_send)
+
+        process_manager.start_processes()
+
+        assert process_manager.web_send_queue.get(timeout=5) == "dummy reply"
 
 
 class TestCheckProcesses:
     """ describe: check_processes プロセス監視 """
 
-    @pytest.mark.asyncio
-    async def test_default (self, mocker):
+    def test_default (self, mocker):
         """ it: プロセスが停止していた場合、再起動する。
+        停止していない場合は何もしない。
         """
-        shared_conn1, shared_conn2 = Pipe()
 
-        with patch('yt_diffuser.main.process_manager._processes', {
-            "Web": {"process": None, "shared_conn": shared_conn1, "target": dummy_proc_loop},
-            "Worker": {"process": None, "shared_conn": shared_conn2, "target": dummy_proc_loop}
-        }) as _processes:
+        web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_loop)
+        worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_loop)
 
-            await process_manager.check_processes()
+        process_manager.check_processes()
 
-            assert type(_processes["Web"]["process"] ) == SpawnProcess
-            assert type(_processes["Worker"]["process"] ) == SpawnProcess
-            assert _processes["Web"]["process"].is_alive() == True
-            assert _processes["Worker"]["process"].is_alive() == True
+        assert type(process_manager.web_process) == SpawnProcess
+        assert process_manager.web_process.is_alive() == True
+        assert type(process_manager.worker_process) == SpawnProcess
+        assert process_manager.worker_process.is_alive() == True
+ 
+        process_manager.web_process.terminate()
+        process_manager.web_process.join()
+        process_manager.worker_process.terminate()
+        process_manager.worker_process.join()
 
+        process_manager.check_processes()
 
-            _processes["Web"]["process"].kill()
-            _processes["Web"]["process"].join()
-            assert _processes["Web"]["process"].is_alive() == False
-
-            await process_manager.check_processes()
-
-            assert type(_processes["Web"]["process"] ) == SpawnProcess
-            assert _processes["Web"]["process"].is_alive() == True
+        assert type(process_manager.web_process) == SpawnProcess
+        assert process_manager.web_process.is_alive() == True
+        assert type(process_manager.worker_process) == SpawnProcess
+        assert process_manager.worker_process.is_alive() == True
+ 
+        process_manager.web_process.terminate()
+        process_manager.web_process.join()
+        process_manager.worker_process.terminate()
+        process_manager.worker_process.join()
 
 class TestStartLoop:
     """ describe: start_loop プロセス起動と監視開始 """
@@ -128,35 +138,36 @@ class TestStartLoop:
         mock_signal = mocker.patch('yt_diffuser.main.process_manager.signal.signal')
         mock_start_processes = mocker.patch('yt_diffuser.main.process_manager.start_processes')
         mock_check_processes = mocker.patch('yt_diffuser.main.process_manager.check_processes')
-        mock_loop_listener = mocker.patch('yt_diffuser.main.process_manager.loop_listener')
+        mock_infinite_loop = mocker.patch('yt_diffuser.main.process_manager.infinite_loop')
 
-        process_manager.start_loop(dummy_proc, dummy_proc)
+        process_manager.start_loop()
 
         assert mock_atexit_unregister.call_count == 1
         assert mock_atexit_register.call_count == 1
         assert mock_signal.call_count == 2
         assert mock_start_processes.call_count == 1
-        assert mock_loop_listener.call_count == 1
-        assert mock_loop_listener.call_args[1]["loop_callback"] == mock_check_processes
+        assert mock_infinite_loop.call_count == 1
+        assert mock_infinite_loop.call_args[1]["loop_callback"] == mock_check_processes
 
-def dummy_proc(shared_conn:Connection):
+def dummy_proc(send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ 即終了
     """
     return
 
-def dummy_proc_loop(shared_conn:Connection):
+def dummy_proc_loop(send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ 無限ループ
     """
     while True:
         time.sleep(1)
 
-def dummy_proc_send(shared_conn:Connection):
+def dummy_proc_send(send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ メッセージ送信
     """
-    shared_conn.send("dummy")
+    send_queue.put("dummy")
 
-def dummy_proc_recv(shared_conn:Connection):
+def dummy_proc_recv(send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ メッセージ受信
     """
-    shared_conn.recv()
-    shared_conn.send("dummy reply")
+    msg = recv_queue.get()
+    if msg == "dummy":
+        send_queue.put("dummy reply")

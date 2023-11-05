@@ -4,14 +4,16 @@
 """
 from logging import getLogger; logger = getLogger(__name__)
 
-from yt_diffuser.worker.connection import get_shared_conn
+from yt_diffuser.worker.web_sender import get_send_queue
 
-def dispatch (event:str, data = None):
+def dispatch (msg):
+    (event, data) = msg
     logger.debug('dispatch: event=%s', event)
+
     if event == "download":
-        conn = get_shared_conn()
+        queue = get_send_queue()
         from datetime import datetime
-        conn.send(('status', datetime.now().strftime('%Y/%m/%d %H:%M:%S')))
+        queue.put(('status', datetime.now().strftime('%Y/%m/%d %H:%M:%S')))
         
     elif event == "stop_download":
         pass

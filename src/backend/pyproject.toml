@@ -1,0 +1,8 @@
+[tool.pytest.ini_options]
+markers = [
+    "describe: Description of the test context",
+    "it: Description of the test case"
+]
+
+[tool.coverage.run]
+branch = true

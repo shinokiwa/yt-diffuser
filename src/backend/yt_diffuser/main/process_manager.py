@@ -2,90 +2,90 @@
 
 基本 start_loop() を呼び出すだけでよい。
 """
-from typing import Callable
 import atexit
 import signal
-from multiprocessing import get_context
-import asyncio
+import multiprocessing
+import time
 
 from logging import getLogger; logger = getLogger(__name__)
 
-from yt_diffuser.util.loop import loop_listener
+from yt_diffuser.util.loop import infinite_loop
+from yt_diffuser.web.main import web_procedure
+from yt_diffuser.worker.main import worker_procedure
 
-context = get_context('spawn')
+context = multiprocessing.get_context('spawn')
 
-_processes = {
-    "Web": {
-        "target": None,
-        "process": None,
-        "shared_conn": None
-    },
-    "Worker": {
-        "target": None,
-        "process": None,
-        "shared_conn": None
-    }
-}
+web_process = None
+worker_process = None
+
+web_send_queue = None
+worker_send_queue = None
 
 def stop_all():
     """ 登録されたプロセスをすべて終了する
     通常は本モジュール外から呼び出す必要はない
     """
+    global web_process, worker_process, web_send_queue, worker_send_queue
+
     logger.debug("Cleaning up processes...")
 
-    for key in _processes.keys():
-        if _processes[key]["process"] is not None and _processes[key]["process"].is_alive():
-            _processes[key]["process"].terminate()
-            _processes[key]["process"].join()
-            logger.debug(f"{key} process terminated.")
-        _processes[key]["process"] = None
-        _processes[key]["shared_conn"] = None
-        _processes[key]["target"] = None
+    for p in [web_process, worker_process]:
+        if p is not None and p.is_alive():
+            p.terminate()
+            p.join()
+    
+    web_process = None
+    worker_process = None
+    web_send_queue = None
+    worker_send_queue = None
     
     logger.debug("Cleanup completed.")
 
 def signal_handler(signal_num, frame):
     """ 終了シグナルを受け取った場合の処理
     """
+    global web_process, worker_process, web_send_queue, worker_send_queue
+
     logger.debug(f"Received signal {signal_num}")
     stop_all()
     exit(0)
 
-def start_processes(web_procedure:Callable, worker_procedure:Callable) -> None:
+def start_processes() -> None:
     """ サブプロセスを初期化する
     """
+    global web_process, worker_process, web_send_queue, worker_send_queue
+
     # プロシージャ登録
-    _processes["Web"]["target"] = web_procedure
-    _processes["Worker"]["target"] = worker_procedure
+    web_send_queue = context.Queue()
+    worker_send_queue = context.Queue()
 
-    _processes["Web"]["shared_conn"], _processes["Worker"]["shared_conn"] = context.Pipe()
+    web_process = context.Process(target=web_procedure, args=[web_send_queue, worker_send_queue])
+    worker_process = context.Process(target=worker_procedure, args=[worker_send_queue, web_send_queue])
 
-    for key in _processes.keys():
-        _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=[_processes[key]["shared_conn"]])
-        _processes[key]["process"].daemon = True
-        _processes[key]["process"].start()
+    for p in [web_process, worker_process]:
+        p.daemon = True
+        p.start()
 
-async def check_processes() -> None:
+def check_processes() -> None:
     """ サブプロセスを監視し、停止している場合再起動する。
     """
-    for key in _processes.keys():
-        if _processes[key]["process"] is None or _processes[key]["process"].is_alive() == False:
+    global web_process, worker_process, web_send_queue, worker_send_queue
 
-            logger.warning(f'{key} process is dead. Restarting...')
-
-            _processes[key]["process"] = context.Process(target=_processes[key]["target"], args=[_processes[key]["shared_conn"]])
-            _processes[key]["process"].daemon = True
-            _processes[key]["process"].start()
+    if web_process is not None and not web_process.is_alive():
+        logger.debug("Web process is down. Restarting...")
+        web_process = context.Process(target=web_procedure, args=[web_send_queue, worker_send_queue])
+        web_process.daemon = True
+        web_process.start()
     
-    await asyncio.sleep(1)
+    if worker_process is not None and not worker_process.is_alive():
+        logger.debug("Worker process is down. Restarting...")
+        worker_process = context.Process(target=worker_procedure, args=[worker_send_queue, web_send_queue])
+        worker_process.daemon = True
+        worker_process.start()
 
-def start_loop(web_procedure:Callable, worker_procedure:Callable) -> None:
+def start_loop() -> None:
     """ プロセスをすべて起動し、監視を開始する。
     登録するプロシージャはラムダ式やローカル関数ではなく、グローバルから参照できる関数である必要がある。
-
-    param:
-        web_procedure: Webプロセスのメインロジック
-        worker_procedure: データ処理プロセスのメインロジック
     """
     try:
         # 初期化
@@ -95,10 +95,10 @@ def start_loop(web_procedure:Callable, worker_procedure:Callable) -> None:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-        start_processes(web_procedure, worker_procedure)
+        start_processes()
 
         logger.debug("Start main loop.")
-        asyncio.run(loop_listener(loop_callback=check_processes))
+        infinite_loop(loop_callback=check_processes)
 
     except KeyboardInterrupt:
         logger.debug("KeyboardInterrupt")
