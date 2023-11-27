@@ -3,15 +3,12 @@
  * ヘッダーのコンポーネント
  */
 
-import { useStatus } from '@/composables/api/sse/status'
-const { status } = useStatus()
 
 </script>
 
 <template>
 <header>
     <h1><i class="bi-cpu"></i>&nbsp;ゆとりでふーざー</h1>
-    <div>{{ status }}</div>
 </header>
 </template>
 

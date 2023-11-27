@@ -25,6 +25,9 @@ export default defineConfig({
         globals: true,
         // happy-dom で DOM をシミュレーション
         environment: "happy-dom",
-        include: ["tests/unit/**/*.test.js"]
+        include: ["specs/unit/**/*.spec.js"],
+        coverage: {
+            all: true,
+        }
     },
 });

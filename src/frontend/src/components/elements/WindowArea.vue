@@ -58,6 +58,6 @@ defineProps({
 
 .window-contents {
     padding: 10px;
-    height: 100%;
+    height: auto;
 }
 </style>

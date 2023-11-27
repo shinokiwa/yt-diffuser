@@ -5,9 +5,9 @@ import threading
 import queue
 from multiprocessing.queues import Queue
 
-from yt_diffuser.util.loop import infinite_loop
+from queue import Empty # このモジュールでは使わないが、インポート先で確定的に使うのでここでインポートしておく
 
-from queue import Empty
+from yt_diffuser.util.loop import infinite_loop
 
 _listeners = {}
 _latest_messages = {}

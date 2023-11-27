@@ -6,6 +6,7 @@
     --color-bg-focus: #0033ff;
 
     --color-border-window: #cccccc;
+    --color-border-dark: #000322;
 
     --color-shadow: rgba(0, 51, 102, 0.2);
 
@@ -16,6 +17,7 @@
 
     --size-header-height: 30px;
     --size-menu-width: 50px;
+    --size-status-height: 30px;
 }
 
 /**

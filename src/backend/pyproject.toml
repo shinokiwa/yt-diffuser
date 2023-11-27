@@ -1,7 +1,11 @@
 [tool.pytest.ini_options]
 markers = [
     "describe: Description of the test context",
-    "it: Description of the test case"
+    "it: Description of the test case",
+    "test: Description of the test context"
+]
+env = [
+    "TEST=1"
 ]
 
 [tool.coverage.run]

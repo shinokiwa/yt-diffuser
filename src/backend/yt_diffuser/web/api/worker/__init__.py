@@ -8,8 +8,16 @@ worker_bp = Blueprint('api_worker', __name__)
 
 @worker_bp.route('/api/worker/download', methods=['POST'])
 def download ():
-    """ ワーカープロセスに指示を出す
+    """ モデルダウンロード
     """
     q = get_send_queue()
     q.put(('download', None))
-    return 'ok'
+    return {'status': 'ok'}
+
+@worker_bp.route('/api/worker/stop', methods=['GET'])
+def stop ():
+    """ 処理中断
+    """
+    q = get_send_queue()
+    q.put(('stop', None))
+    return {'status': 'ok'}

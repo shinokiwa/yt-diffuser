@@ -5,21 +5,50 @@
 from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.worker.web_sender import get_send_queue
+from yt_diffuser.worker.util.task import is_empty, is_running, run_task, stop_task 
 
-def dispatch (msg):
-    (event, data) = msg
-    logger.debug('dispatch: event=%s', event)
+import asyncio
 
-    if event == "download":
-        queue = get_send_queue()
-        from datetime import datetime
-        queue.put(('status', datetime.now().strftime('%Y/%m/%d %H:%M:%S')))
-        
-    elif event == "stop_download":
-        pass
-    elif event == "load":
-        pass
-    elif event == "generate":
-        pass
-    elif event == "stop_generate":
-        pass
+worker_loop = None
+worker_queue = asyncio.Queue()
+
+def get_worker_queue (): return worker_queue
+def get_worker_loop (): return worker_loop
+
+async def loop ():
+    while True:
+        (event, data) = await worker_queue.get()
+
+        logger.debug('dispatch: event=%s', event)
+
+        if event == "download":
+            if is_empty() and not is_running():
+                run_task(test_task, (event, data))
+
+        elif event == "stop":
+            if is_running():
+                stop_task()
+            else:
+                logger.debug('task is not running')
+
+        elif event == "load":
+            pass
+        elif event == "generate":
+            pass
+
+def start_worker ():
+    global worker_loop
+    worker_loop = asyncio.new_event_loop()
+    worker_loop.run_until_complete(loop())
+
+
+async def test_task (event, data):
+    logger.debug('test_task')
+    from yt_diffuser.worker.util.tqdm import WorkerProgress
+    progress = WorkerProgress(total=100)
+    queue = get_send_queue()
+    queue.put(('status', 'download-progress'))
+    for i in range(10):
+        await asyncio.sleep(1)
+        progress.update(10)
+    queue.put(('status', 'download-complete'))

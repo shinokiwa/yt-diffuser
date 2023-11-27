@@ -8,10 +8,10 @@ const baseModels = ref([])
 const loraModels = ref([])
 const upscaleModels = ref([])
 
-const { api } = useApi()
+const { apix } = useApi()
 
 async function loadModels () {
-    const response = await api.get('/api/res/model')
+    const response = await apix.get('/api/res/model')
     const list = response.data
     baseModels.value = list.base || []
     loraModels.value = list.lora || []

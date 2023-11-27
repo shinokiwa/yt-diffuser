@@ -25,12 +25,14 @@ watchEffect(()=> {
 
 <style scoped>
 .progress-bar {
+    position: relative;
     width: 100%;
-    height: 15px;
+    height: 20px;
     background-color: #cccccc;
     border: 1px solid #999999;
-    border-radius: 8px;
+    border-radius: 5px;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .bar {
@@ -49,4 +51,5 @@ watchEffect(()=> {
 @keyframes progress-bar-stripes {
     0% { background-position-x: 15px; }
 }
+
 </style>

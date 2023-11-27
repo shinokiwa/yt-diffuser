@@ -7,19 +7,16 @@ import InputText from '@/components/elements/InputText.vue'
 
 import { useApi } from '@/composables/api';
 
-import { useGlobals } from '@/composables/global';
-const { currentView } = useGlobals()
-
 const addModel = ref(null)
 
 function edit () {
     addModel.value.show()
 }
 
-const { api } = useApi()
+const { apix } = useApi()
 
 function download () {
-    api.post('/api/worker/download', {})
+    apix.post('/api/worker/download', {})
 }
 
 </script>
