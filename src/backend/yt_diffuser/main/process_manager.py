@@ -5,10 +5,10 @@
 import atexit
 import signal
 import multiprocessing
-import time
 
 from logging import getLogger; logger = getLogger(__name__)
 
+from yt_diffuser.config import AppConfig
 from yt_diffuser.util.loop import infinite_loop
 from yt_diffuser.web.main import web_procedure
 from yt_diffuser.worker.main import worker_procedure
@@ -20,6 +20,8 @@ worker_process = None
 
 web_send_queue = None
 worker_send_queue = None
+
+app_config = None
 
 def stop_all():
     """ 登録されたプロセスをすべて終了する
@@ -50,17 +52,18 @@ def signal_handler(signal_num, frame):
     stop_all()
     exit(0)
 
-def start_processes() -> None:
+def start_processes(config:AppConfig) -> None:
     """ サブプロセスを初期化する
     """
-    global web_process, worker_process, web_send_queue, worker_send_queue
+    global web_process, worker_process, web_send_queue, worker_send_queue, app_config
 
     # プロシージャ登録
     web_send_queue = context.Queue()
     worker_send_queue = context.Queue()
+    app_config = config
 
-    web_process = context.Process(target=web_procedure, args=[web_send_queue, worker_send_queue])
-    worker_process = context.Process(target=worker_procedure, args=[worker_send_queue, web_send_queue])
+    web_process = context.Process(target=web_procedure, args=[app_config, web_send_queue, worker_send_queue])
+    worker_process = context.Process(target=worker_procedure, args=[app_config, worker_send_queue, web_send_queue])
 
     for p in [web_process, worker_process]:
         p.daemon = True
@@ -83,7 +86,7 @@ def check_processes() -> None:
         worker_process.daemon = True
         worker_process.start()
 
-def start_loop() -> None:
+def start_loop(config: AppConfig) -> None:
     """ プロセスをすべて起動し、監視を開始する。
     登録するプロシージャはラムダ式やローカル関数ではなく、グローバルから参照できる関数である必要がある。
     """
@@ -95,7 +98,7 @@ def start_loop() -> None:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-        start_processes()
+        start_processes(config)
 
         logger.debug("Start main loop.")
         infinite_loop(loop_callback=check_processes)

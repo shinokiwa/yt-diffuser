@@ -5,9 +5,7 @@ import datetime
 from typing import Union
 from os import PathLike
 
-from yt_diffuser.constant import DB_FILE
-
-def connect_database(database:Union[str, bytes, PathLike] = DB_FILE) -> sqlite3.Connection:
+def connect_database(database:Union[str, bytes, PathLike]) -> sqlite3.Connection:
     """データベースに接続する
 
     Args:

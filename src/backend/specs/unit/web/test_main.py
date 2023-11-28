@@ -5,6 +5,7 @@ from multiprocessing import Queue
 from flask import Flask
 
 from yt_diffuser.web.main import web_procedure
+from yt_diffuser.config import AppConfig
 
 @pytest.mark.describe('web_procedure')
 @pytest.mark.it('it: waitressのWSGIサーバーが起動する。その際にappにAPIが登録される。')
@@ -19,7 +20,11 @@ def test_web_procedure_spec(mocker):
 
     sq = Queue()
     rq = Queue()
-    web_procedure(send_queue=sq, recv_queue=rq)
+    web_procedure(
+        config=AppConfig(),
+        send_queue=sq,
+        recv_queue=rq
+    )
 
     assert mock_create_app.call_count == 1
 
@@ -48,6 +53,10 @@ def test_web_procedure_debug(mocker):
 
     sq = Queue()
     rq = Queue()
-    web_procedure(send_queue=sq, recv_queue=rq)
+    web_procedure(
+        config=AppConfig(),
+        send_queue=sq,
+        recv_queue=rq
+    )
 
     assert mock_serve.call_args[0][0].debug == True

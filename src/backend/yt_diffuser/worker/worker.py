@@ -4,6 +4,7 @@
 """
 from logging import getLogger; logger = getLogger(__name__)
 
+from yt_diffuser.config import AppConfig
 from yt_diffuser.worker.web_sender import get_send_queue
 from yt_diffuser.worker.util.task import is_empty, is_running, run_task, stop_task 
 
@@ -15,7 +16,7 @@ worker_queue = asyncio.Queue()
 def get_worker_queue (): return worker_queue
 def get_worker_loop (): return worker_loop
 
-async def loop ():
+async def loop (config:AppConfig):
     while True:
         (event, data) = await worker_queue.get()
 
@@ -23,7 +24,7 @@ async def loop ():
 
         if event == "download":
             if is_empty() and not is_running():
-                run_task(test_task, (event, data))
+                run_task(test_task, (config, event, data))
 
         elif event == "stop":
             if is_running():
@@ -36,13 +37,13 @@ async def loop ():
         elif event == "generate":
             pass
 
-def start_worker ():
+def start_worker (config:AppConfig):
     global worker_loop
     worker_loop = asyncio.new_event_loop()
-    worker_loop.run_until_complete(loop())
+    worker_loop.run_until_complete(loop(config))
 
 
-async def test_task (event, data):
+async def test_task (config, event, data):
     logger.debug('test_task')
     from yt_diffuser.worker.util.tqdm import WorkerProgress
     progress = WorkerProgress(total=100)

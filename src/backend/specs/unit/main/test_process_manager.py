@@ -8,6 +8,7 @@ from multiprocessing.queues import Queue
 from multiprocessing.context import SpawnProcess
 
 from yt_diffuser.main import process_manager
+from yt_diffuser.config import AppConfig
 
 @pytest.mark.describe("stop_all")
 @pytest.mark.it("登録されている全プロセスを終了し、クリーンアップする。")    
@@ -82,7 +83,7 @@ def test_start_process_spec (mocker):
     web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_loop)
     worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_loop)
 
-    process_manager.start_processes()
+    process_manager.start_processes(AppConfig())
 
     assert type(process_manager.web_send_queue) == Queue
     assert type(process_manager.worker_send_queue) == Queue
@@ -103,14 +104,14 @@ def test_queue(mocker):
     web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_send)
     worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_recv)
 
-    process_manager.start_processes()
+    process_manager.start_processes(AppConfig())
 
     assert process_manager.worker_send_queue.get(timeout=5) == "dummy reply"
 
     web_procedure = mocker.patch('yt_diffuser.main.process_manager.web_procedure', dummy_proc_recv)
     worker_procedure = mocker.patch('yt_diffuser.main.process_manager.worker_procedure', dummy_proc_send)
 
-    process_manager.start_processes()
+    process_manager.start_processes(AppConfig())
 
     assert process_manager.web_send_queue.get(timeout=5) == "dummy reply"
 
@@ -161,7 +162,7 @@ def test_start_all(mocker):
     mock_infinite_loop = mocker.patch('yt_diffuser.main.process_manager.infinite_loop')
     mock_stop_all = mocker.patch('yt_diffuser.main.process_manager.stop_all')
 
-    process_manager.start_loop()
+    process_manager.start_loop(AppConfig())
 
     assert mock_atexit_unregister.call_count == 1
     assert mock_atexit_register.call_count == 1
@@ -182,7 +183,7 @@ def test_start_loop_interrupt (mocker):
     mock_infinite_loop = mocker.patch('yt_diffuser.main.process_manager.infinite_loop', side_effect=KeyboardInterrupt)
     mock_stop_all = mocker.patch('yt_diffuser.main.process_manager.stop_all')
 
-    process_manager.start_loop()
+    process_manager.start_loop(AppConfig())
 
     assert mock_atexit_unregister.call_count == 1
     assert mock_atexit_register.call_count == 1
@@ -194,23 +195,23 @@ def test_start_loop_interrupt (mocker):
 
 
 
-def dummy_proc(send_queue:Queue, recv_queue:Queue):
+def dummy_proc(config:AppConfig, send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ 即終了
     """
     return
 
-def dummy_proc_loop(send_queue:Queue, recv_queue:Queue):
+def dummy_proc_loop(config:AppConfig, send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ 無限ループ
     """
     while True:
         time.sleep(1)
 
-def dummy_proc_send(send_queue:Queue, recv_queue:Queue):
+def dummy_proc_send(config:AppConfig, send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ メッセージ送信
     """
     send_queue.put("dummy")
 
-def dummy_proc_recv(send_queue:Queue, recv_queue:Queue):
+def dummy_proc_recv(config:AppConfig, send_queue:Queue, recv_queue:Queue):
     """ ダミープロシージャ メッセージ受信
     """
     msg = recv_queue.get()
