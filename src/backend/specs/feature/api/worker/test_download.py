@@ -2,6 +2,7 @@
 """
 import pytest
 import requests
+import json
 
 from specs.feature.testutils.app import setup_app
 
@@ -14,9 +15,23 @@ def test_download(setup_app):
     assert res.status_code == 200
     assert res.json() == {'status': 'ok'}
 
-    res = requests.get('http://localhost:8000/api/sse/progress', stream=True)
+    res = requests.get('http://localhost:8000/api/sse/download', stream=True)
 
-    for line in res.iter_lines():
+    for _line in res.iter_lines():
+        line = _line.decode('utf-8')
         if line:
-            print(line.decode('utf-8'))
-            assert line.decode('utf-8') == 'data: {"status": "progress"}'
+            assert line.startswith('data: ')
+
+            if line == 'data: {}':
+                continue
+
+            data = json.loads(line[len('data: '):])
+            assert data.keys() == {'target', 'total', 'progress', 'percentage', 'elapsed', 'remaining'}
+            if data['percentage'] >= 100.0:
+                break
+
+    assert data['target'] == 'CompVis/stable-diffusion-v1-4/fp16'
+    assert data['total'] == 10
+    assert data['progress'] == 10
+    assert data['percentage'] >= 100.0
+

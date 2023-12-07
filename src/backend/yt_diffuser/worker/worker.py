@@ -2,11 +2,12 @@
 
 一部の処理については、実行可能かどうかに条件がある。
 """
+from multiprocessing.queues import Queue
 from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.worker.web_sender import get_send_queue
 from yt_diffuser.worker.util.task import is_empty, is_running, run_task, stop_task 
+from yt_diffuser.worker.procs.download import download_procedure
 
 import asyncio
 
@@ -16,7 +17,7 @@ worker_queue = asyncio.Queue()
 def get_worker_queue (): return worker_queue
 def get_worker_loop (): return worker_loop
 
-async def loop (config:AppConfig):
+async def loop (config:AppConfig, send_queue:Queue):
     while True:
         (event, data) = await worker_queue.get()
 
@@ -24,7 +25,7 @@ async def loop (config:AppConfig):
 
         if event == "download":
             if is_empty() and not is_running():
-                run_task(test_task, (config, event, data))
+                run_task(download_procedure, (config, send_queue, event, data))
 
         elif event == "stop":
             if is_running():
@@ -37,17 +38,16 @@ async def loop (config:AppConfig):
         elif event == "generate":
             pass
 
-def start_worker (config:AppConfig):
+def start_worker (config:AppConfig, send_queue:Queue):
     global worker_loop
     worker_loop = asyncio.new_event_loop()
-    worker_loop.run_until_complete(loop(config))
+    worker_loop.run_until_complete(loop(config, send_queue))
 
 
-async def test_task (config, event, data):
+async def test_task (config:AppConfig, queue:Queue, event:str, data:dict):
     logger.debug('test_task')
     from yt_diffuser.worker.util.tqdm import WorkerProgress
     progress = WorkerProgress(total=100)
-    queue = get_send_queue()
     queue.put(('status', 'download-progress'))
     for i in range(10):
         await asyncio.sleep(1)

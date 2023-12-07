@@ -28,8 +28,7 @@ class AppConfig:
         # ストア関連
         self.STORE_DIR: Path  = self.DATA_DIR / "store"
         self.STORE_MODEL_DIR: Path = self.STORE_DIR / "model"
-        self.STORE_HF_MODEL_DIRNAME: str = "hf"
-        self.STORE_LOCK_FILE: str = ".lock"
+        self.STORE_HF_MODEL_DIR: Path = self.STORE_MODEL_DIR / "huggingface"
 
         # データベース関連
         self.DB_DIR: Path = self.DATA_DIR / "db"

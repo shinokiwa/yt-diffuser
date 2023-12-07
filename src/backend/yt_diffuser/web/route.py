@@ -20,6 +20,7 @@ def init_routes (app:Flask):
 
     api.register_blueprint(import_module('yt_diffuser.web.api.sse.status').sse_status_bp)
     api.register_blueprint(import_module('yt_diffuser.web.api.sse.progress').sse_progress_bp)
+    api.register_blueprint(import_module('yt_diffuser.web.api.sse.download').sse_download_bp)
 
     from yt_diffuser.web.api.worker import worker_bp
     api.register_blueprint(worker_bp)

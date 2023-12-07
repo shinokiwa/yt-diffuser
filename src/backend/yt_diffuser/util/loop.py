@@ -6,7 +6,6 @@
 
 """
 from typing import Callable
-import multiprocessing
 from multiprocessing.queues import Queue
 from queue import Empty
 import time

@@ -23,6 +23,12 @@ def create_table (conn:Connection) -> None:
         "CREATE INDEX models_class ON models (class_name);"
     ))
 
+MODEL_CLASS_NAME = { # models.class_name の区分値定義
+    'NONE': 0, # '未設定
+    'ModelStore': 1,
+    'HFModelStore': 2,
+}
+
 
 def insert (conn:Connection, path_name:str, name:str, revision:str, class_name:str) -> None:
     """ モデルマスターにモデル情報を挿入

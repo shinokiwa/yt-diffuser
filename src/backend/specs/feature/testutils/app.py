@@ -10,7 +10,7 @@ from yt_diffuser.store.db.setup import setup_database
 from yt_diffuser.main.process_manager import start_processes
 
 @pytest.fixture(scope='module')
-def setup_app():
+def setup_app() -> AppConfig:
     """ テスト用のアプリケーションをセットアップする
     """
 
