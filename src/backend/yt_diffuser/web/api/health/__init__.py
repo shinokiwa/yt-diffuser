@@ -2,10 +2,16 @@
 """
 from flask import Blueprint
 
-health_bp = Blueprint('api_health', __name__)
+bp = Blueprint('api_health', __name__)
 
-@health_bp.route('/api/health', methods=['GET'])
-def health ():
-    """ ヘルスチェック
+@bp.route('/api/health', methods=['GET'])
+def health () -> str:
+    """
+    ヘルスチェック
+
+    - ヘルスチェックとして、'ok'を返す。
+
+    Returns:
+        str: 'ok'
     """
     return 'ok'

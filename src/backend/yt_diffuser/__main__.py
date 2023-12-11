@@ -1,31 +1,32 @@
 """ ゆとりでふーざー メインモジュール
 
-マスタープロセスとして起動し、Webモジュールとデータ処理モジュールを子プロセスとして起動、監視する。
+Web APIプロセスのメイン処理
 """
 from logging import getLogger; logger = getLogger(__name__)
 
 import os
 
-from yt_diffuser.config import AppConfig
-from yt_diffuser.store.db.setup import setup_database
-from yt_diffuser.main.process_manager import start_loop
-from yt_diffuser.main.watchdog import watchdog_process
+from waitress import serve
 
-def main(config: AppConfig, debug=False):
+from yt_diffuser.config import AppConfig
+from yt_diffuser.web.app import create_app
+
+def main(config:AppConfig, debug:bool) -> None:
     """ メイン関数
     """
+    if debug:
+        import logging; logging.basicConfig(level=logging.DEBUG)
+
     logger.debug("Start yt_diffuser")
 
-    setup_database(
-        db_file=config.DB_FILE,
-        db_update_file=config.DB_UPDATE_FILE,
-        db_version=config.DB_VERSION
+    app = create_app(config)
+
+    app.debug = debug
+
+    serve(app, host='0.0.0.0', port=8000)
+
+if __name__ == '__main__':   # pragma: no cover
+    main(
+        config=AppConfig(),
+        debug=os.environ.get('DEBUG') == '1'
     )
-
-    if debug:
-        watchdog_process(procedure=start_loop, args=(config,))
-    else:
-        start_loop(config)
-
-if __name__ == '__main__':
-    main(AppConfig(), os.environ.get('DEBUG') == '1')

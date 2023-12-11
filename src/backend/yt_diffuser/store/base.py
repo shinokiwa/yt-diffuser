@@ -1,77 +1,61 @@
 """ ストアの基底クラス
 """
-import os
-import threading
 from pathlib import Path
-import time
 
 from yt_diffuser.config import AppConfig
+from yt_diffuser.store.lock import StoreLock, StoreLockedError
 
 class Store:
-    config: AppConfig = None
-    path: Path = ""
-    lock_file_name: str = ".lock"
+    """
+    ストアの基底クラス
 
-    def __init__(self, config: AppConfig, path: str):
-        self.config = config
-        self.set_path(path)
-    
-    def set_path(self, path: str) -> None:
-        """ パスを設定する
+    ストアはディレクトリとデータベースレコードの集合体。
+    どのテーブルが使われるかはサブクラスによって決まるので、
+    ここではデータベースの操作は行わない。
+    """
+
+    def __init__(self, config: AppConfig, path: str) -> None:
         """
-        self.path = self.config.STORE_DIR / path
+        コンストラクタ
+        渡されたConfigからストアディレクトリのパスを生成する。
+
+        args:
+            config: アプリケーション設定値
+            path: ベースディレクトリからの相対パス
+        """
+        self.config:AppConfig = config
+        self._path: str = path
+    
+    @property
+    def path(self) -> Path:
+        """
+        ストアディレクトリのパスを返す。
+
+        returns:
+            Path: パス
+        """
+        return self.config.STORE_DIR / self._path
 
     def exists(self) -> bool:
-        """ ストアディレクトリが存在するかどうかを返す
+        """
+        ストアディレクトリが存在するかどうかを返す。
+
+        returns:
+            bool: ストアディレクトリが存在する場合はTrue
         """
         return self.path.exists()
     
     def mkdir(self) -> None:
-        """ ストアディレクトリを作成する
         """
+        ストアディレクトリを作成する。
+
+        ストアディレクトリが存在していてもエラーにはならないが、
+        ロックされているときは StoreLockedError が送出される。
+
+        raises:
+            StoreLockedError: ストアディレクトリがロックされている場合
+        """
+        if StoreLock(self.path).is_locked():
+            raise StoreLockedError(self.path)
+
         self.path.mkdir(parents=True, exist_ok=True)
-    
-    def is_locked(self) -> bool:
-        """ ストアディレクトリがロックされているかどうかを返す
-        .lockファイルが存在する場合はロックされていると判定するが、
-        ファイルの最終更新時刻が3時間以上前の場合はロックされていないと判定する
-        """
-        lock_file = self.path / self.lock_file_name
-        if not lock_file.exists():
-            return False
-
-        if lock_file.stat().st_mtime < time.time() - 60 * 60 * 3:
-            lock_file.unlink()
-            return False
-
-        # ロック所有者が自身の場合はロックされていない
-        with lock_file.open("r") as f:
-            lock_info = f.read()
-            pid, tid = lock_info.split("-")
-            if pid == str(os.getpid()) and tid == str(threading.get_ident()):
-                return False
-
-        return True
-    
-    def lock(self) -> None:
-        """ ストアディレクトリをロックする
-        ロックファイルの内容はプロセスIDとスレッドID
-        """
-        lock_file = self.path / self.lock_file_name
-        lock_file.touch()
-        with lock_file.open("w") as f:
-            f.write(f"{os.getpid()}-{threading.get_ident()}")
-
-
-    def unlock(self, forced:bool = False):
-        """ ストアディレクトリのロックを解除する
-        自身と同様のプロセスIDとスレッドIDを持つロックファイルの場合のみ解除する
-
-        args:
-            forced: Trueの場合は強制的にロックを解除する
-        """
-        if not forced and self.is_locked():
-            raise EnvironmentError(f"{self.path} is locked")
-
-        lock_file = self.path / self.lock_file_name
-        lock_file.unlink(True)

@@ -1,4 +1,5 @@
-""" model.py のテスト
+"""
+yt_diffuser.store.db.op.models のテスト
 """
 import pytest
 
@@ -13,9 +14,13 @@ def conn():
     yield conn
     conn.close()
 
-@pytest.mark.describe("create_table")
-@pytest.mark.it("テーブルが作成される")
 def test_create_table(conn):
+    """
+    create_table
+
+    it:
+        テーブルを作成する。
+    """
     models.create_table(conn)
 
     # SELECTにエラーが出なければOK
@@ -23,60 +28,85 @@ def test_create_table(conn):
     cursor.execute("SELECT COUNT(*) FROM models")
     assert cursor.fetchone()[0] == 0
 
-@pytest.mark.describe("insert")
-@pytest.mark.it("データが挿入される")
 def test_insert(conn):
+    """
+    insert
+
+    it:
+        モデルマスターにモデル情報を挿入する。
+    """
     models.create_table(conn)
 
-    models.insert(conn, "path", "name", "revision", "class_name")
+    models.insert(conn,
+        model_name="model_name",
+        revision="revision",
+        class_name="class_name"
+    )
 
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM models")
+    cursor.execute("SELECT count(*) FROM models WHERE model_name = 'model_name' AND revision = 'revision' AND class_name = 'class_name'")
     assert cursor.fetchone()[0] == 1
 
 
-@pytest.mark.describe("get_by_pathname")
-@pytest.mark.it("パス名からモデル情報を取得できる")
-def test_get_by_pathname(conn):
+def test_get(conn):
+    """
+    get
+
+    it:
+        モデル名とリビジョンからモデルマスター情報を取得する。
+    """
     models.create_table(conn)
-    models.insert(conn, "path", "name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", "class_name")
 
-    result = models.get_by_pathname(conn, "path")
+    result = models.get(conn, "model_name", "revision")
 
-    assert result["path_name"] == "path"
-    assert result["name"] == "name"
+    assert result["model_name"] == "model_name"
     assert result["revision"] == "revision"
     assert result["class_name"] == "class_name"
 
-@pytest.mark.describe("is_exists_by_pathname")
-@pytest.mark.it("パス名のモデルが存在するか判定できる")
-def test_is_exists_by_pathname(conn):
+
+def test_is_exists(conn):
+    """
+    is_exists
+
+    it:
+        指定したモデル名とリビジョンのモデルが存在するか判定する。
+    """
     models.create_table(conn)
-    models.insert(conn, "path", "name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", "class_name")
 
-    assert models.is_exists_by_pathname(conn, "path") == True
-    assert models.is_exists_by_pathname(conn, "path2") == False
+    assert models.is_exists(conn, "model_name", "revision") == True
+    assert models.is_exists(conn, "none", "revision") == False
 
-@pytest.mark.describe("update_by_pathname")
-@pytest.mark.it("パス名からモデル情報を更新できる")
-def test_update_by_pathname(conn):
+
+def test_update(conn):
+    """
+    update
+
+    it:
+        モデル名とリビジョンからモデルマスター情報を更新する。
+    """
     models.create_table(conn)
-    models.insert(conn, "path", "name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", "class_name")
 
-    models.update_by_pathname(conn, "path", name="new_name", revision="new_revision", class_name="new_class_name")
+    models.update(conn, "model_name", "revision",
+        class_name="new_class_name"
+    )
 
-    result = models.get_by_pathname(conn, "path")
+    result = models.get(conn, "model_name", "revision")
 
-    assert result["name"] == "new_name"
-    assert result["revision"] == "new_revision"
     assert result["class_name"] == "new_class_name"
 
-@pytest.mark.describe("delete_by_pathname")
-@pytest.mark.it("パス名からモデル情報を削除できる")
-def test_delete_by_pathname(conn):
+def test_delete(conn):
+    """
+    delete
+
+    it:
+        モデルマスターからモデル情報を削除する。
+    """
     models.create_table(conn)
-    models.insert(conn, "path", "name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", "class_name")
 
-    models.delete_by_pathname(conn, "path")
+    models.delete(conn, "model_name", "revision")
 
-    assert models.is_exists_by_pathname(conn, "path") == False
+    assert models.is_exists(conn, "model_name", "revision") == False

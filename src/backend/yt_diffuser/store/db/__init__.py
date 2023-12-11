@@ -11,7 +11,9 @@ def connect_database(database:Union[str, bytes, PathLike]) -> sqlite3.Connection
     Args:
         database (Union[str, bytes, PathLike]): データベースファイルパス
     """
-    conn = sqlite3.connect(database)
+    conn = sqlite3.connect(database,
+        timeout=10,
+                           )
     conn.row_factory = sqlite3.Row
 
     sqlite3.register_adapter(datetime.date, adapt_date)

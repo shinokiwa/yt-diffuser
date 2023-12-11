@@ -4,22 +4,24 @@ from typing import Dict
 from sqlite3 import Connection
 
 def create_table (conn:Connection) -> None:
-    """ テーブルを作成
+    """
+    テーブルを作成する。
+
+    Args:
+        conn (Connection): DBコネクション
     """
     conn.executescript((
         "CREATE TABLE models ("
             "id              INTEGER     NOT NULL    PRIMARY KEY AUTOINCREMENT," # モデルID
-            "path_name       TEXT        NOT NULL,"                              # モデルのパス
-            "name            TEXT        NOT NULL,"                              # モデルの名前
+            "model_name      TEXT        NOT NULL,"                              # モデル名
             "revision        TEXT        NOT NULL,"                              # モデルのリビジョン
             "class_name      INT         NOT NULL,"                              # このモデルを処理するクラス
             "updated_at      DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP," # モデルの更新日時
             "registed_at     DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP"  # モデルの登録日時
         ");"
         # インデックス
-        "CREATE UNIQUE INDEX models_path_name ON models (path_name);"
-        "CREATE INDEX models_name ON models (name);"
-        "CREATE INDEX models_revision ON models (revision);"
+        "CREATE UNIQUE INDEX models_path ON models (model_name, revision);"
+        "CREATE INDEX models_model_name ON models (model_name);"
         "CREATE INDEX models_class ON models (class_name);"
     ))
 
@@ -29,54 +31,91 @@ MODEL_CLASS_NAME = { # models.class_name の区分値定義
     'HFModelStore': 2,
 }
 
+MODEL_DEFAULT_REVISION = "0" # モデルのリビジョンのデフォルト値
 
-def insert (conn:Connection, path_name:str, name:str, revision:str, class_name:str) -> None:
-    """ モデルマスターにモデル情報を挿入
+def insert (conn:Connection, model_name:str, revision:str, class_name:str) -> None:
     """
-    sql = "INSERT INTO models (path_name, name, revision, class_name) VALUES (?, ?, ?, ?)"
-    conn.execute(sql, (path_name, name, revision, class_name))
-    return
-
-
-def get_by_pathname (conn:Connection, path_name:str) -> Dict:
-    """ パス名からモデルマスター情報を取得
+    モデルマスターにモデル情報を挿入する。
 
     Args:
         conn (Connection): DBコネクション
-        path_name (str): パス名
+        model_name (str): モデル名
+        revision (str): モデルのリビジョン
+        class_name (str): このモデルを処理するクラス(定数 MODEL_CLASS_NAME のいずれか)
+    
+    Returns:
+        None
+    """
+    sql = "INSERT INTO models (model_name, revision, class_name) VALUES (?, ?, ?)"
+    conn.execute(sql, (model_name, revision, class_name))
+    return
+
+
+def get (conn:Connection, model_name:str, revision:str) -> Dict:
+    """
+    モデル名とリビジョンからモデルマスター情報を取得する。
+
+    Args:
+        conn (Connection): DBコネクション
+        model_name (str): モデル名
+        revision (str): リビジョン
 
     Returns:
         Dict: モデルマスター情報
             - id: モデルID
-            - path_name: モデルのパス
-            - name: モデルの名前
+            - model_name: モデル名
             - revision: モデルのリビジョン
             - class_name: このモデルを処理するクラス
     """
-    sql = "SELECT id, path_name, name, revision, class_name FROM models WHERE path_name = ?"
-    return conn.execute(sql, (path_name,)).fetchone()
+    sql = "SELECT id, model_name, revision, class_name FROM models WHERE model_name = ? AND revision = ?"
+    return conn.execute(sql, (model_name, revision,)).fetchone()
 
 
-def is_exists_by_pathname (conn:Connection, path_name:str) -> bool:
-    """ 指定したパス名のモデルが存在するか判定
+def is_exists (conn:Connection, model_name:str, revision:str) -> bool:
     """
-    sql = "SELECT COUNT(*) FROM models WHERE path_name = ?"
-    return conn.execute(sql, (path_name,)).fetchone()[0] > 0
+    指定したモデル名とリビジョンのモデルが存在するか判定する。
+
+    Args:
+        conn (Connection): DBコネクション
+        model_name (str): モデル名
+        revision (str): リビジョン
+    
+    Returns:
+        bool: True:存在する、False:存在しない
+    """
+    sql = "SELECT COUNT(*) FROM models WHERE model_name = ? and revision = ?"
+    return conn.execute(sql, (model_name, revision)).fetchone()[0] > 0
 
 
-def update_by_pathname (conn: Connection, path_name:str, **kwargs) -> None:
-    """ パス名からモデルマスター情報を更新
+def update (conn: Connection, model_name:str, revision:str, **kwargs) -> None:
+    """
+    モデル名とリビジョンからモデルマスター情報を更新する。
+
+    Args:
+        conn (Connection): DBコネクション
+        model_name (str): モデル名
+        revision (str): リビジョン
+        **kwargs: 更新するカラム名と値
+    
+    Returns:
+        None
     """
     sql = "UPDATE models SET "
     sql += ", ".join([f"{key} = ?" for key in kwargs.keys()])
-    sql += " WHERE path_name = ?"
-    conn.execute(sql, (*kwargs.values(), path_name))
+    sql += " WHERE model_name = ? AND revision = ?"
+    conn.execute(sql, (*kwargs.values(), model_name, revision))
     return
 
 
-def delete_by_pathname (conn: Connection, pathname:str) -> None:
-    """ パス名からモデルマスター情報を削除
+def delete (conn: Connection, model_name:str, revision:str) -> None:
     """
-    sql = "DELETE FROM models WHERE path_name = ?"
-    conn.execute(sql, (pathname,))
+    モデル名とリビジョンからモデルマスター情報を削除する。
+
+    Args:
+        conn (Connection): DBコネクション
+        model_name (str): モデル名
+        revision (str): リビジョン
+    """
+    sql = "DELETE FROM models WHERE model_name = ? AND revision = ?"
+    conn.execute(sql, (model_name, revision))
     return

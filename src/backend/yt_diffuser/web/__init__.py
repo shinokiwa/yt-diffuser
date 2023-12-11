@@ -1,2 +1,0 @@
-""" FlaskとSocketIOを使ったWeb APIプロセスモジュール
-"""
