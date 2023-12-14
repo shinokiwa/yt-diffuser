@@ -4,10 +4,14 @@ import multiprocessing
 import os
 import json
 from requests import HTTPError
-from logging import getLogger; logger = getLogger(__name__)
+import logging; logger = logging.getLogger(__name__)
 
 from tqdm.contrib.concurrent import thread_map
-from huggingface_hub.file_download import hf_hub_download, repo_folder_name
+from huggingface_hub.file_download import (
+    hf_hub_download,
+    repo_folder_name,
+    REGEX_COMMIT_HASH
+)
 from huggingface_hub.utils import (
     EntryNotFoundError, RepositoryNotFoundError, RevisionNotFoundError,
     filter_repo_objects
@@ -30,10 +34,14 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     UIの都合そのままでは使えないため、似たような処理を実装する。
 
     """
+    if config.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
+    logger.debug(f"download_procedure start: {repo_id}:{revision}")
     send_message(queue, "download-start", target=f"{repo_id}:{revision}")
 
     cache_dir = config.STORE_HF_MODEL_DIR
+    local_files_only = config.offline == True
 
     # 指定したrepo_idとrevisionのmodel_index.jsonをダウンロードする。
     try:
@@ -45,7 +53,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
             force_download=False,
             proxies=None,
             resume_download=False,
-            local_files_only=None,
+            local_files_only=local_files_only,
             use_auth_token=None,
             #user_agent=user_agent,
             subfolder=None,
@@ -59,7 +67,8 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         ValueError,
         EnvironmentError
     ) as e:
-        print (e.__class__.__name__)
+        logger.error (f"download_procedure error! {e.__class__.__name__}")
+        send_message(queue, "download-error", target=e.__class__.__name__)
         return
 
     # model_index.jsonに記載されている項目のうち、_から始まらない項目をダウンロード対象のフォルダ名として取得する。
@@ -86,6 +95,22 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
 
     storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=REPO_TYPE_MODEL))
 
+    if local_files_only:
+        if REGEX_COMMIT_HASH.match(revision):
+            commit_hash = revision
+        else:
+            # retrieve commit_hash from file
+            ref_path = os.path.join(storage_folder, "refs", revision)
+            with open(ref_path) as f:
+                commit_hash = f.read()
+
+        snapshot_folder = os.path.join(storage_folder, "snapshots", commit_hash)
+
+        if os.path.exists(snapshot_folder) == False:
+            logger.error (f"download_procedure error! {e.__class__.__name__}")
+            send_message(queue, "download-error", target=e.__class__.__name__)
+
+        return
 
     # HuggingFace Hub APIからすべてのファイル情報を取得する。
     api = HfApi()
@@ -148,5 +173,8 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     conn = connect_database(config.DB_FILE)
     hf_model_store = HFModelStore(config, repo_id=repo_id, revision=revision)
     hf_model_store.save(conn)
+    conn.commit()
 
     send_message(queue, "download-complete", target=f"{repo_id}:{revision}")
+
+    logger.debug(f"download_procedure complete: {repo_id}:{revision}")

@@ -3,6 +3,7 @@
 
 主に形式の統一のためのもの。
 """
+import logging; logger = logging.getLogger(__name__)
 
 from multiprocessing import Queue
 
@@ -20,7 +21,7 @@ def send_message (queue: Queue, label: str, **kwargs):
     """
     data = kwargs
     data['label'] = label
-    queue.put((EVENT_TYPE_MESSAGE, data))
+    queue.put((EVENT_TYPE_MESSAGE, data), timeout=1)
 
 
 def send_progress (queue: Queue, event: str, target: str, total: int, progress: int, percentage: float, elapsed: float, remaining: float):

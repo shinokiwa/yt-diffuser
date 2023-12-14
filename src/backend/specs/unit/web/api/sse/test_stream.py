@@ -3,7 +3,7 @@
 import pytest
 import queue
 
-from yt_diffuser.web.api.sse.utils import event_stream
+from yt_diffuser.web.api.sse.stream import event_stream
 
 def test_event_stream_spec(mocker):
     """
@@ -13,12 +13,12 @@ def test_event_stream_spec(mocker):
         メッセージリスナーからのメッセージを取得し、データを文字列として返す
         データはSSE向けに data: value\n\n の形式になる
         データが辞書型だった場合、JSONを文字列化した形式になる
-        SSEのタイムアウトを回避するため、5秒間データがなかった場合は空のデータを返す
+        SSEのタイムアウトを回避するため、20秒間データがなかった場合は空(data: \n\n)のデータを返す。
         GeneratorExitが発生した場合、メッセージリスナーから削除する
     """
     q = queue.Queue()
-    mock_listener = mocker.patch('yt_diffuser.web.api.sse.utils.get_event_listener', return_value=q)
-    mock_remove_listener = mocker.patch('yt_diffuser.web.api.sse.utils.remove_event_listener')
+    mock_listener = mocker.patch('yt_diffuser.web.api.sse.stream.get_event_listener', return_value=q)
+    mock_remove_listener = mocker.patch('yt_diffuser.web.api.sse.stream.remove_event_listener')
 
     output = event_stream('test_event', 0.1)
     assert next(output) == 'data: \n\n'

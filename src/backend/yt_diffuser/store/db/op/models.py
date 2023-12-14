@@ -102,6 +102,8 @@ def update (conn: Connection, model_name:str, revision:str, **kwargs) -> None:
     """
     sql = "UPDATE models SET "
     sql += ", ".join([f"{key} = ?" for key in kwargs.keys()])
+    sql += "," if len(kwargs) > 0 else ""
+    sql += " updated_at = CURRENT_TIMESTAMP"
     sql += " WHERE model_name = ? AND revision = ?"
     conn.execute(sql, (*kwargs.values(), model_name, revision))
     return

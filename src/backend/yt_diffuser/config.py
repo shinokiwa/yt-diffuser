@@ -1,27 +1,54 @@
 """ アプリケーション設定値
 """
-import os
+from typing import Union
 from pathlib import Path
 
 class AppConfig:
     """ アプリケーション設定値
     """
 
-    def __init__(self, **kwargs) -> None:
-        """ コンストラクタ
+    def __init__(self,
+                 debug:bool=False,
+                 BASE_DIR:Union[Path, str]=None,
+                 offilne:bool=False
+                 ) -> None:
+        """
+        コンストラクタ
+
+        一部の設定値は引数によりオーバーライド可能。
+
+        Args:
+            debug: デバッグモード
+            BASE_DIR: ベースディレクトリ
+            offilne: オフラインモード
         """
 
         #### 都度変更する可能性のある設定値 ####
 
         self.DB_VERSION = 1
-        """DBのバージョン値
+        """
+        DBのバージョン値
         この値がDBに保存されているバージョン値より大きい場合、DBのセットアップが必要
         この値は、DBの構成バージョンであり、アプリケーションのバージョンとは異なる
         """
 
 
         #### 基本的に変更されない設定値 ####
-        self.BASE_DIR: Path = Path(__file__).parents[3] if kwargs.get("BASE_DIR") is None else Path (kwargs.get("BASE_DIR"))
+        self.debug: bool = debug
+        """
+        デバッグモード
+        """
+
+        self.offline: bool = offilne
+        """
+        オフラインモード
+        主にテスト用で、ネットワークからモデルをダウンロードしない。
+        """
+
+        self.BASE_DIR: Path = Path(__file__).parents[3] if BASE_DIR is None else Path(BASE_DIR)
+        """
+        ベースディレクトリ
+        """
 
         self.DATA_DIR: Path = self.BASE_DIR / "data"
 

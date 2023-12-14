@@ -4,6 +4,7 @@ import sqlite3
 import datetime
 from typing import Union
 from os import PathLike
+from pathlib import Path
 
 def connect_database(database:Union[str, bytes, PathLike]) -> sqlite3.Connection:
     """データベースに接続する

@@ -6,7 +6,7 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from flask import Blueprint, Response
 
-from yt_diffuser.web.api.sse.utils import event_stream
+from yt_diffuser.web.api.sse.stream import event_stream
 
 bp = Blueprint('api_res_sse_download', __name__)
 

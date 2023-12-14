@@ -14,7 +14,7 @@ class Store:
     ここではデータベースの操作は行わない。
     """
 
-    def __init__(self, config: AppConfig, path: str) -> None:
+    def __init__(self, config: AppConfig, store_name: str) -> None:
         """
         コンストラクタ
         渡されたConfigからストアディレクトリのパスを生成する。
@@ -24,7 +24,7 @@ class Store:
             path: ベースディレクトリからの相対パス
         """
         self.config:AppConfig = config
-        self._path: str = path
+        self.store_name: str = store_name
     
     @property
     def path(self) -> Path:
@@ -34,7 +34,7 @@ class Store:
         returns:
             Path: パス
         """
-        return self.config.STORE_DIR / self._path
+        return self.config.STORE_DIR / self.store_name
 
     def exists(self) -> bool:
         """

@@ -1,6 +1,6 @@
-""" HuggingFaceモデルストア
 """
-from sqlite3 import Connection
+HuggingFaceモデルストア
+"""
 from pathlib import Path
 
 from huggingface_hub.file_download import repo_folder_name
@@ -13,17 +13,15 @@ from yt_diffuser.store.model import ModelStore, AppConfig
 from yt_diffuser.store.db.op.models import MODEL_CLASS_NAME
 
 class HFModelStore(ModelStore):
-    """ HuggingFaceモデルストアクラス
+    """
+    HuggingFaceモデルストアクラス
     """
     class_num: int = MODEL_CLASS_NAME['HFModelStore']
-    config_name: str = "model_index.json"
 
     def __init__(self, config:AppConfig,  repo_id: str, revision: str):
-        path = repo_folder_name(repo_id=repo_id, repo_type=REPO_TYPE_MODEL)
-        super().__init__(config, path, revision)
-
-        self.repo_id = repo_id
+        super().__init__(config, repo_id, revision)
     
-    def set_path(self, path: str) -> None:
-        self.path = self.config.STORE_HF_MODEL_DIR / path
+    @property
+    def path(self) -> Path:
+        return self.config.STORE_HF_MODEL_DIR / repo_folder_name(repo_id=self.store_name, repo_type=REPO_TYPE_MODEL)
     

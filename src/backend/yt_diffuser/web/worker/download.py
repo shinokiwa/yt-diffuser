@@ -10,9 +10,11 @@
 
 import multiprocessing
 from multiprocessing.context import SpawnProcess
+from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.worker.exceptions import DuplicateProcessError
+from yt_diffuser.web.message_listener import get_context, get_message_queue
 from yt_diffuser.download.main import download_procedure
 
 _process: multiprocessing.Process = None
@@ -28,7 +30,7 @@ def is_running() -> bool:
     """
     return _process is not None and _process.is_alive()
 
-def download(config:AppConfig, queue:multiprocessing.Queue, repo_id:str, revision:str) -> SpawnProcess:
+def download(config:AppConfig, repo_id:str, revision:str) -> SpawnProcess:
     """
     ダウンロードプロセスを実行する。
 
@@ -49,8 +51,10 @@ def download(config:AppConfig, queue:multiprocessing.Queue, repo_id:str, revisio
     if is_running():
         raise DuplicateProcessError("download process is already running")
     
-    context = multiprocessing.get_context('spawn')
+    context = get_context()
+    queue = get_message_queue()
 
+    logger.debug(f"download_procedure call: {repo_id}:{revision}")
     _process = context.Process(
         target=download_procedure,
         args=(config, queue, repo_id, revision),

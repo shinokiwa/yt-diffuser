@@ -42,4 +42,5 @@ def test_main_debug(mocker):
         debug=True
     )
 
-    assert mock_serve.call_args[0][0].debug == True
+    assert mock_create_app.call_count == 1
+    assert mock_create_app.call_args[1]['debug'] == True

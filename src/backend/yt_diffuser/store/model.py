@@ -2,15 +2,18 @@
 """
 import shutil
 from sqlite3 import Connection
+from pathlib import Path
 from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.store.base import Store, AppConfig
+from yt_diffuser.store.lock import StoreLock, StoreLockedError
 from yt_diffuser.store.db.op.models import (
     is_exists,
     insert,
     update,
     delete,
-    MODEL_CLASS_NAME
+    MODEL_CLASS_NAME,
+    MODEL_DEFAULT_REVISION
 )
 
 class ModelStore(Store):
@@ -18,29 +21,54 @@ class ModelStore(Store):
     """
     class_num: int = MODEL_CLASS_NAME['ModelStore']
 
-    def __init__(self, config: AppConfig, path: str, revision: str):
-        super().__init__(config, path)
-        self.revision:str = revision
+    def __init__(self, config: AppConfig, model_name: str, revision: str  = MODEL_DEFAULT_REVISION):
+        super().__init__(config, model_name)
+        self.revision: str = revision
     
-    def set_path(self, path: str) -> None:
-        self.path = self.config.STORE_MODEL_DIR / path
+    @property
+    def path(self) -> Path:
+        """
+        モデルストアのパス
+        """
+        return self.config.STORE_MODEL_DIR / self.store_name
     
     def save(self, conn:Connection) -> None:
-        """ モデル情報を保存する
+        """
+        モデル情報を保存する。
+
+        モデルストアが存在しない場合はValueErrorを送出する。
+
+        args:
+            conn: DBコネクション
         """
         if not self.exists():
             raise ValueError("model store not exists")
+        
+        with StoreLock(self.path):
 
-        if is_exists_by_pathname(conn, self.path, self.revision):
-            update_by_pathname(conn, self.path, self.revision, name="")
-        else:
-            insert(conn, model_name=self.path, revision=self.revision, name="", class_name=self.class_num)
+            if is_exists (conn, self.store_name, self.revision):
+                update(conn, self.store_name, self.revision)
+            else:
+                insert(conn, model_name=self.store_name, revision=self.revision, class_name=self.class_num)
 
     def remove(self, conn:Connection) -> None:
-        """ モデルストアを削除する
-        ディレクトリ内のファイルを削除し、DBからも削除する
+        """
+        モデルストアを削除する。
+
+        ディレクトリ内のファイルを削除し、DBからも削除する。
+        ロック中の場合はStoreLockedErrorを送出する。
+
+        args:
+            conn: DBコネクション
+
+        raises:
+            StoreLockedError: モデルストアがロックされている場合
         """
         if self.exists():
+            lock = StoreLock(self.path)
+            if lock.is_locked():
+                raise StoreLockedError(self.path)
+
             shutil.rmtree(self.path)
 
-        delete_by_pathname(conn, self.path, self.revision)
+        delete(conn, self.store_name, MODEL_DEFAULT_REVISION)

@@ -17,7 +17,8 @@ def get_event_listener(event_name:str) -> queue.Queue:
     """
     指定したイベントのリスナーキューを作成し、取得する。
 
-    - リスナーキューは初期状態で最新のメッセージが入っている。
+    - リスナーキューは最初に最新のキャッシュメッセージが格納される。
+    - ハートビートも兼ねて、最新のメッセージがない場合は空文字列が格納される。
     - 使用後は remove_event_listener で削除すること。
 
     Args:
@@ -31,9 +32,8 @@ def get_event_listener(event_name:str) -> queue.Queue:
         _listeners[event_name] = []
 
     q = queue.Queue()
-    latest_message = _latest_messages.get(event_name, None)
-    if latest_message is not None:
-        q.put_nowait(latest_message)
+    latest_message = _latest_messages.get(event_name, "")
+    q.put_nowait(latest_message)
 
     _listeners[event_name].append(q)
 
@@ -63,7 +63,18 @@ def remove_event_listener(event_name: str, listener: queue.Queue):
 
     logger.debug(f"Remove listener for {event_name}.")
 
-_message_queue = multiprocessing.Queue()
+_context = multiprocessing.get_context('spawn')
+
+def get_context() -> multiprocessing.context.SpawnContext:
+    """
+    プロセスコンテキストを取得する。
+
+    Returns:
+        multiprocessing.context.SpawnContext: プロセスコンテキスト
+    """
+    return _context
+
+_message_queue = _context.Queue()
 
 def get_message_queue() -> multiprocessing.Queue:
     """
@@ -89,12 +100,13 @@ def message_listener() -> None:
     Returns:
         None
     """
+    logger.debug("Start message listener.")
     queue = get_message_queue()
     while True:
         (event, data) = queue.get()
 
         if event == "exit":
-            logger.debug("Exit worker listener.")
+            logger.debug("Exit message listener.")
             break
 
         if event not in _NO_CACHE_EVENT:
@@ -111,7 +123,7 @@ def start_message_listener () -> None:
     - メッセージリスナーは別スレッドで起動する。
     - メッセージリスナーはプロセス終了時に自動的に終了する。
     """
-    logger.debug("Start worker listener.")
+    logger.debug("Call message listener.")
 
     threading.Thread(
         target=message_listener,

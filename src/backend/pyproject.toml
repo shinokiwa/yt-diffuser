@@ -1,4 +1,5 @@
 [tool.pytest.ini_options]
+log_cli_level = "DEBUG"
 markers = [
     "describe: Description of the test context",
     "it: Description of the test case",
