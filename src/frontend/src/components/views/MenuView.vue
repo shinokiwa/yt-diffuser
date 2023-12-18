@@ -9,7 +9,8 @@ const {
     changeView,
     MODEL_MANAGE,
     GENERATE,
-    GALLERY
+    GALLERY,
+    EDITOR,
 } = useViewStore()
 
 </script>
@@ -28,6 +29,10 @@ const {
         <li role="gallery" v-bind:class="{ 'active': currentView === GALLERY }" v-on:click="changeView(GALLERY)">
             <i class="bi-images"></i>
             <span>ギャラリー</span>
+        </li>
+        <li role="editor" v-bind:class="{ 'active': currentView === EDITOR }" v-on:click="changeView(EDITOR)">
+            <i class="bi-pencil-square"></i>
+            <span>画像編集</span>
         </li>
     </ul>
     <ul class="bottom-menu">

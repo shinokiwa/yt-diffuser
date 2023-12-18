@@ -23,5 +23,6 @@ export function useViewStore() {
         MODEL_MANAGE: 1,
         GENERATE: 2,
         GALLERY: 3,
+        EDITOR: 4,
     }
 }

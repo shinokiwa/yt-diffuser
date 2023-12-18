@@ -32,6 +32,8 @@ defineProps({
 
 <style scoped>
 .window {
+    display: flex; flex-direction: column;
+
     background-color: var(--color-bg-base);
     border: 1px solid var(--color-border-window);
     border-radius: 4px;
@@ -57,6 +59,7 @@ defineProps({
 }
 
 .window-contents {
+    flex-grow: 1;
     padding: 10px;
     height: auto;
 }

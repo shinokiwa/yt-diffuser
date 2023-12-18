@@ -8,7 +8,7 @@
 
 <template>
 <header>
-    <h1><i class="bi-cpu"></i>&nbsp;ゆとりでふーざー</h1>
+    <h1><i class="bi-lightbulb"></i>&nbsp;ゆとりでふーざー</h1>
 </header>
 </template>
 
