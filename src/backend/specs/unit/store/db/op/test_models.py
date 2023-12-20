@@ -48,6 +48,24 @@ def test_insert(conn):
     assert cursor.fetchone()[0] == 1
 
 
+def test_get_all(conn):
+    """
+    get_all
+
+    it:
+        モデルマスターに登録されている全てのモデル情報を取得する。
+    """
+    models.create_table(conn)
+    models.insert(conn, "model_name", "revision", 0)
+
+    result = models.get_all(conn)
+
+    assert len(result) == 1
+    assert result[0]["model_name"] == "model_name"
+    assert result[0]["revision"] == "revision"
+    assert result[0]["class_name"] == 0
+
+
 def test_get(conn):
     """
     get
@@ -56,13 +74,14 @@ def test_get(conn):
         モデル名とリビジョンからモデルマスター情報を取得する。
     """
     models.create_table(conn)
-    models.insert(conn, "model_name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", 0, "screen_name")
 
     result = models.get(conn, "model_name", "revision")
 
     assert result["model_name"] == "model_name"
     assert result["revision"] == "revision"
-    assert result["class_name"] == "class_name"
+    assert result["class_name"] == 0
+    assert result["screen_name"] == "screen_name"
 
 
 def test_is_exists(conn):
@@ -73,7 +92,7 @@ def test_is_exists(conn):
         指定したモデル名とリビジョンのモデルが存在するか判定する。
     """
     models.create_table(conn)
-    models.insert(conn, "model_name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", 0)
 
     assert models.is_exists(conn, "model_name", "revision") == True
     assert models.is_exists(conn, "none", "revision") == False
@@ -87,15 +106,17 @@ def test_update(conn):
         モデル名とリビジョンからモデルマスター情報を更新する。
     """
     models.create_table(conn)
-    models.insert(conn, "model_name", "revision", "class_name")
+    models.insert(conn, "model_name", "revision", 0)
 
     models.update(conn, "model_name", "revision",
-        class_name="new_class_name"
+        class_name=1,
+        screen_name="screen_name"
     )
 
     result = models.get(conn, "model_name", "revision")
 
-    assert result["class_name"] == "new_class_name"
+    assert result["class_name"] == 1
+    assert result["screen_name"] == "screen_name"
 
 def test_delete(conn):
     """

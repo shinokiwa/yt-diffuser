@@ -29,7 +29,6 @@ class TestApiDownload:
         mock_is_running = mocker.patch('yt_diffuser.web.api.download.is_running')
         mock_is_running.return_value = False
         mock_download = mocker.patch('yt_diffuser.web.api.download.download')
-        mock_queue = mocker.patch('yt_diffuser.web.api.download.get_message_queue', return_value='test_queue')
 
         client = app.test_client()
         response = client.post('/api/download/start', json={
@@ -40,7 +39,6 @@ class TestApiDownload:
         assert response.json == {'status': 'ok'}
         assert mock_download.call_count == 1
         assert mock_download.call_args.kwargs == {
-            'queue': 'test_queue',
             'config': app.config['APP_CONFIG'],
             'repo_id': 'test_repo',
             'revision': 'test_revision'
@@ -58,7 +56,6 @@ class TestApiDownload:
         """
         mock_is_running = mocker.patch('yt_diffuser.web.api.download.is_running')
         mock_is_running.return_value = False
-        mock_download = mocker.patch('yt_diffuser.web.api.download.download')
 
         client = app.test_client()
 

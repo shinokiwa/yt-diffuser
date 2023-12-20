@@ -14,13 +14,9 @@ def init_routes (app:Flask):
     register_errorhandler(api)
 
     api.register_blueprint(import_module('yt_diffuser.web.api.health').bp)
-    #from yt_diffuser.web.api.health import health_bp
-    #api.register_blueprint(health_bp)
-
     api.register_blueprint(import_module('yt_diffuser.web.api.download').bp)
    
-    #from yt_diffuser.web.api.res.model import model_bp
-    #api.register_blueprint(model_bp)
+    api.register_blueprint(import_module('yt_diffuser.web.api.res.model').bp)
 
     api.register_blueprint(import_module('yt_diffuser.web.api.sse.sse').bp)
 

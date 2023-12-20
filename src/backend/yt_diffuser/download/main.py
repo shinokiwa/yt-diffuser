@@ -19,7 +19,11 @@ from huggingface_hub.utils import (
 # プログレスバーは表示しない
 from huggingface_hub.utils import disable_progress_bars; disable_progress_bars()
 from huggingface_hub.constants import REPO_TYPE_MODEL
-from huggingface_hub.hf_api import HfApi
+from huggingface_hub.hf_api import (
+    HfApi,
+    ModelInfo,
+    RepoFile
+)
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.tqdm import WorkerProgress
@@ -41,9 +45,9 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     send_message(queue, "download-start", target=f"{repo_id}:{revision}")
 
     cache_dir = config.STORE_HF_MODEL_DIR
-    local_files_only = config.offline == True
+    offline = config.offline == True
 
-    # 指定したrepo_idとrevisionのmodel_index.jsonをダウンロードする。
+    # 指定したrepo_idとrevisionのmodel_index.jsonをダウンロードし、必要なファイルの一覧を取得する。
     try:
         config_file = hf_hub_download(
             repo_id,
@@ -53,7 +57,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
             force_download=False,
             proxies=None,
             resume_download=False,
-            local_files_only=local_files_only,
+            local_files_only=offline,
             use_auth_token=None,
             #user_agent=user_agent,
             subfolder=None,
@@ -93,9 +97,13 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     # 必要な全ファイルをダウンロード
     # snapshot_downloadがそのままでは使えないので、コピペして修正
 
+    conn = connect_database(config.DB_FILE)
+    store = HFModelStore(config, repo_id=repo_id, revision=revision)
+
     storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=REPO_TYPE_MODEL))
 
-    if local_files_only:
+    # オフラインモードの時は、storage_folderの内容をそのまま使う。
+    if offline:
         if REGEX_COMMIT_HASH.match(revision):
             commit_hash = revision
         else:
@@ -109,13 +117,20 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         if os.path.exists(snapshot_folder) == False:
             logger.error (f"download_procedure error! {e.__class__.__name__}")
             send_message(queue, "download-error", target=e.__class__.__name__)
+            return
+        
+        repo_info = ModelInfo(sha=commit_hash, siblings=[])
+        for root, dirs, files in os.walk(snapshot_folder):
+            for file in files:
+                relative_path = os.path.relpath(os.path.join(root, file), snapshot_folder)
+                repo_info.siblings.append(RepoFile(rfilename=relative_path))
+        
 
-        return
-
-    # HuggingFace Hub APIからすべてのファイル情報を取得する。
-    api = HfApi()
-    repo_info = api.repo_info(repo_id=repo_id, repo_type=REPO_TYPE_MODEL, revision=revision, token=None)
-    assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
+    else:
+        # HuggingFace Hub APIからすべてのファイル情報を取得する。
+        api = HfApi()
+        repo_info = api.repo_info(repo_id=repo_id, repo_type=REPO_TYPE_MODEL, revision=revision, token=None)
+        assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
 
     # 取得したファイル情報から、許可パターンと拒否パターンを使って、ダウンロード対象のファイルを絞り込む。
     filtered_repo_files = list(
@@ -150,6 +165,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
             cache_dir=cache_dir,
             local_dir=None,
             local_dir_use_symlinks="auto",
+            local_files_only=offline,
             library_name=None,
             library_version=None,
             user_agent=None,
@@ -170,9 +186,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     )
 
     # ダウンロードしたファイルをモデルストアに保存する。
-    conn = connect_database(config.DB_FILE)
-    hf_model_store = HFModelStore(config, repo_id=repo_id, revision=revision)
-    hf_model_store.save(conn)
+    store.save(conn)
     conn.commit()
 
     send_message(queue, "download-complete", target=f"{repo_id}:{revision}")

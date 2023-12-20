@@ -5,7 +5,6 @@ import tempfile
 import multiprocessing
 from pathlib import Path
 import time
-import sqlite3
 
 from huggingface_hub.hf_api import (
     ModelInfo,
@@ -13,7 +12,7 @@ from huggingface_hub.hf_api import (
 )
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import connect_database
+from yt_diffuser.store import connect_database, MODEL_CLASS_NAME
 from yt_diffuser.store.db.setup import setup_database
 from yt_diffuser.download.main import download_procedure
 
@@ -64,36 +63,32 @@ def test_download_procedure_spec (mocker):
 
     assert mock_hf_hub_download.call_count == 5
 
-    message = q.get(timeout=5)
-    assert message[0] == 'message'
-    assert message[1].keys() == {'label', 'target'}
-    assert message[1]['label'] == 'download-start'
-    assert message[1]['target'] == f"{repo_id}:{revision}"
-
-    r = q.get(timeout=5)
-    assert r[0] == 'download'
-    assert r[1].keys() == {'elapsed', 'percentage', 'progress', 'remaining', 'target', 'total'}
-    assert r[1]['target'] == f"{repo_id}:{revision}"
-    assert r[1]['total'] == 4
-    assert r[1]['progress'] == 0
-
-    download = r[1]
-
-    # 進捗状況の受信は処理速度に依存するため、最後のもののみ確認する。
+    message = []
+    download = []
     while not q.empty():
         r = q.get(timeout=1)
         if r[0] == 'download':
-            download = r
+            download.append(r)
         elif r[0] == 'message':
-            message = r
+            message.append(r)
 
-    assert download[1]['target'] == f"{repo_id}:{revision}"
-    assert download[1]['progress'] == 4
-    assert download[1]['total'] == 4
+    assert len(message) == 2
+    assert message[0][1].keys() == {'label', 'target'}
+    assert message[0][1]['label'] == 'download-start'
+    assert message[0][1]['target'] == f"{repo_id}:{revision}"
+    assert message[1][1].keys() == {'label', 'target'}
+    assert message[1][1]['label'] == 'download-complete'
+    assert message[1][1]['target'] == f"{repo_id}:{revision}"
 
-    assert message[1].keys() == {'label', 'target'}
-    assert message[1]['label'] == 'download-complete'
-    assert message[1]['target'] == f"{repo_id}:{revision}"
+    assert download[0][0] == 'download'
+    assert download[0][1].keys() == {'elapsed', 'percentage', 'progress', 'remaining', 'target', 'total'}
+    assert download[0][1]['target'] == f"{repo_id}:{revision}"
+    assert download[0][1]['progress'] == 0
+    assert download[0][1]['total'] == 4
+
+    assert download[-1][1]['target'] == f"{repo_id}:{revision}"
+    assert download[-1][1]['progress'] == 4
+    assert download[-1][1]['total'] == 4
 
     # ダウンロードしたファイルがDBに登録されていることを確認する。
     conn = connect_database(config.DB_FILE)
@@ -101,4 +96,4 @@ def test_download_procedure_spec (mocker):
     rows = r.fetchall()
     rows = [tuple(row) for row in rows]
     assert len(rows) == 1
-    assert rows[0] == ('repo_id', 'revision', 2)
+    assert rows[0] == ('repo_id', 'revision', MODEL_CLASS_NAME["HFModelStore"])

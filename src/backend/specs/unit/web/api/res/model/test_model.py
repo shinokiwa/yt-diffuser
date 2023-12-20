@@ -1,23 +1,19 @@
 """ modelモジュールのテスト """
 
-from flask import Blueprint
+from flask import Flask
 
-from yt_diffuser.web.api.res.model import model_bp, get_model
+from specs.utils.test_utils.app import app
+from yt_diffuser.web.api.res.model import bp
 
-class TestModelBp:
-    """ describe: model_bp Blueprintオブジェクト"""
+def test_get_model (app:Flask):
+    """
+    get_model
 
-    def test_model_bp(self):
-        """ it: model_bpはBlueprintオブジェクト """
-
-        assert type(model_bp) == Blueprint
-
-class TestGetModel:
-    """ describe: get_model 保存済みのモデル一覧を取得する """
-
-    def test_get_model (self):
-        """ it: get_modelは保存済みのモデル一覧を取得する。 """
-
-        data = get_model()
+    it:
+        保存済みのモデル一覧を取得する。
+    """
+    with app.test_client() as client:
+        response = client.get('/api/res/model')
+        data = response.get_json()
 
         assert data['models'] == []

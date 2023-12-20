@@ -18,6 +18,7 @@ def get_event_listener(event_name:str) -> queue.Queue:
     指定したイベントのリスナーキューを作成し、取得する。
 
     - リスナーキューは最初に最新のキャッシュメッセージが格納される。
+    - 未登録のイベント名の場合はイベントを作成する。
     - ハートビートも兼ねて、最新のメッセージがない場合は空文字列が格納される。
     - 使用後は remove_event_listener で削除すること。
 
@@ -60,6 +61,9 @@ def remove_event_listener(event_name: str, listener: queue.Queue):
 
     if listener in _listeners[event_name]:
         _listeners[event_name].remove(listener)
+
+    if len(_listeners[event_name]) == 0:
+        del _listeners[event_name]
 
     logger.debug(f"Remove listener for {event_name}.")
 
@@ -106,7 +110,6 @@ def message_listener() -> None:
         (event, data) = queue.get()
 
         if event == "exit":
-            logger.debug("Exit message listener.")
             break
 
         if event not in _NO_CACHE_EVENT:
@@ -114,6 +117,7 @@ def message_listener() -> None:
 
         for listener in _listeners.get(event, []):
             listener.put_nowait(data)
+    logger.debug("Exit message listener.")
 
 
 def start_message_listener () -> None:
@@ -129,3 +133,14 @@ def start_message_listener () -> None:
         target=message_listener,
         daemon=True
     ).start()
+
+def stop_message_listener () -> None:
+    """
+    メッセージリスナーを終了する。
+
+    - メッセージリスナーはプロセス終了時に自動的に終了するため、通常は呼び出す必要はない。
+    - テストの連続実行時はプロセスが終了しないため、明示的に終了する必要がある。
+    """
+    logger.debug("Call stop message listener.")
+
+    get_message_queue().put_nowait(("exit", None))

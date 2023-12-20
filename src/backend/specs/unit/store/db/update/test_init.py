@@ -19,6 +19,8 @@ def test_init_database(mocker):
     assert table_names == [
         "database_status",
         "models",
+        "models_hf_refs",
+        "models_hf_snapshots",
         "sqlite_sequence"
     ]
 

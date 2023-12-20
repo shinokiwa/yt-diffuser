@@ -17,6 +17,7 @@ def setup_database (db_file: Path, db_update_file: Path, db_version: int):
     DBが存在しない場合は初期化し、存在する場合はアップデートの必要性を確認し、必要ならアップデートを行う。
     アップデート時は新規のDBを作成し、旧DBから必要なデータをコピー後、リネームしてオリジナルと差し替える。
     """
+    logger.debug("Setup database.")
 
     # DBが存在しない場合は初期化のみ行う。
     if not db_file.exists():

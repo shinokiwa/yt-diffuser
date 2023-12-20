@@ -5,14 +5,18 @@ from sqlite3 import Connection
 from pathlib import Path
 from logging import getLogger; logger = getLogger(__name__)
 
-from yt_diffuser.store.base import Store, AppConfig
-from yt_diffuser.store.lock import StoreLock, StoreLockedError
+from yt_diffuser.config import AppConfig
+from yt_diffuser.store import (
+    StoreLock,
+    StoreLockedError,
+    Store,
+    MODEL_CLASS_NAME
+)
 from yt_diffuser.store.db.op.models import (
     is_exists,
     insert,
     update,
     delete,
-    MODEL_CLASS_NAME,
     MODEL_DEFAULT_REVISION
 )
 

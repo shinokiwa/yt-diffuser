@@ -1,12 +1,12 @@
 """ テスト用ユーティリティ
 """
 import pytest
-import requests
-import time
 import tempfile
+from pathlib import Path
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.app import create_app
+from yt_diffuser.web.message_listener import stop_message_listener
 
 @pytest.fixture(scope='module')
 def app() -> AppConfig:
@@ -19,6 +19,10 @@ def app() -> AppConfig:
         offilne=True
     )
 
+    config.STORE_HF_MODEL_DIR = Path(__file__).parents[1] / "test_models"
+
     _app = create_app(config)
     
-    return _app
+    yield _app
+
+    stop_message_listener()

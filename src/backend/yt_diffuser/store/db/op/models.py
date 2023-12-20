@@ -1,7 +1,10 @@
-""" モデル情報マスター models のテーブル操作モジュール
 """
-from typing import Dict
+モデル情報マスターテーブル models
+"""
+from typing import Dict, List
 from sqlite3 import Connection
+
+from yt_diffuser.store import MODEL_CLASS_NAME
 
 def create_table (conn:Connection) -> None:
     """
@@ -16,6 +19,7 @@ def create_table (conn:Connection) -> None:
             "model_name      TEXT        NOT NULL,"                              # モデル名
             "revision        TEXT        NOT NULL,"                              # モデルのリビジョン
             "class_name      INT         NOT NULL,"                              # このモデルを処理するクラス
+            "screen_name     TEXT,"                                              # モデルの表示名
             "updated_at      DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP," # モデルの更新日時
             "registed_at     DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP"  # モデルの登録日時
         ");"
@@ -25,15 +29,10 @@ def create_table (conn:Connection) -> None:
         "CREATE INDEX models_class ON models (class_name);"
     ))
 
-MODEL_CLASS_NAME = { # models.class_name の区分値定義
-    'NONE': 0, # '未設定
-    'ModelStore': 1,
-    'HFModelStore': 2,
-}
 
 MODEL_DEFAULT_REVISION = "0" # モデルのリビジョンのデフォルト値
 
-def insert (conn:Connection, model_name:str, revision:str, class_name:str) -> None:
+def insert (conn:Connection, model_name:str, revision:str, class_name:int, screen_name:str = "") -> None:
     """
     モデルマスターにモデル情報を挿入する。
 
@@ -41,14 +40,35 @@ def insert (conn:Connection, model_name:str, revision:str, class_name:str) -> No
         conn (Connection): DBコネクション
         model_name (str): モデル名
         revision (str): モデルのリビジョン
-        class_name (str): このモデルを処理するクラス(定数 MODEL_CLASS_NAME のいずれか)
+        class_name (int): このモデルを処理するクラス(定数 MODEL_CLASS_NAME のいずれか)
+        screen_name (str): モデルの表示名
     
     Returns:
         None
     """
-    sql = "INSERT INTO models (model_name, revision, class_name) VALUES (?, ?, ?)"
-    conn.execute(sql, (model_name, revision, class_name))
+    sql = "INSERT INTO models (model_name, revision, class_name, screen_name) VALUES (?, ?, ?, ?)"
+    conn.execute(sql, (model_name, revision, class_name, screen_name))
     return
+
+def get_all (conn:Connection) -> List[Dict]:
+    """
+    モデルマスターに登録されている全てのモデル情報を取得する。
+
+    Args:
+        conn (Connection): DBコネクション
+
+    Returns:
+        List[Dict]: モデルマスター情報のリスト
+            - id: モデルID
+            - model_name: モデル名
+            - revision: モデルのリビジョン
+            - class_name: このモデルを処理するクラス
+            - screen_name: モデルの表示名
+            - updated_at: レコードの更新日時
+            - registed_at: レコードの登録日時
+    """
+    sql = "SELECT * FROM models"
+    return conn.execute(sql).fetchall()
 
 
 def get (conn:Connection, model_name:str, revision:str) -> Dict:
@@ -66,8 +86,11 @@ def get (conn:Connection, model_name:str, revision:str) -> Dict:
             - model_name: モデル名
             - revision: モデルのリビジョン
             - class_name: このモデルを処理するクラス
+            - screen_name: モデルの表示名
+            - updated_at: レコードの更新日時
+            - registed_at: レコードの登録日時
     """
-    sql = "SELECT id, model_name, revision, class_name FROM models WHERE model_name = ? AND revision = ?"
+    sql = "SELECT * FROM models WHERE model_name = ? AND revision = ?"
     return conn.execute(sql, (model_name, revision,)).fetchone()
 
 
