@@ -54,10 +54,14 @@ class AppConfig:
 
         # ストア関連
         self.STORE_DIR: Path  = self.DATA_DIR / "store"
-        self.STORE_MODEL_DIR: Path = self.STORE_DIR / "model"
+        self.STORE_MODEL_DIR: Path = self.STORE_DIR / "models"
         self.STORE_HF_MODEL_DIR: Path = self.STORE_MODEL_DIR / "huggingface"
 
         # データベース関連
         self.DB_DIR: Path = self.DATA_DIR / "db"
         self.DB_FILE: Path = self.DB_DIR / "yt_diffuser.db"
         self.DB_UPDATE_FILE: Path = self.DB_DIR /"yt_diffuser_update.db"
+
+        # 出力データ関連
+        self.OUTPUT_DIR: Path = self.DATA_DIR / "output"
+        self.OUTPUT_IMAGE_DIR: Path = self.OUTPUT_DIR / "images"

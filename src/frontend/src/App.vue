@@ -12,6 +12,8 @@ import ProgressBar from '@/components/elements/ProgressBar.vue'
 import MenuView from '@/components/views/MenuView.vue'
 import NotificationView from '@/components/views/NotificationView.vue'
 import ModelManageView from '@/components/views/ModelManageView.vue'
+import InputPromptView from '@/components/views/InputPromptView.vue'
+import GalleryView from '@/components/views/GalleryView.vue'
 
 import { useAppStore } from '@/composables/store/app';
 import { useViewStore } from '@/composables/store/view';
@@ -21,9 +23,11 @@ const { readyState, ready } = useAppStore()
 const {
     changeView,
     currentView,
-    MODEL_MANAGE
+    MODEL_MANAGE,
+    GENERATE,
+    GALLERY
 } = useViewStore()
-const { loadModels, baseModels } = useModel()
+const { getModels, allModels } = useModel()
 
 /**
  * 初期化処理
@@ -35,9 +39,9 @@ const { loadModels, baseModels } = useModel()
  * モデルがない場合はモデル管理表示
  */
 onMounted(async ()=>{
-    await loadModels()
+    await getModels()
 
-    if (baseModels.value.length == 0) {
+    if (allModels.value.length == 0) {
         changeView(MODEL_MANAGE)
     }
 
@@ -49,6 +53,12 @@ watchEffect(()=>{
     switch (currentView.value) {
         case (MODEL_MANAGE):
             selectedView.value = ModelManageView
+            break
+        case (GENERATE):
+            selectedView.value = InputPromptView
+            break
+        case (GALLERY):
+            selectedView.value = GalleryView
             break
     }
 })

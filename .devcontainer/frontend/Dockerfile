@@ -1,5 +1,5 @@
 # Vue.js開発コンテナ
-FROM node:20.5.1
+FROM node:20.10.0
 
 # ディレクトリを作成
 WORKDIR /src/frontend/

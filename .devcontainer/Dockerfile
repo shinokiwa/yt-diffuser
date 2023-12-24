@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     language-pack-ja \
     build-essential \
     git curl \
-    python3-pip python3-venv
+    python3-pip python3-venv \
+    libgl1-mesa-glx libglib2.0-0
 
 # workspaceディレクトリを作成
 WORKDIR /workspace/src/backend/
@@ -18,7 +19,8 @@ COPY ./src/backend/requirements.txt /workspace/src/backend/
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN python3 -m pip install -r /workspace/src/backend/requirements.txt
 
-CMD ["python3", "-m", "yt_diffuser"]
+COPY ./.devcontainer/backend/entrypoint.sh /
+ENTRYPOINT [ "/entrypoint.sh" ]
 
 #################################
 
@@ -28,7 +30,7 @@ FROM backend AS devcontainer
 WORKDIR /workspace/src/frontend
 
 # Node.jsをインストール
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt-get install -y nodejs
 
 # npmインストール
@@ -40,4 +42,5 @@ WORKDIR /workspace/src/
 COPY ./src/backend/requirements-dev.txt /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements-dev.txt
 
-CMD ["sh"]
+COPY ./.devcontainer/entrypoint.sh /
+ENTRYPOINT [ "/entrypoint.sh" ]

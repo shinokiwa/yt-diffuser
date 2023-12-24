@@ -2,6 +2,7 @@
 """
 from logging import getLogger; logger = getLogger(__name__)
 import multiprocessing
+from multiprocessing.context import SpawnContext
 import threading
 import queue
 
@@ -34,7 +35,7 @@ def get_event_listener(event_name:str) -> queue.Queue:
 
     q = queue.Queue()
     latest_message = _latest_messages.get(event_name, "")
-    q.put_nowait(latest_message)
+    q.put(latest_message)
 
     _listeners[event_name].append(q)
 
@@ -69,12 +70,12 @@ def remove_event_listener(event_name: str, listener: queue.Queue):
 
 _context = multiprocessing.get_context('spawn')
 
-def get_context() -> multiprocessing.context.SpawnContext:
+def get_context() -> SpawnContext:
     """
     プロセスコンテキストを取得する。
 
     Returns:
-        multiprocessing.context.SpawnContext: プロセスコンテキスト
+        SpawnContext: プロセスコンテキスト
     """
     return _context
 
@@ -114,9 +115,11 @@ def message_listener() -> None:
 
         if event not in _NO_CACHE_EVENT:
             _latest_messages[event] = data
+        
+        logger.debug(f"Received message : {event}")
 
         for listener in _listeners.get(event, []):
-            listener.put_nowait(data)
+            listener.put(data)
     logger.debug("Exit message listener.")
 
 
@@ -144,3 +147,6 @@ def stop_message_listener () -> None:
     logger.debug("Call stop message listener.")
 
     get_message_queue().put_nowait(("exit", None))
+
+import atexit
+atexit.register(stop_message_listener)

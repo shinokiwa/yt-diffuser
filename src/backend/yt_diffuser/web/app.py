@@ -14,7 +14,6 @@ def create_app (config:AppConfig):
     """ Flaskのアプリを作成する
     """
     app = Flask(__name__)
-    app.debug = config.debug
     app.config['APP_CONFIG'] = config
 
     init_routes(app)

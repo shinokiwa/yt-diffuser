@@ -16,20 +16,8 @@ YuTori Diffuser<br />
 
 ## ディレクトリ構成
 
-- .devcontainer : VSCodeのDev Containers向け各種定義ファイル
-- .vscode : VSCode向け設定ファイル
-- data : 初期設定では各種ユーザーデータ
-- docs : 汎用的なドキュメント
-- src : ソースコード
-  - backend : バックエンドのソースコード
-    - specs : バックエンド用テストコード
-      - feature : 機能テスト用コード
-      - unit : ユニットテスト用コード
-    - yt_diffuser : バックエンドモジュール本体
-  - frontend : フロントエンドのソースコード
-    - public : 静的ファイル
-    - specs : フロントエンド用テストコード
-    - src : フロントエンドのソースコード
+[こちら](./docs/directories.md)を参照。
+
 
 ## 開発環境について
 

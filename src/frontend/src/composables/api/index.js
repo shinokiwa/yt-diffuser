@@ -1,11 +1,6 @@
 /**
- * API呼び出し
- * 
- * axiosは今後使わないのであとで消す。
+ * API呼び出しの共通処理
  */
-import axios from 'axios'
-
-const apix = axios.create()
 
 function get (url, params) {
     let _url = url
@@ -18,9 +13,19 @@ function get (url, params) {
     return fetch(_url)
 }
 
+function post (url, data) {
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+}
+
 export function useApi () {
     return{
-        apix,
-        get
+        get,
+        post
     }
 }

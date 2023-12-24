@@ -4,13 +4,11 @@
  */
 import { watch, ref } from 'vue';
 import ProgressBar from '@/components/elements/ProgressBar.vue';
-import { useStatusStore } from '@/composables/store/status';
 import { useProgressStore } from '@/composables/store/progress';
 
 import { useApi } from '@/composables/api';
 const { get } = useApi()
 
-const { status } = useStatusStore()
 const { progress } = useProgressStore()
 
 const percentage = ref(0)
@@ -39,7 +37,7 @@ function stop() {
 
 <template>
 <div id="ProgressView">
-    <div class="status">{{ status }}</div>
+    <div class="status">未</div>
 
     <div class="progress" v-if="true || status.indexOf('download-progress') == 0">
         <div><ProgressBar :value="percentage" /></div>

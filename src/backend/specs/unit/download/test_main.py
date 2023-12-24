@@ -12,7 +12,7 @@ from huggingface_hub.hf_api import (
 )
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import connect_database, MODEL_CLASS_NAME
+from yt_diffuser.store import connect_database
 from yt_diffuser.store.db.setup import setup_database
 from yt_diffuser.download.main import download_procedure
 
@@ -89,11 +89,3 @@ def test_download_procedure_spec (mocker):
     assert download[-1][1]['target'] == f"{repo_id}:{revision}"
     assert download[-1][1]['progress'] == 4
     assert download[-1][1]['total'] == 4
-
-    # ダウンロードしたファイルがDBに登録されていることを確認する。
-    conn = connect_database(config.DB_FILE)
-    r = conn.execute("SELECT model_name, revision, class_name FROM models")
-    rows = r.fetchall()
-    rows = [tuple(row) for row in rows]
-    assert len(rows) == 1
-    assert rows[0] == ('repo_id', 'revision', MODEL_CLASS_NAME["HFModelStore"])

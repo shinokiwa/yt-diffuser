@@ -28,7 +28,6 @@ from huggingface_hub.hf_api import (
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.tqdm import WorkerProgress
 from yt_diffuser.utils.message_queue import send_message
-from yt_diffuser.store import connect_database, HFModelStore
 
 def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:str, revision:str):
     """
@@ -96,10 +95,6 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
 
     # 必要な全ファイルをダウンロード
     # snapshot_downloadがそのままでは使えないので、コピペして修正
-
-    conn = connect_database(config.DB_FILE)
-    store = HFModelStore(config, repo_id=repo_id, revision=revision)
-
     storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=REPO_TYPE_MODEL))
 
     # オフラインモードの時は、storage_folderの内容をそのまま使う。
@@ -184,10 +179,6 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         queue=queue,
         target=f"{repo_id}:{revision}",
     )
-
-    # ダウンロードしたファイルをモデルストアに保存する。
-    store.save(conn)
-    conn.commit()
 
     send_message(queue, "download-complete", target=f"{repo_id}:{revision}")
 

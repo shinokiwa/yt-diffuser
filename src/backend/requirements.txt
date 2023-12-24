@@ -4,15 +4,18 @@ tqdm
 scipy
 ftfy
 
-xformers==0.0.18
+invisible_watermark===0.2.0
+transformers===4.36.2
+safetensors
 
+xformers==0.0.18
 
 flask>=3.0,<3.1
 waitress>=2.1,<2.2
 pydantic>=1.10,<1.11
 watchdog==3.0.0
 
-accelerate>=0.16,<0.17
+accelerate>=0.25,<0.26
 datasets>=2.9,<2.10
 
 bitsandbytes==0.37.0

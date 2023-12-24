@@ -6,8 +6,22 @@
  * トーストは通知エリアと連動してスライドするため同一のコンポーネントで実装している。
  */
 
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import ProgressView from '@/components/views/ProgressView.vue'
+
+import { useMessage } from '@/composables/api/sse/message'
+const {openMessage} = useMessage()
+
+const messageSource = ref(null)
+
+onMounted(()=>{
+    messageSource.value = openMessage()
+})
+
+onUnmounted(()=>{
+    messageSource.value.close()
+})
+
 import { useNotificationStore } from '@/composables/store/notification';
 const {
     notificationState,
@@ -32,7 +46,7 @@ watch(newNotifications, ()=>{
 
     clearNewNotifications()
     showToast()
-})
+}, {deep: true})
 
 function showToast() {
     if (toastQueue.value.length === 0) {
@@ -57,7 +71,7 @@ function showToast() {
   <div class="notification-panel" :class="{ 'show': notificationState }">
     <ul class="notifications">
         <li class="notify-box" v-for="notification in notifications" :key="notification.id">
-            {{ notification.message }}
+            {{ notification }}
         </li>
     </ul>
     <ul class="bottom">

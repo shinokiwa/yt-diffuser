@@ -18,10 +18,8 @@ def test_init_database(mocker):
     table_names = [table[0] for table in tables]
     assert table_names == [
         "database_status",
-        "models",
-        "models_hf_refs",
-        "models_hf_snapshots",
-        "sqlite_sequence"
+        "model_info",
+        #"sqlite_sequence"
     ]
 
     assert conn.execute('SELECT value FROM database_status WHERE key="version" ').fetchone()["value"] == "1"

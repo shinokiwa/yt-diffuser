@@ -2,9 +2,10 @@
 
 Web APIプロセスのメイン処理
 """
-from logging import getLogger; logger = getLogger(__name__)
-
+import sys
 import os
+import logging; logger = logging.getLogger('yt_diffuser')
+logging.basicConfig(stream=sys.stdout)
 
 from waitress import serve
 
@@ -22,7 +23,7 @@ def main(config:AppConfig) -> None:
         config (AppConfig): アプリケーション設定
     """
     if config.debug:
-        import logging; logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(level=logging.DEBUG)
 
     logger.debug("Start yt_diffuser")
 

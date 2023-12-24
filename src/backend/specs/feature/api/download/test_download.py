@@ -25,11 +25,6 @@ class TestFeatureApiWorkerDownload:
         repo_id = "test/repo_id"
         revision = "test_revision"
 
-        response = client.get('/api/res/model')
-        assert response.status_code == 200
-        models = response.json
-        assert models['models'] == []
-
         messages = []
         message = client.get('/api/sse/message', headers={'Accept': 'text/event-stream'})
         assert message.status_code == 200
@@ -99,13 +94,3 @@ class TestFeatureApiWorkerDownload:
 
         assert progresses[-1]['progress'] == 5
         assert progresses[-1]['percentage'] >= 100.0
-
-        response = client.get('/api/res/model')
-        assert response.status_code == 200
-        models = response.json
-        assert models['models'] == [{
-            'model_name': repo_id,
-            'revision': revision,
-            'class_name': 1
-        }]
-        

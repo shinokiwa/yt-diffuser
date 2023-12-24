@@ -24,6 +24,23 @@ def send_message (queue: Queue, label: str, **kwargs):
     queue.put((EVENT_TYPE_MESSAGE, data), timeout=1)
 
 
+def send_ready (queue: Queue, event: str, target: str):
+    """
+    準備完了イベントを送信する。
+
+    この関数は特定のイベント名は持たない。
+
+    params:
+        queue: 送信キュー
+        event: イベント名
+        target: ターゲット名
+    """
+    queue.put((event, {
+        'target': target,
+        'status': 'ready'
+    }))
+
+
 def send_progress (queue: Queue, event: str, target: str, total: int, progress: int, percentage: float, elapsed: float, remaining: float):
     """
     進捗イベントを送信する。
@@ -42,6 +59,7 @@ def send_progress (queue: Queue, event: str, target: str, total: int, progress: 
     """
     queue.put((event, {
         'target': target,
+        'status': 'progress',
         'total': total,
         'progress': progress,
         'percentage': percentage,

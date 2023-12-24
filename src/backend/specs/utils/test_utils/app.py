@@ -1,8 +1,8 @@
 """ テスト用ユーティリティ
 """
 import pytest
-import tempfile
-from pathlib import Path
+
+from specs.utils.test_utils.config import make_config
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.app import create_app
@@ -13,13 +13,7 @@ def app() -> AppConfig:
     """
     テスト用のアプリケーションをセットアップする。
     """
-    config = AppConfig(
-        debug=True,
-        BASE_DIR=tempfile.mkdtemp(),
-        offilne=True
-    )
-
-    config.STORE_HF_MODEL_DIR = Path(__file__).parents[1] / "test_models"
+    config = make_config()
 
     _app = create_app(config)
     

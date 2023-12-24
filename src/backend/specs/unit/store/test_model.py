@@ -20,66 +20,49 @@ class TestModelStore:
         store = ModelStore(config, "test")
         assert store.path == Path(config.STORE_MODEL_DIR, "test")
     
-    def test_save(self, mocker):
+    def test_get_info(self, mocker):
         """
-        save
+        get_info
 
         it:
-            モデルストアが存在しない場合はValueErrorを送出する
-            モデルストアが存在する場合はDBに保存する
+            DBから追加情報を取得する。
         """
-        config = AppConfig(BASE_DIR=Path(tempfile.mkdtemp()))
+        config = AppConfig()
         store = ModelStore(config, "test")
-        conn = mocker.MagicMock()
-        mock_is_exists = mocker.patch("yt_diffuser.store.model.is_exists")
-        mock_update = mocker.patch("yt_diffuser.store.model.update")
-        mock_insert = mocker.patch("yt_diffuser.store.model.insert")
+        mock_get = mocker.patch("yt_diffuser.store.model.get", return_value={"screen_name": "test"})
+        conn = "conn"
 
-        # モデルストアが存在しない場合はValueErrorを送出する
-        with pytest.raises(ValueError):
-            store.save(conn)
-        
-        # モデルストアが存在する場合はDBに保存する
-        store.path.mkdir(parents=True, exist_ok=True)
-        mock_is_exists.return_value = False
-        store.save(conn)
+        store.get_info(conn)
+        assert store.screen_name == "test"
 
-        assert mock_insert.call_count == 1
-        assert mock_update.call_count == 0
-
-        mock_is_exists.return_value = True
-        store.save(conn)
-
-        assert mock_insert.call_count == 1
-        assert mock_update.call_count == 1
-
-    def test_remove(self, mocker):
+    def test_exists(self, mocker):
         """
-        remove
+        exists
+
+        TODO: mkdirとテストが混ざってる
 
         it:
-            モデルストアが存在する場合は削除する
+            ストアディレクトリが存在する場合はTrueを返す。
+            ストアディレクトリが存在しない場合はFalseを返す。
+
+        mkdir
+
+        it:
+            ストアディレクトリを作成する。
+            ストアディレクトリが存在していてもエラーにはならないが、
+            ロックされているときは StoreLockedError が送出される。
         """
-        config = AppConfig(BASE_DIR=Path(tempfile.mkdtemp()))
-        store = ModelStore(config, "test")
-        conn = mocker.MagicMock()
-        mock_store_lock = mocker.patch("yt_diffuser.store.model.StoreLock")
-        mock_remove = mocker.patch("yt_diffuser.store.model.shutil.rmtree")
-        mock_delete = mocker.patch("yt_diffuser.store.model.delete")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config = AppConfig()
+            config.STORE_MODEL_DIR = Path(tmp_dir)
 
-        # モデルストアが存在しない場合はDBだけ削除する
-        store.remove(conn)
-        assert mock_remove.call_count == 0
-        assert mock_delete.call_count == 1
+            store = ModelStore(config, "test")
+            assert store.exists() == False
 
-        # モデルストアがロックされている場合はStoreLockedErrorを送出する
-        store.path.mkdir(parents=True, exist_ok=True)
-        mock_store_lock.return_value.is_locked.return_value = True
-        with pytest.raises(StoreLockedError):
-            store.remove(conn)
+            store.mkdir()
+            assert store.exists() == True
 
-        # モデルストアが存在する場合は削除する
-        mock_store_lock.return_value.is_locked.return_value = False
-        store.remove(conn)
-        assert mock_remove.call_count == 1
-        assert mock_delete.call_count == 2
+            # ロックされている場合
+            mocker.patch("yt_diffuser.store.model.StoreLock.is_locked", return_value=True)
+            with pytest.raises(StoreLockedError):
+                store.mkdir()

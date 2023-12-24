@@ -6,73 +6,102 @@ from pathlib import Path
 from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import (
-    StoreLock,
-    StoreLockedError,
-    Store,
-    MODEL_CLASS_NAME
-)
-from yt_diffuser.store.db.op.models import (
-    is_exists,
-    insert,
-    update,
-    delete,
-    MODEL_DEFAULT_REVISION
+from yt_diffuser.store.lock import StoreLock, StoreLockedError
+from yt_diffuser.store.db.op.model_info import (
+    get,
+    save,
+    delete
 )
 
-class ModelStore(Store):
+class ModelStore:
     """ モデルストアクラス
     """
-    class_num: int = MODEL_CLASS_NAME['ModelStore']
+    def __init__(self, config: AppConfig,
+                 model_name: str,
+                 screen_name: str = None,
+    ):
+        self.base_dir: Path = config.STORE_MODEL_DIR
+        self.model_name: str = model_name  
+        self.revision: str = "main"
+        self.screen_name: str = screen_name
 
-    def __init__(self, config: AppConfig, model_name: str, revision: str  = MODEL_DEFAULT_REVISION):
-        super().__init__(config, model_name)
-        self.revision: str = revision
     
     @property
     def path(self) -> Path:
         """
         モデルストアのパス
         """
-        return self.config.STORE_MODEL_DIR / self.store_name
+        return self.base_dir / self.model_name
     
-    def save(self, conn:Connection) -> None:
+    def get_info (self, conn: Connection) -> None:
         """
-        モデル情報を保存する。
+        DBから追加情報を取得する。
 
-        モデルストアが存在しない場合はValueErrorを送出する。
-
-        args:
-            conn: DBコネクション
+        Args:
+            conn (Connection): DBコネクション
         """
-        if not self.exists():
-            raise ValueError("model store not exists")
-        
-        with StoreLock(self.path):
+        info = get(conn, self.model_name, self.revision)
+        if info is None:
+            return
 
-            if is_exists (conn, self.store_name, self.revision):
-                update(conn, self.store_name, self.revision)
-            else:
-                insert(conn, model_name=self.store_name, revision=self.revision, class_name=self.class_num)
+        self.screen_name = info['screen_name']
 
-    def remove(self, conn:Connection) -> None:
+    
+    def save_info (self, conn: Connection) -> None:
         """
-        モデルストアを削除する。
+        DBに追加情報を保存する。
 
-        ディレクトリ内のファイルを削除し、DBからも削除する。
-        ロック中の場合はStoreLockedErrorを送出する。
+        Args:
+            conn (Connection): DBコネクション
+        """
+        save(conn, self.model_name, self.revision, self.__class__.__name__, self.screen_name)
+        return
+    
+    def get_lock (self) -> StoreLock:
+        """
+        ロックを取得する。
 
-        args:
-            conn: DBコネクション
+        Returns:
+            StoreLock: ロックオブジェクト
+        """
+        return StoreLock(self.path)
+
+
+    def exists(self) -> bool:
+        """
+        ストアディレクトリが存在するかどうかを返す。
+
+        returns:
+            bool: ストアディレクトリが存在する場合はTrue
+        """
+        return self.path.exists()
+    
+    def mkdir(self) -> None:
+        """
+        ストアディレクトリを作成する。
+
+        ストアディレクトリが存在していてもエラーにはならないが、
+        ロックされているときは StoreLockedError が送出される。
 
         raises:
-            StoreLockedError: モデルストアがロックされている場合
+            StoreLockedError: ストアディレクトリがロックされている場合
         """
-        if self.exists():
-            lock = StoreLock(self.path)
-            if lock.is_locked():
-                raise StoreLockedError(self.path)
+        if self.get_lock().is_locked():
+            raise StoreLockedError(self.path)
 
-            shutil.rmtree(self.path)
+        self.path.mkdir(parents=True, exist_ok=True)
 
-        delete(conn, self.store_name, MODEL_DEFAULT_REVISION)
+    def to_dict (self, keys:set) -> dict:
+        """
+        辞書形式に変換する。
+
+        - 存在しないキーはNoneになる。
+
+        Args:
+            keys (set): 変換するキーの集合
+
+        Returns:
+            dict: 辞書形式のオブジェクト
+        """
+        return {key: getattr(self, key, None) for key in keys}
+

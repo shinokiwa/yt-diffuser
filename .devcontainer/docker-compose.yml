@@ -15,6 +15,9 @@ services:
             - type: bind
               source: ./nginx/etc/nginx/nginx.conf
               target: /etc/nginx/nginx.conf
+            - type: volume
+              source: dev_data_volume
+              target: /workspace/data
         depends_on:
             - backend
             - frontend

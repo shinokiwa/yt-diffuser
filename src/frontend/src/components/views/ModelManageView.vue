@@ -1,34 +1,23 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import Overlay from '@/components/elements/Overlay.vue'
 import FormGrid from '@/components/elements/FormGrid.vue'
 import InputText from '@/components/elements/InputText.vue'
 
+import { useModel } from '@/composables/api/res/model'
+const { allModels } = useModel()
+
+import { useGenerateImage } from '@/composables/api/generate/image'
+const { loadModel } = useGenerateImage()
+
 import { useApi } from '@/composables/api';
+const { get } = useApi()
 
 const addModel = ref(null)
-const { apix } = useApi()
 
-const models = ref([
-    {
-        id: 1,
-        screen_name: 'StableDiffusion XL',
-        name: 'StableDiffusion XL',
-        revision: 'main',
-        updated_at: '2023-04-02'
-    },
-    {
-        id: 2,
-        screen_name: '',
-        name: 'StableDiffusion v2.1',
-        revision: 'fp16',
-        updated_at: '2023-04-02'
-    }
-])
-
-const selectedModel = ref(null)
-const detail = ref(models.value[0])
+const selectedModel = ref(-1)
+const detail = ref(allModels.value[0])
 
 function edit () {
     addModel.value.show()
@@ -40,7 +29,11 @@ function download () {
 
 function select (id) {
     selectedModel.value = id
-    detail.value = models.value.find(model => model.id === id)
+    detail.value = allModels.value.find(model => model.id === id)
+}
+
+function load () {
+    loadModel(detail.value.model_name, detail.value.revision)
 }
 </script>
 
@@ -51,20 +44,22 @@ function select (id) {
             <li @click="edit()">
                 <i class="bi-plus-circle"></i> モデルを新規追加
             </li>
-            <li v-for="model in models" :key="model.id" @click="select(model.id)">
-                <div class="name">{{ model.screen_name || model.name }}</div>
+            <li v-for="model in allModels" :key="model.id" @click="select(model.id)">
+                <div class="name">{{ model.screen_name || model.model_name }}</div>
                 <ul class="info">
                     <li>{{ model.revision }}</li>
-                    <li>更新: {{ model.updated_at }}</li>
                 </ul>
             </li>
         </ul>
         <div class="detail">
-            <div v-if="selectedModel">
+            <div v-if="selectedModel == -1">
+                モデルを選択して下さい。
+            </div>
+            <div v-else>
                 <div class="header">
-                    <div class="name">{{ detail.screen_name || detail.name }}</div>
+                    <div class="name">{{ detail.screen_name || detail.model_name }}</div>
                     <div class="menu">
-                        <button>読み込み</button>
+                        <button @click="load">読み込み</button>
                         <ul class="append-menu">
                             <li>編集</li>
                             <li>削除</li>
@@ -73,15 +68,10 @@ function select (id) {
                 </div>
                 <dl>
                     <dt>モデル名</dt>
-                    <dd>{{ detail.name }}</dd>
+                    <dd>{{ detail.model_name }}</dd>
                     <dt>リビジョン</dt>
                     <dd>{{ detail.revision }}</dd>
-                    <dt>更新日</dt>
-                    <dd>{{ detail.updated_at }}</dd>
                 </dl>
-            </div>
-            <div v-else>
-                モデルを選択して下さい。
             </div>
         </div>
     </div>

@@ -4,7 +4,6 @@ yt_diffuser.store.hf_model のテスト
 import pytest
 
 from yt_diffuser.store.hf_model import HFModelStore, AppConfig
-from yt_diffuser.store.db.op.models import MODEL_CLASS_NAME
 
 class TestHFModelStore:
     """
