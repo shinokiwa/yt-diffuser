@@ -64,4 +64,5 @@ class AppConfig:
 
         # 出力データ関連
         self.OUTPUT_DIR: Path = self.DATA_DIR / "output"
+        self.OUTPUT_TEMP_DIR: Path = self.OUTPUT_DIR / "temp"
         self.OUTPUT_IMAGE_DIR: Path = self.OUTPUT_DIR / "images"

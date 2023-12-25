@@ -9,7 +9,7 @@ function getImageList (path, callback) {
     const source = new EventSource('/api/res/image/list/' + path)
     source.onmessage = (event) => {
         if (event.data.length > 0) {
-            const data = event.data
+            const data = JSON.parse(event.data)
             callback(data)
         }
     }

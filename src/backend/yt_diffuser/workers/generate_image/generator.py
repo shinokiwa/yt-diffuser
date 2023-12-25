@@ -27,6 +27,8 @@ def procedure(config:AppConfig,
         message_queue (multiprocessing.Queue): この処理から出力されるメッセージを格納するキュー
         input_queue (multiprocessing.Queue): この処理への入力を格納するキュー
     """
+    send_message(message_queue, 'genarate-load-start', target=f"{model_name}:{revision}")
+
     pipe:StableDiffusionXLPipeline = DiffusionPipeline.from_pretrained(
         pretrained_model_name_or_path=model_name,
         revision=revision,
@@ -38,7 +40,7 @@ def procedure(config:AppConfig,
     )
     pipe.enable_model_cpu_offload()
 
-    send_message(message_queue, 'genarate-loaded', target=f"{model_name}:{revision}")
+    send_message(message_queue, 'genarate-load-complete', target=f"{model_name}:{revision}")
     send_ready(message_queue, "generate", f"{model_name}:{revision}")
 
     while True:
@@ -53,13 +55,23 @@ def procedure(config:AppConfig,
             break
         
         if message == "generate-image":
+
             text = data['text']
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d/%H-%M-%S')
-            output_dir = config.OUTPUT_IMAGE_DIR / timestamp
-            output_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
+            config.OUTPUT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+            # 出力ファイル名は末尾を4桁ゼロ埋めの連番にする
+            i = 0
+            output_path = None
+            while True:
+                output_path = config.OUTPUT_TEMP_DIR / f"{timestamp}-{i:04}.png"
+                if not output_path.exists():
+                    break
+                i += 1
+
+            send_message(message_queue, 'genarate-start', target=f"{timestamp}")
 
             image = pipe(text).images[0]
 
-            image.save(output_dir / "image.png")
+            image.save(output_path)
 
-            send_message(message_queue, 'genarate-complete', target=f"{timestamp}/image.png")
+            send_message(message_queue, 'genarate-complete', target=output_path.name)

@@ -66,3 +66,18 @@ def send_progress (queue: Queue, event: str, target: str, total: int, progress: 
         'elapsed': elapsed,
         'remaining': remaining
     }))
+
+
+def send_filesystem (queue: Queue, type: str, target: str):
+    """
+    ファイルシステムイベントを送信する。
+
+    params:
+        queue: 送信キュー
+        type: 変更の種類
+        target: 対象ファイルパス
+    """
+    queue.put(('file', {
+        'type': type,
+        'target': target
+    }))

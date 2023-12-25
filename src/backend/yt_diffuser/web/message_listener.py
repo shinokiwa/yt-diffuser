@@ -119,7 +119,7 @@ def message_listener() -> None:
         logger.debug(f"Received message : {event}")
 
         for listener in _listeners.get(event, []):
-            listener.put(data)
+            listener.put_nowait(data)
     logger.debug("Exit message listener.")
 
 

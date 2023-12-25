@@ -2,6 +2,7 @@
 """
 from typing import Generator
 import json
+import logging; logger = logging.getLogger(__name__)
 
 from yt_diffuser.web.message_listener import get_event_listener, remove_event_listener, Empty
 

@@ -1,12 +1,9 @@
 <script setup>
 /**
- * ギャラリービュー
+ * 生成ビューの出力エリア
  */
 import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
-import Overlay from '@/components/elements/Overlay.vue'
-import FormGrid from '@/components/elements/FormGrid.vue'
-import InputText from '@/components/elements/InputText.vue'
 
 import { useImage } from '@/composables/api/res/image'
 const { getImageList } = useImage()
@@ -15,7 +12,7 @@ const imageList = ref([])
 let source = null
 
 onMounted(()=>{
-    source = getImageList('images', (data)=>{
+    source = getImageList('temp', (data)=>{
         if (data.type === 'deleted' || data.type === 'modified') {
             imageList.value = imageList.value.filter((item) => {
                 return item.url !== data.target
@@ -34,28 +31,31 @@ onMounted(()=>{
 onUnmounted(()=>{
     source.close()
 })
-
 </script>
 
 <template>
-<WindowArea id="GalleryView" window-title="ギャラリー">
+<WindowArea window-title="出力画像">
     <div class="gallery">
         <div class="gallery-item" v-for="image in imageList" :key="image.id">
-            <img :src="'output/images/' + image.url">
+            <img :src="'output/temp/' + image.url">
         </div>
     </div>
 </WindowArea>
 </template>
 
 <style scoped>
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    word-wrap: break-word;
+}
+
 .gallery-item {
-    width: 200px;
-    height: 200px;
-    margin: 10px;
+    width: 150px;
+    height: 150px;
+    margin: 5px;
     display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    overflow: hidden;
 }
 
 .gallery-item img {

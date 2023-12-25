@@ -12,7 +12,7 @@ import ProgressBar from '@/components/elements/ProgressBar.vue'
 import MenuView from '@/components/views/MenuView.vue'
 import NotificationView from '@/components/views/NotificationView.vue'
 import ModelManageView from '@/components/views/ModelManageView.vue'
-import InputPromptView from '@/components/views/InputPromptView.vue'
+import GeneratorView from '@/components/views/GeneratorView.vue'
 import GalleryView from '@/components/views/GalleryView.vue'
 
 import { useAppStore } from '@/composables/store/app';
@@ -55,7 +55,7 @@ watchEffect(()=>{
             selectedView.value = ModelManageView
             break
         case (GENERATE):
-            selectedView.value = InputPromptView
+            selectedView.value = GeneratorView
             break
         case (GALLERY):
             selectedView.value = GalleryView
