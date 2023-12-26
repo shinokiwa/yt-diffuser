@@ -18,7 +18,7 @@ def init_routes (app:Flask):
     api.register_blueprint(import_module('yt_diffuser.web.api.generate.image').bp)
    
     api.register_blueprint(import_module('yt_diffuser.web.api.res.model').bp)
-    api.register_blueprint(import_module('yt_diffuser.web.api.res.image').bp)
+    api.register_blueprint(import_module('yt_diffuser.web.api.res.output').bp)
 
     api.register_blueprint(import_module('yt_diffuser.web.api.sse.sse').bp)
 

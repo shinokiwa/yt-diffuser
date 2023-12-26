@@ -8,6 +8,7 @@ import logging; logger = logging.getLogger(__name__)
 from multiprocessing import Queue
 
 EVENT_TYPE_MESSAGE = 'message'
+EVENT_TYPE_FILESYSTEM = 'file'
 
 
 def send_message (queue: Queue, label: str, **kwargs):
@@ -75,9 +76,12 @@ def send_filesystem (queue: Queue, type: str, target: str):
     params:
         queue: 送信キュー
         type: 変更の種類
+            - created: 作成
+            - modified: 更新
+            - deleted: 削除
         target: 対象ファイルパス
     """
-    queue.put(('file', {
+    queue.put((EVENT_TYPE_FILESYSTEM, {
         'type': type,
         'target': target
     }))
