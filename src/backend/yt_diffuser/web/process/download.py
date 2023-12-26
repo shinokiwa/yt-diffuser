@@ -7,7 +7,7 @@
 
 今のところHuggingFaceのモデルをダウンロードするプロセスのみを実装している。
 """
-
+import atexit
 import multiprocessing
 from multiprocessing.context import SpawnProcess
 from logging import getLogger; logger = getLogger(__name__)
@@ -76,6 +76,9 @@ def terminate() -> None:
     global _process
 
     if is_running():
+        logger.debug("terminate download process")
         _process.terminate()
         _process.join()
         _process = None
+
+atexit.register(terminate)

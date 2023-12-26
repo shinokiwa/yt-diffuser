@@ -1,7 +1,12 @@
-""" watchdog.pyのテスト """
+"""
+watchdog.pyのテスト
+"""
+import pytest
+
 from watchdog.events import FileModifiedEvent
-from unittest.mock import MagicMock, patch
-from yt_diffuser.main.watchdog import WatchdogDebugHandler, watchdog_process
+
+from yt_diffuser.dev_watcher import WatchdogDebugHandler, watchdog_process
+
 
 class TestWatchdogDebugHandler:
     """describe: WatchdogDebugHandler ファイル変更監視"""
@@ -24,7 +29,7 @@ class TestWatchdogProcess:
     
         procedure = MagicMock()
         
-        with patch('yt_diffuser.main.watchdog.PollingObserver') as observer_mock, \
+        with patch('yt_diffuser.dev_watcher.PollingObserver') as observer_mock, \
             patch('multiprocessing.Process') as process_mock:
             
             watchdog_process(procedure, ('arg1', 'arg2'))

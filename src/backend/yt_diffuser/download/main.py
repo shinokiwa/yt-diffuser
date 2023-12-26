@@ -114,7 +114,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
             send_message(queue, "download-error", target=e.__class__.__name__)
             return
         
-        repo_info = ModelInfo(sha=commit_hash, siblings=[])
+        repo_info = ModelInfo(sha=commit_hash, siblings=[], id="0", private=True)
         for root, dirs, files in os.walk(snapshot_folder):
             for file in files:
                 relative_path = os.path.relpath(os.path.join(root, file), snapshot_folder)

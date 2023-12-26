@@ -1,6 +1,7 @@
 """ ワーカープロセスからのメッセージを受け取るモジュール
 """
 from logging import getLogger; logger = getLogger(__name__)
+import atexit
 import multiprocessing
 from multiprocessing.context import SpawnContext
 import threading
@@ -8,10 +9,13 @@ import queue
 
 from queue import Empty # このモジュールでは使わないが、インポート先で確定的に使うのでここでインポートしておく
 
+from yt_diffuser.utils.message_queue import EVENT_TYPE_FILESYSTEM, EVENT_TYPE_MESSAGE
+
 _listeners = {}
 _latest_messages = {}
 _NO_CACHE_EVENT = [
-    'message'
+    EVENT_TYPE_MESSAGE,
+    EVENT_TYPE_FILESYSTEM
 ] # 最終メッセージをキャッシュしないイベント
 
 def get_event_listener(event_name:str) -> queue.Queue:
@@ -39,7 +43,7 @@ def get_event_listener(event_name:str) -> queue.Queue:
 
     _listeners[event_name].append(q)
 
-    logger.debug(f"Add listener for {event_name}.")
+    logger.debug(f"Add listener for {event_name}. id={id(q)}")
 
     return q
 
@@ -66,7 +70,7 @@ def remove_event_listener(event_name: str, listener: queue.Queue):
     if len(_listeners[event_name]) == 0:
         del _listeners[event_name]
 
-    logger.debug(f"Remove listener for {event_name}.")
+    logger.debug(f"Remove listener for {event_name}. id={id(listener)}")
 
 _context = multiprocessing.get_context('spawn')
 
@@ -115,11 +119,12 @@ def message_listener() -> None:
 
         if event not in _NO_CACHE_EVENT:
             _latest_messages[event] = data
-        
+
         logger.debug(f"Received message : {event}")
 
         for listener in _listeners.get(event, []):
-            listener.put_nowait(data)
+            logger.debug(f"Put message to listener. id={id(listener)}")
+            listener.put(data)
     logger.debug("Exit message listener.")
 
 
@@ -136,6 +141,7 @@ def start_message_listener () -> None:
         target=message_listener,
         daemon=True
     ).start()
+    atexit.register(stop_message_listener)
 
 def stop_message_listener () -> None:
     """
@@ -147,6 +153,3 @@ def stop_message_listener () -> None:
     logger.debug("Call stop message listener.")
 
     get_message_queue().put_nowait(("exit", None))
-
-import atexit
-atexit.register(stop_message_listener)

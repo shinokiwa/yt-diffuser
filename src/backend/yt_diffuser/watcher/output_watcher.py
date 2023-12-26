@@ -38,6 +38,7 @@ class FileEventHandler(FileSystemEventHandler):
 def start_watchdog(config:AppConfig, queue:Queue):
     event_handler = FileEventHandler(queue=queue)
     observer = PollingObserver(timeout=5)
+    config.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     observer.schedule(event_handler, path=config.OUTPUT_DIR, recursive=True)
     observer.start()
     logger.info(f"Start watchdog for {config.OUTPUT_DIR}")

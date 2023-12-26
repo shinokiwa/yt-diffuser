@@ -6,16 +6,7 @@ from pytest_mock import MockerFixture
 import queue
 import multiprocessing
 
-from yt_diffuser.web.message_listener import (
-    get_event_listener,
-    remove_event_listener,
-
-    get_context,
-    get_message_queue,
-
-    message_listener,
-    start_message_listener
-)
+from yt_diffuser.web.message_listener import *
 
 def test_get_event_listener_spec(mocker:MockerFixture):
     """
@@ -136,3 +127,17 @@ def test_start_listener_spec(mocker:MockerFixture):
     assert mock_thread.call_count == 1
     assert mock_thread.call_args_list[0][1]["target"] == mock_message_listener
 
+
+def test_stop_listener_spec(mocker:MockerFixture):
+    """
+    stop_message_listener
+
+    it:
+        - メッセージリスナーを終了する。
+    """
+
+    mock_queue = mocker.MagicMock(put_nowait=mocker.MagicMock())
+    mock_message_queue = mocker.patch( "yt_diffuser.web.message_listener.get_message_queue", return_value=mock_queue)
+    stop_message_listener()
+    assert mock_queue.put_nowait.call_count == 1
+    assert mock_queue.put_nowait.call_args_list[0][0][0] == ("exit", None)

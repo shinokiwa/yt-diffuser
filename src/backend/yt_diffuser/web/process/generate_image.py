@@ -6,7 +6,7 @@
 また、生成プロセスは１つしか実行されない。
 
 """
-
+import atexit
 import multiprocessing
 from multiprocessing.context import SpawnProcess
 from logging import getLogger; logger = getLogger(__name__)
@@ -107,6 +107,9 @@ def terminate() -> None:
     global _process
 
     if is_running():
+        logger.debug("Terminate generate_image")
         input_message("exit")
         _process.join()
         _process = None
+
+atexit.register(terminate)

@@ -1,6 +1,5 @@
 import sys
 import logging; logger = logging.getLogger('yt_diffuser')
-logging.basicConfig(stream=sys.stdout)
 
 from waitress import serve
 
@@ -18,6 +17,7 @@ def main(config:AppConfig) -> None:
         config (AppConfig): アプリケーション設定
     """
     if config.debug:
+        logging.basicConfig(stream=sys.stdout)
         logger.setLevel(level=logging.DEBUG)
 
     logger.debug("Start yt_diffuser")

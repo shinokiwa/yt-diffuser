@@ -1,6 +1,7 @@
 """
 output API関連のユーティリティ関数群
 """
+import logging; logger = logging.getLogger(__name__)
 from typing import Union, Generator
 import os
 import json
@@ -47,6 +48,7 @@ def stream_list (path:Path, timeout:float=20.0) -> Generator[str, None, None]:
         while True:
             try:
                 data = queue.get(timeout=timeout)
+                logger.debug(f"get event: {data}")
                 if type(data) == dict:
                     event_path = Path(data['target'])
                     if is_child(path, event_path) == False:

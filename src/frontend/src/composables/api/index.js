@@ -23,9 +23,23 @@ function post (url, data) {
     })
 }
 
+/**
+ * DELETEリクエスト
+ * deleteが予約語なのでdelにしている
+ * 
+ * @param {*} url 
+ * @returns 
+ */
+function del (url) {
+    return fetch(url, {
+        method: 'DELETE'
+    })
+}
+
 export function useApi () {
     return{
         get,
-        post
+        post,
+        del
     }
 }

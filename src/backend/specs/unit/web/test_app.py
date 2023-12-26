@@ -12,12 +12,13 @@ def test_create_app (mocker):
     mock_init_routes = mocker.patch('yt_diffuser.web.app.init_routes')
     mock_start_listener = mocker.patch('yt_diffuser.web.app.start_message_listener')
     mock_setup_database = mocker.patch('yt_diffuser.web.app.setup_database')
+    mock_watchdog = mocker.patch('yt_diffuser.web.app.start_watchdog')
+
     app = create_app(AppConfig())
 
     assert type(app) == Flask
     assert mock_init_routes.call_count == 1
-
     assert mock_start_listener.call_count == 1
-
     assert mock_setup_database.call_count == 1
+    assert mock_watchdog.call_count == 1
 

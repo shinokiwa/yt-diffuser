@@ -5,45 +5,68 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 
-import { useImage } from '@/composables/api/res/image'
-const { getImageList } = useImage()
-
-const imageList = ref([])
-let source = null
+import { useTemp } from '@/composables/api/res/output/temp'
+const { imageList, refresh, close, deleteAll, deleteSelected } = useTemp()
 
 onMounted(()=>{
-    source = getImageList('temp', (data)=>{
-        if (data.type === 'deleted' || data.type === 'modified') {
-            imageList.value = imageList.value.filter((item) => {
-                return item.url !== data.target
-            })
-        }
-
-        if (data.type === 'created' || data.type === 'list' || data.type === 'modified') {
-            imageList.value.push({
-                id: imageList.value.length,
-                url: data.target
-            })
-        }
-    })
+    refresh()
 })
 
 onUnmounted(()=>{
-    source.close()
+    close()
 })
+
+const isSelected = ref(false)
+
+function toggleSelect (id) {
+    let selected = false
+    imageList.value.forEach(image => {
+        if (image.id === id) {
+            image.selected = !image.selected
+        }
+
+        if (image.selected) {
+            selected = true
+        }
+    })
+    isSelected.value = selected
+}
 </script>
 
 <template>
 <WindowArea window-title="出力画像">
+    <div class="menu">
+        <button @click="refresh">更新</button>
+        <button v-if="isSelected" @click="deleteSelected">選択したものを削除</button>
+        <button @click="deleteAll">すべて削除</button>
+    </div>
     <div class="gallery">
-        <div class="gallery-item" v-for="image in imageList" :key="image.id">
-            <img :src="'output/temp/' + image.url">
-        </div>
+        <a
+            class="gallery-item"
+            v-for="image in imageList"
+            :key="image.id"
+            :class="{ selected: image.selected }"
+            href="#"
+            @click="toggleSelect(image.id)"
+        >
+            <img
+                :src="'output/temp/' + image.url + '?t=' + image.timestamp"
+            >
+        </a>
     </div>
 </WindowArea>
 </template>
 
 <style scoped>
+
+.menu {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.menu button {
+    margin: 5px;
+}
 .gallery {
     display: flex;
     flex-wrap: wrap;
@@ -55,7 +78,22 @@ onUnmounted(()=>{
     width: 150px;
     height: 150px;
     margin: 5px;
+    padding: 5px;
     display: inline-block;
+    box-sizing: content-box;
+}
+
+.gallery-item:hover {
+    cursor: pointer;
+}
+
+.gallery-item:focus {
+    outline: 1px solid #333333;
+    background-color: #3344cc;
+}
+
+.gallery-item.selected {
+    background-color: #3344cc;
 }
 
 .gallery-item img {
