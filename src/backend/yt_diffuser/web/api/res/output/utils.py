@@ -19,6 +19,9 @@ def is_child (parent:StrOrPath, child:StrOrPath) -> bool:
 
     同一の場合もTrueとなる。
     """
+    if not child.is_absolute():
+        child = (parent / child).resolve()
+
     if isinstance(parent, str):
         parent = Path(parent)
     if isinstance(child, str):
@@ -48,12 +51,13 @@ def stream_list (path:Path, timeout:float=20.0) -> Generator[str, None, None]:
         while True:
             try:
                 data = queue.get(timeout=timeout)
-                logger.debug(f"get event: {data}")
                 if type(data) == dict:
                     event_path = Path(data['target'])
                     if is_child(path, event_path) == False:
                         continue
 
+                    if not event_path.is_absolute():
+                        event_path = (path / event_path).resolve()
                     data['target'] = str(event_path.relative_to(path))
                     data = json.dumps(data)
             except Empty:

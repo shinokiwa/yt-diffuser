@@ -2,7 +2,7 @@
 /**
  * 生成ビューの出力エリア
  */
-import { ref, onMounted, onUnmounted, watch} from 'vue'
+import { ref, onMounted, onUnmounted} from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 
 import { useTemp } from '@/composables/api/res/output/temp'
@@ -16,86 +16,169 @@ onUnmounted(()=>{
     close()
 })
 
-const selectImgs = ref([])
-const lastSelectIndex = ref(null)
+const is_enable_delete = ref(false)
+const gallery = ref(null)
+const focus = ref(null)
+const rangeFocus = ref(null)
 
-function selectItem (event, index, image) {
-    event.preventDefault()
-    event.stopPropagation()
+/**
+ * 対象を選択状態にする
+ * 
+ * @param {Element} target 対象の.gallery-item
+ * @param {Boolean} ctrlKey Ctrlキーが押されているか
+ * @param {Boolean} shiftKey Shiftキーが押されているか
+ */
+function selectItem (target, ctrlKey=false, shiftKey=false) {
     // Ctrlキーが押されていない場合は選択状態を解除
-    if (!event.ctrlKey) {
-        selectImgs.value = []
+    if (ctrlKey === false) {
+        clearSelect()
     }
 
     // Shiftキーが押されている場合は範囲選択
-    if (event.shiftKey && lastSelectIndex.value !== null) {
-        const range = [lastSelectIndex.value, index].sort()
-        imageList.value.forEach((v, i) => {
-            if (i >= range[0] && i <= range[1]) {
-                selectImgs.value.push(v.url)
+    if (shiftKey && focus.value !== null) {
+        const startIndex = parseInt(rangeFocus.value)
+        const targetIndex = parseInt(target.dataset.index)
+
+        const range = [startIndex, targetIndex].sort((a, b) => a - b)
+
+        gallery.value.querySelectorAll(`.gallery-item`).forEach((v) => {
+            const index = parseInt(v.dataset.index)
+            if (index >= range[0] && index <= range[1]) {
+                v.dataset.selected = '1'
             }
         })
     } else {
-        if (selectImgs.value.includes(image.url)) {
-            selectImgs.value = selectImgs.value.filter(url => url !== image.url)
-        } else {
-            selectImgs.value.push(image.url)
-        }
-        lastSelectIndex.value = index
+        target.dataset.selected = target.dataset.selected === '1' ? '0' : '1'
+        rangeFocus.value = target.dataset.index
     }
 
+    focus.value = target.dataset.index
+    if (gallery.value.querySelectorAll('.gallery-item[data-selected="1"]').length > 0) {
+        is_enable_delete.value = true
+    } else {
+        is_enable_delete.value = false
+    }
     return false
 }
 
 function clearSelect () {
-    selectImgs.value = []
-    lastSelectIndex.value = null
+    gallery.value.querySelectorAll('.gallery-item[data-selected="1"]').forEach((v) => {
+        v.dataset.selected = 0
+    })
+    is_enable_delete.value = false
 }
 
 
-function keyDown (event) {
-    if (event.key === 'ArrowRight') {
-        const nextItem = event.target.nextElementSibling
-        if (nextItem) {
-            nextItem.focus()
-            nextItem.click()
-        }
-    } else if (event.key === 'ArrowLeft') {
-        const prevItem = event.target.previousElementSibling
-        if (prevItem) {
-            prevItem.focus()
-            prevItem.click()
-        }
+function mouseDown (event) {
+    if (event.target.classList.contains('gallery-item')) {
+        selectItem(event.target, event.ctrlKey, event.shiftKey)
+    } else {
+        clearSelect()
     }
+}
+
+function keyDown (event) {
+    let index = focus.value === null ? 0 : parseInt(focus.value)
+
+    if (event.key === 'ArrowRight') {
+        if (gallery.value.querySelector('.gallery-item.focus') === null) {
+            index = index - 1
+        }
+        if (index >= imageList.value.length - 1) {
+            index = imageList.value.length - 2
+        }
+        selectItem(gallery.value.querySelector(`.gallery-item[data-index="${index + 1}"]`), false, event.shiftKey)
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+        if (index < 1) {
+            index = 1
+        }
+        selectItem(gallery.value.querySelector(`.gallery-item[data-index="${index - 1}"]`), false, event.shiftKey)
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault()
+        const current = gallery.value.querySelector('.gallery-item.focus')
+        const rect = current.getBoundingClientRect()
+        let rows = []
+        gallery.value.querySelectorAll('.gallery-item').forEach((v, i) => {
+            let targetRect = v.getBoundingClientRect()
+            if (targetRect.left == rect.left) {
+                rows.push([v, targetRect])
+            }
+        })
+        rows = rows.sort((a, b) => {
+            return a[1].top - b[1].top
+        })
+        const currentRow = rows.findIndex((v) => {
+            return v[0] === current
+        })
+        if (event.key === 'ArrowUp') {
+            if (currentRow > 0) {
+                selectItem(rows[currentRow - 1][0], false, event.shiftKey)
+            }
+        } else {
+            if (currentRow < rows.length - 1) {
+                selectItem(rows[currentRow + 1][0], false, event.shiftKey)
+            }
+        }
+    } else if (event.key === 'Enter') {
+        const selected = gallery.value.querySelector('.gallery-item[data-selected="1"]')
+        if (selected !== null) {
+            window.open(selected.dataset.imageUrl)
+        }
+    } else if (event.key === 'Delete') {
+        doDeleteSelected()
+    } else {
+        return
+    }
+}
+
+function doDeleteSelected () {
+    const selected = gallery.value.querySelectorAll('.gallery-item[data-selected="1"]')
+    const selectImgs = []
+    selected.forEach((v) => {
+        selectImgs.push(v.dataset.imageUrl)
+    })
+    if (selectImgs.length > 0) {
+        deleteSelected(selectImgs)
+    }
+
+    is_enable_delete.value = false
+}
+
+function doDeleteAll () {
+    window.confirm('すべて削除しますか？') && deleteAll()
 }
 
 </script>
 
 <template>
-<WindowArea window-title="出力画像">
+<WindowArea window-title="出力画像" activate="1">
     <div class="menu">
         <button @click="refresh">更新</button>
-        <button v-if="selectImgs.length > 0" @click="deleteSelected">選択したものを削除</button>
-        <button @click="deleteAll">すべて削除</button>
+        <button v-if="is_enable_delete" @click="doDeleteSelected">選択したものを削除</button>
+        <button @click="doDeleteAll">すべて削除</button>
     </div>
     <div class="gallery"
-        @click="clearSelect"
+        ref="gallery"
+        tabindex="0"
+
+        @mousedown.left="mouseDown"
+        @keydown="keyDown($event)"
     >
-        <a
+        <div
             class="gallery-item"
             v-for="(image, index) in imageList"
             :key="image.id"
-            :class="{ selected: selectImgs.includes(image.url) }"
-            :href="'output/temp/' + image.url + '?t=' + image.timestamp"
-            target="_blank"
 
-            @click="selectItem($event, index, image)"
-            @keydown="keyDown"
+            :class="{ focus: focus === index.toString() }"
+            :data-index="index"
+            :data-image-url="image.url"
+            data-selected="0"
+
         >
             <img
                 :src="'output/temp/' + image.url + '?t=' + image.timestamp"
-            >
-        </a>
+            />
+        </div>
     </div>
 </WindowArea>
 </template>
@@ -115,28 +198,16 @@ function keyDown (event) {
     flex-wrap: wrap;
     justify-content: flex-start;
     word-wrap: break-word;
+    user-select: none;
 }
 
 .gallery-item {
+    position: relative;
     width: 150px;
     height: 150px;
     margin: 5px;
-    padding: 5px;
     display: inline-block;
     box-sizing: content-box;
-}
-
-.gallery-item:hover {
-    cursor: pointer;
-}
-
-.gallery-item:focus {
-    outline: 0;
-    box-shadow: 0 0 0 2px #333333;
-}
-
-.gallery-item.selected {
-    background-color: #3344cc;
 }
 
 .gallery-item img {
@@ -144,4 +215,22 @@ function keyDown (event) {
     height: 100%;
     object-fit: cover;
 }
+
+.gallery-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    box-sizing: border-box;
+}
+
+.gallery-item.focus::before {
+    box-shadow: 0 0 0 2px #333333;
+}
+
+.gallery-item[data-selected="1"]::before {
+    border: 1px solid #3246dd;
+    background-color: rgba(50, 70, 221, 0.3);
+}
+
+
 </style>

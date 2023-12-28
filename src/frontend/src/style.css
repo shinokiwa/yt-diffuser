@@ -4,6 +4,7 @@
     --color-bg-header: #001166;
     --color-bg-menu: #000322;
     --color-bg-focus: #0033ff;
+    --color-bg-activewindow: #0033ff;
 
     --color-border-window: #cccccc;
     --color-border-dark: #000322;
@@ -13,6 +14,7 @@
     --font-color-base: #333333;
     --font-color-gray: #cccccc;
     --font-color-light: #eeeeee;
+    --font-color-activewindow: #eeeeee;
     --font-size-base: 16px;
 
     --size-header-height: 30px;

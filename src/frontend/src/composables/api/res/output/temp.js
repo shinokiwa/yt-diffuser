@@ -31,7 +31,6 @@ function refresh () {
                     id: imageList.value.length,
                     url: data.target,
                     timestamp: new Date().getTime(),
-                    selected: false
                 })
             }
 
@@ -66,12 +65,14 @@ function deleteAll () {
  * 選択したリソースを削除する
  * @returns 
  */
-function deleteSelected () {
+function deleteSelected (targets) {
     const {del} = useApi()
-    imageList.value.forEach((item) => {
-        if (item.selected) {
-            del('/api/res/output/temp/' + item.url)
-        }
+
+    targets.forEach((target) => {
+        del('/api/res/output/temp/' + target)
+    })
+    imageList.value = imageList.value.filter((item) => {
+        return !targets.includes(item.url)
     })
 }
 
