@@ -48,7 +48,7 @@ defineProps({
     display:flex; flex-direction: row;
     justify-content: space-between;
 
-    margin: 0 0 5px 0;
+    margin: 0;
     padding: 5px 10px;
     border-bottom: 1px solid var(--color-border-window);
     font-size: 16px;
@@ -72,5 +72,6 @@ defineProps({
     flex-grow: 1;
     padding: 10px;
     height: auto;
+    overflow-y: auto;
 }
 </style>

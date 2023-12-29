@@ -1,11 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
+import TempGalleryWindow from '@/components/views/windows/TempGalleryWindow.vue'
+
 import Overlay from '@/components/elements/Overlay.vue'
 import FormGrid from '@/components/elements/FormGrid.vue'
 import InputText from '@/components/elements/InputText.vue'
-
-import OutputArea from '@/components/views/generator/OutputArea.vue'
 
 import { useGenerateImage } from '@/composables/api/generate/image'
 const { start_generate } = useGenerateImage()
@@ -31,7 +31,7 @@ const prompt = ref(null)
                 </div>
             </div>
         </WindowArea>
-        <OutputArea id="OutputArea"/>
+        <TempGalleryWindow id="OutputArea" />
     </div>
 </WindowArea>
 </template>
@@ -40,7 +40,7 @@ const prompt = ref(null)
 #GeneratorArea{
     display: flex;
     flex-direction: row;
-    padding: 5px;
+    height: 100%;
 }
 
 #InputArea {
@@ -58,4 +58,5 @@ const prompt = ref(null)
     flex-grow: 1;
     width: min-content;
 }
+
 </style>
