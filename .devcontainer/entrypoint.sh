@@ -1,3 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+exec > >(tee /var/log/entrypoint.log) 2>&1
+echo "entrypoint.sh is running"
 
-tail -F /dev/null
+. /server_start.sh
+
+/usr/bin/tail -f /dev/null

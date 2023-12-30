@@ -1,16 +1,30 @@
 {
-  "dockerComposeFile": "./docker-compose.yml",
-  "service": "devcontainer",
+  "name": "yt_diffuser dev container",
+  "dockerFile": "../.devcontainer/Dockerfile",
+  "context": "..",
+  "runArgs": [
+    "-v", "${localWorkspaceFolder}:/workspace",
+    "-v", "dev_data_volume:/workspace/data",
+    "-v", "dev_npm_volume:/workspace/src/frontend/node_modules",
+    "-p", "20080:80"
+  ],
+  "remoteEnv": {
+    "LANG": "ja_JP.UTF-8",
+    "LANGUAGE": "ja_JP:ja",
+    "LC_ALL": "ja_JP.UTF-8",
+    "TZ": "JST-9",
+    "DEBUG": "1"
+  },
   "workspaceFolder": "/workspace/",
   "customizations": {
     "vscode": {
       "extensions": [
-		"dbaeumer.vscode-eslint",
-		"esbenp.prettier-vscode",
-		"vue.volar",
-		"ms-python.python",
-		"GitHub.copilot"
-	] 
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vue.volar",
+        "ms-python.python",
+        "GitHub.copilot"
+      ] 
     }
   }
 }

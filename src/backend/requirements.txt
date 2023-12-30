@@ -19,8 +19,3 @@ accelerate>=0.25,<0.26
 datasets>=2.9,<2.10
 
 bitsandbytes==0.37.0
-
---extra-index-url https://download.pytorch.org/whl/cu117
-torch>=2.0,<2.1
-torchvision
-torchaudio

@@ -1,46 +1,53 @@
-# バックエンドコンテナと、マルチステージビルドでDevContainerのイメージを構成
+# Baseステージは本番用とDevContainer用で共通
 
 # NVIDIA CUDA 11.7 Ubuntu用をベースイメージにする
-FROM nvidia/cuda:11.7.1-base-ubuntu22.04 AS backend
+FROM nvidia/cuda:11.7.1-base-ubuntu22.04 AS base
 
-# バックエンドコンテナに必要なパッケージをインストール
+# 必要なパッケージをインストール
 RUN apt-get update && apt-get install -y --no-install-recommends \
     language-pack-ja \
     build-essential \
     git curl \
     python3-pip python3-venv \
-    libgl1-mesa-glx libglib2.0-0
+    libgl1-mesa-glx libglib2.0-0 \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
 
-# workspaceディレクトリを作成
+# Node.jsインストール
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# PyTorchインストール
 WORKDIR /workspace/src/backend/
-
-# pipインストール
-COPY ./src/backend/requirements.txt /workspace/src/backend/
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
-RUN python3 -m pip install -r /workspace/src/backend/requirements.txt
+COPY ./src/backend/requirements-torch.txt /workspace/src/backend/
+RUN python3 -m pip install -r /workspace/src/backend/requirements-torch.txt
 
-COPY ./.devcontainer/backend/entrypoint.sh /
-ENTRYPOINT [ "/entrypoint.sh" ]
 
 #################################
-
 # DevContainer用のイメージを構成
-FROM backend AS devcontainer
+FROM base AS devcontainer
 
-WORKDIR /workspace/src/frontend
-
-# Node.jsをインストール
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
-RUN apt-get install -y nodejs
-
-# npmインストール
-COPY ./src/frontend/package.json /workspace/src/frontend/
-RUN npm install
-
-WORKDIR /workspace/src/
-
+# pipインストール
+WORKDIR /workspace/src/backend/
+COPY ./src/backend/requirements.txt /workspace/src/backend/
+RUN python3 -m pip install -r /workspace/src/backend/requirements.txt
 COPY ./src/backend/requirements-dev.txt /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements-dev.txt
 
+# npmインストール
+WORKDIR /workspace/src/frontend
+COPY ./src/frontend/package.json /workspace/src/frontend/
+RUN npm install
+
+# Nginxの設定
+COPY ./.devcontainer/nginx.conf /etc/nginx/nginx.conf
+
+# ワークスペースの設定
+WORKDIR /workspace/src/
+
+COPY ./.devcontainer/server_start.sh /
 COPY ./.devcontainer/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
