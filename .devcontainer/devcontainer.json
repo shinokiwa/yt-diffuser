@@ -1,7 +1,8 @@
 {
-  "name": "yt_diffuser dev container",
-  "dockerFile": "../.devcontainer/Dockerfile",
+  "name": "yt_diffuser_devcontainer",
+  "dockerFile": "Dockerfile",
   "context": "..",
+  "overrideCommand": false,
   "runArgs": [
     "-v", "${localWorkspaceFolder}:/workspace",
     "-v", "dev_data_volume:/workspace/data",
