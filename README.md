@@ -47,6 +47,11 @@ pytest specs/path/to/test
 
 カバレッジ取得は以下。
 
-```
+```sh
+# ターミナルにレポートを出力する場合
+pytest --cov=yt_diffuser --cov-report term-missing specs/
+
+
+# HTMLファイルに出力する場合
 pytest --cov=yt_diffuser --cov-report html specs/
 ```
