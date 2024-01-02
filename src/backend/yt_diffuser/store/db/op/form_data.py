@@ -1,75 +1,90 @@
-"""form_dataテーブルの操作を行うモジュール
 """
-import sqlite3
+form_data
+フォームの最新状態を保存するテーブル
+"""
+from typing import Dict, List
+from sqlite3 import Connection
 
-def get_all_form_data(db: sqlite3.Connection) -> dict:
-    """全てのフォームデータを取得する
+def create_table (conn:Connection) -> None:
+    """
+    テーブルを作成する。
 
     Args:
-        db (sqlite3.Connection): DBコネクション
+        conn (Connection): DBコネクション
+    """
+    conn.executescript((
+        "CREATE TABLE form_data ("
+            "name            TEXT        NOT NULL,"                              # モデル名
+            "value           TEXT        NOT NULL,"                              # モデルのリビジョン
+            "updated_at      DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP," # モデルの更新日時
+            "registed_at     DATETIME    NOT NULL    DEFAULT CURRENT_TIMESTAMP,"  # モデルの登録日時
+            "PRIMARY KEY (name)"
+        ");"
+    ))
+
+def save (conn:Connection, **kwargs) -> None:
+    """
+    フォーム情報を保存する。
+
+    - レコードが存在する場合は更新、存在しない場合は追加する。
+    - 指定した辞書のキーと値を保存する。
+
+    Args:
+        conn (Connection): DBコネクション
+        **kwargs: 保存するキーと値
+    
+    Returns:
+        None
+    """
+    sql = (
+        "INSERT INTO form_data (name, value)"
+        " VALUES"
+    )
+
+    sql += ",".join(["(?, ?)" for _ in kwargs])
+
+    sql += (
+        " ON CONFLICT(name)"
+        " DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP"
+    )
+    values = []
+    for key, value in kwargs.items():
+        values.append(key)
+        values.append(value)
+
+    conn.execute(sql, values)
+    return
+
+
+def get_all (conn:Connection) -> List[Dict]:
+    """
+    フォーム情報を全て取得する。
+
+    Args:
+        conn (Connection): DBコネクション
 
     Returns:
-        dict: フォームデータ
+        Dict: フォーム最新情報
+            - name: フォーム名
+            - value: フォームの値
+            - updated_at: レコードの更新日時
+            - registed_at: レコードの登録日時
     """
-    cursor = db.cursor()
-    cursor.execute(
-        'SELECT key, value FROM form_data'
-    )
-    return {
-        key: value
-        for key, value in cursor.fetchall()
-    }
+    sql = "SELECT * FROM form_data"
+    result = conn.execute(sql).fetchall()
+    return result
 
-def get_form_data(db: sqlite3.Connection, key: str) -> str:
-    """指定したキーのフォームデータを取得する
+def delete (conn:Connection, name:str) -> None:
+    """
+    フォーム情報を削除する。
 
     Args:
-        db (sqlite3.Connection): DBコネクション
-        key (str): キー
+        conn (Connection): DBコネクション
+        name (str): 削除するフォーム名
+    
+    Returns:
+        None
     """
-    cursor = db.cursor()
-    cursor.execute(
-        'SELECT value FROM form_data WHERE key = ?',
-        (key,)
-    )
-    return cursor.fetchone()[0]
-
-def save_all_form_data(db: sqlite3.Connection, form_data: dict):
-    """全てのフォームデータを保存する
-    未指定のデータは削除される
-
-    Args:
-        db (sqlite3.Connection): DBコネクション
-        form_data (dict): フォームデータ
-    """
-    # データを文字列に変換
-    data = {}
-    for key, value in form_data.items():
-        data[key] = str(value)
-
-    cursor = db.cursor()
-    cursor.execute('DELETE FROM form_data')
-
-    cursor.executemany(
-        'INSERT OR REPLACE INTO form_data VALUES (?, ?)',
-        data.items()
-    )
-    db.commit()
-
-def save_form_data (db: sqlite3.Connection, key: str, value: str):
-    """指定したキーのフォームデータを保存する
-
-    Args:
-        db (sqlite3.Connection): DBコネクション
-        key (str): キー
-        value (str): 値
-    """
-    # データを文字列に変換
-    value = str(value)
-
-    cursor = db.cursor()
-    cursor.execute(
-        'INSERT OR REPLACE INTO form_data VALUES (?, ?)',
-        (key, value)
-    )
-    db.commit()
+    sql = "DELETE FROM form_data WHERE name = ?"
+    conn.execute(sql, (name,))
+    return

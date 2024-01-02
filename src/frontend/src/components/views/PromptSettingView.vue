@@ -1,0 +1,115 @@
+<script setup>
+/**
+ * プロンプト設定画面
+ */
+import { ref } from 'vue'
+import WindowArea from '@/components/elements/WindowArea.vue'
+import InputPrompt from '@/components/elements/InputPrompt.vue'
+
+const prompt = ref("")
+
+</script>
+
+<template>
+<WindowArea id="PromptSettingView" window-title="プロンプト設定">
+    <div id="PromptSettingArea">
+        <div class="left-area">
+            <div class="image-area">
+                <img src="https://via.placeholder.com/300x300" />
+            </div>
+            <div clss="option-area">
+                <div>
+                    <button>プレビュー</button>
+                </div>
+                <div>
+                    <input type="checkbox" id="RealTimePreview" />
+                    <label for="RealTimePreview">
+                        リアルタイムプレビュー
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        SEED値
+                    </label>
+                    <input type="text" placeholder="未入力で自動設定"/>
+                </div>
+                <div>
+                    画像サイズ
+                    <label>
+                        縦
+                    </label>
+                    <input size="3" type="number" placeholder="1" />px<br />
+                    <label>
+                        横
+                    </label>
+                    <input size="3" type="number" placeholder="1" />px
+                </div>
+                <div>
+                    <label>
+                        スケジューラー
+                    </label>
+                    <select>
+                        <option value="0">なし</option>
+                        <option value="1">毎日</option>
+                        <option value="2">毎週</option>
+                        <option value="3">毎月</option>
+                    </select>
+                </div>
+                <div>
+                    <label>
+                        ステップ数
+                    </label>
+                    <input type="number" placeholder="1" />
+                </div>
+                <div>
+                    <label>
+                        ガイダンススケール
+                    </label>
+                    <input type="number" placeholder="1" />
+                </div>
+            </div>
+        </div>
+        <div class="right-area">
+            <div class="prompt-area">
+                <InputPrompt
+                    id="prompt"
+                    label="プロンプト"
+                    v-model="prompt"
+                />
+            </div>
+            <div class="prompt-area">
+                ネガティブプロンプト<br />
+                <textarea placeholder=""></textarea>
+                <textarea placeholder=""></textarea>
+            </div>
+            <div class="prompt-area">
+                メモ<br />
+                <textarea placeholder=""></textarea>
+            </div>
+        </div>
+    </div>
+</WindowArea>
+</template>
+
+<style scoped>
+#PromptSettingArea{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.left-area {
+    width: 400px;
+    margin-right: 10px;
+}
+
+.right-area {
+    flex-grow: 1;
+    width: min-content;
+}
+
+textarea {
+    width: 50%;
+    height: 15em;
+}
+</style>

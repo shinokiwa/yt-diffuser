@@ -21,8 +21,9 @@ export function useViewStore() {
         // ビューの定義
         INITIALIZING: 0,
         MODEL_MANAGE: 1,
-        GENERATE: 2,
-        GALLERY: 3,
-        EDITOR: 4,
+        PROMPT_SETTING: 2,
+        GENERATE_BATCH: 3,
+        GALLERY: 4,
+        EDITOR: 5,
     }
 }

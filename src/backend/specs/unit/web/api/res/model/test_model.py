@@ -1,9 +1,10 @@
-""" modelモジュールのテスト """
-
+"""
+yt_diffuser.web.api.res.model のテスト
+"""
 from flask import Flask
 
 from specs.utils.test_utils.app import app
-from yt_diffuser.web.api.res.model._model import bp
+from yt_diffuser.web.api.res.model import bp
 
 def test_get_model (app:Flask):
     """

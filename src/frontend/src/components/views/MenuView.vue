@@ -8,7 +8,8 @@ const {
     currentView,
     changeView,
     MODEL_MANAGE,
-    GENERATE,
+    PROMPT_SETTING,
+    GENERATE_BATCH,
     GALLERY,
     EDITOR,
 } = useViewStore()
@@ -22,9 +23,13 @@ const {
             <i class="bi-gpu-card"></i>
             <span>モデル管理</span>
         </li>
-        <li role="generate" v-bind:class="{ 'active': currentView === GENERATE }" v-on:click="changeView(GENERATE)">
+        <li role="prompt" v-bind:class="{ 'active': currentView === PROMPT_SETTING }" v-on:click="changeView(PROMPT_SETTING)">
             <i class="bi-cpu"></i>
-            <span>画像生成</span>
+            <span>プロンプト設定</span>
+        </li>
+        <li role="generate" v-bind:class="{ 'active': currentView === GENERATE_BATCH }" v-on:click="changeView(GENERATE_BATCH)">
+            <i class="bi-cpu"></i>
+            <span>連続生成</span>
         </li>
         <li role="gallery" v-bind:class="{ 'active': currentView === GALLERY }" v-on:click="changeView(GALLERY)">
             <i class="bi-images"></i>

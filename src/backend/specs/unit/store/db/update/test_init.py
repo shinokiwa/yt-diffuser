@@ -2,24 +2,30 @@
 """
 import pytest
 
-from yt_diffuser.store.db.update.init import init_database
-from yt_diffuser.store.db import connect_database
+from specs.utils.test_utils.db import make_db_memory
 
-@pytest.mark.describe("init_database")
-@pytest.mark.it("DBの初期化を行う")
-def test_init_database(mocker):
+from yt_diffuser.config import AppConfig
 
-    conn = connect_database(":memory:")
-    db_version = 1
+def test_init_database():
+    """
+    init_database
     
-    init_database(conn, db_version)
+    it:
+        - DBの初期化を行う
+        - テスト内容はmake_db_memoryと同じなので結果だけ確認する
+    """
 
+    conn = make_db_memory(AppConfig())
+
+    # アサーションの都合テーブルは名前順に並べ替える
     tables = conn.execute('SELECT name FROM sqlite_master WHERE type="table" ORDER BY NAME ASC').fetchall()
     table_names = [table[0] for table in tables]
     assert table_names == [
         "database_status",
+        "form_data",
         "model_info",
-        #"sqlite_sequence"
+        "prompt_archive",
+        "sqlite_sequence"
     ]
 
     assert conn.execute('SELECT value FROM database_status WHERE key="version" ').fetchone()["value"] == "1"
