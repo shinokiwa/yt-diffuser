@@ -9,9 +9,12 @@ from pathlib import Path
 
 from yt_diffuser.config import AppConfig
 
-def make_config() -> AppConfig:
+def make_config(is_memory_db:bool = False) -> AppConfig:
     """
     テスト用のアプリケーション設定を生成する。
+
+    Args:
+        is_memory_db (bool): メモリDBを使用するかどうか。
     """
     config = AppConfig(
         debug=True,
@@ -20,5 +23,8 @@ def make_config() -> AppConfig:
     )
 
     config.STORE_HF_MODEL_DIR = Path(__file__).parents[1] / "test_data/basic/models/huggingface"
+
+    if is_memory_db:
+        config.DB_FILE = ':memory:'
 
     return config

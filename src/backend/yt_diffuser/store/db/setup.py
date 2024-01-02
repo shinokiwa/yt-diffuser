@@ -19,8 +19,8 @@ def setup_database (db_file: Path, db_update_file: Path, db_version: int):
     """
     logger.debug("Setup database.")
 
-    # DBが存在しない場合は初期化のみ行う。
-    if not db_file.exists():
+    # DBが存在しない場合、もしくはインメモリの時は初期化のみ行う。
+    if not db_file.exists() or str(db_file) == ':memory:':
         db_file.parent.mkdir(parents=True, exist_ok=True)
 
         conn = connect_database(db_file)
