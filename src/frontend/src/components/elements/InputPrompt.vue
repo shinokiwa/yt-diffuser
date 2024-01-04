@@ -3,20 +3,21 @@ import {ref, defineProps, defineEmits, watchEffect} from 'vue'
     
 const props = defineProps({
     id: String,
-    modelValue: Array,
-    label: String
+    label: String,
+    promptList: Array,
+    modelValue: String
 })
 const emits = defineEmits(['update:modelValue'])
 
-const text = ref(props.modelValue[0])
+const prompt = ref(props.modelValue)
 
 watchEffect(()=>{
-    emits('update:modelValue', text.value)
+    emits('update:modelValue', prompt.value)
 })
 
 async function copy () {
     try {
-        await navigator.clipboard.writeText(text.value);
+        await navigator.clipboard.writeText(prompt.value);
         toast.emit('クリップボードにコピーしました。')
     } catch (err) {
         toast.emit('コピーに失敗しました。')
@@ -25,15 +26,15 @@ async function copy () {
 </script>
 
 <template>    
-<div>
+<div class="prompt-area">
     <label :for="id">{{ label }}</label>
     <textarea
         :id="id"
-        placeholder="プロンプトを入力"
-        v-model="text"
+        placeholder="ここに入力"
+        v-model="prompt"
     ></textarea>
 
-    <div class="btn-menu textarea-menu">
+    <div class="btn-menu">
         <button type="button" title="プロンプトを表示" @click='store.dispatch("image/prompt")'>
             <i class="bi-info-circle"></i>
         </button>
@@ -46,7 +47,7 @@ async function copy () {
             <i class="bi-clipboard"></i>
         </button>
 
-        <button type="button" title="プロンプトを全削除" @click='text = ""'>
+        <button type="button" title="プロンプトを全削除" @click='prompt = ""'>
             <i class="bi-trash"></i>
         </button>
     </div>    
@@ -55,133 +56,68 @@ async function copy () {
     
     
 <style scoped>
+.prompt-area {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    margin: 11px 0 22px;
+    border: 1px solid var(--color-border-window);
+    border-radius: 5px;
+    background-color: var(--color-bg-base);
+    box-sizing: border-box;
+}
+
+.prompt-area:has(*:focus) {
+    box-shadow: 0 0 2px 3px var(--color-shadow);
+}
+
+label {
+    position: absolute;
+    display: block;
+    top: -11px;
+    left: 10px;
+    z-index: 1;
+    color: var(--font-color-gray);
+    background-color: var(--color-bg-base);
+    width: auto !important;
+}
+
 textarea {
     width: 100%;
+    height: 8em;
     font-size: var(--font-size-base);
-    margin: 0; padding: 10px;
-    border: 1px solid var(--color-border-window);
-    background-color: var(--color-background);
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    background-color: transparent;
     box-sizing: border-box;
     resize: vertical;
+    border: 0 solid var(--color-border-window);
+    border-bottom-width: 1px;
 }
 
 textarea::placeholder {
-    color: var(--color-mid1)
-}
-
-.title {
-    position: absolute;
-    top: -11px;
-    z-index: 1;
-    color: var(--color-mid2);
-    background-color: var(--color-background);
-    width: auto !important;
+    color: var(--font-color-gray);
 }
 
 .btn-menu {
     display: flex;
     flex-direction: row;
     justify-content: end;
+    margin-top: -8px;
 }
 .btn-menu button {
+    margin: 0;
+    padding: 2px 3px;
     font-size: 18px;
-    border-left-width: 0;
-}
-.btn-menu button:first-of-type {
+    border-width: 0;
     border-left-width: 1px;
+    border-color: var(--color-border-window);
+    background-color: var(--color-bg-base);
 }
 
 .btn-menu button:disabled:hover {
     background-color: transparent;
 }
 
-
-/**
- * フォーム関連
- */
-.form-area {
-    position: relative;
-    border: none;
-    border-radius: 5px;
-    padding: 0;
-    -webkit-transition: box-shadow .2s ease-in-out;
-    transition: box-shadow .2s ease-in-out;
-    width: 100%;
-}
-
-.form-area:has(*:focus) {
-    box-shadow: 0 0 2px 5px var(--color-shadow);
-}
-
-.form-area .title {
-    margin-left: 10px;
- }
-
-.form-area input,
-.form-area select {
-    border-radius: 5px;
-}
-
-.form-area textarea {
-    border-radius: 5px 5px 0 0;
-}
-
-.btn-menu.textarea-menu {
-    width: 100%;
-    margin: -5px 0 0 0;
-    border: 1px solid var(--color-mid2);
-    border-radius: 0 0 5px 5px;
-    box-sizing: border-box;
-}
-.btn-menu.textarea-menu button {
-    border-top-width: 0;
-    border-bottom-width: 0;
-    box-sizing: border-box;
-}
-.btn-menu.textarea-menu button:last-of-type {
-    border-bottom-right-radius: 5px;
-    border-right-width: 0;
-}
-
-
-/**
- * ユーティリティ
- */
-.flex {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-}
-.flex div {
-    width: 100%;
-}
-
-.border {
-    border: 1px solid var(--color-mid2);
-    border-radius: 5px;
-}
-
-.hidden {
-    display: none;
-}
-
-.text-info {
-    color: #3208eb;
-}
-
-.mb-1 {
-    margin-bottom: 5px !important;
-}
-
-.mb-2 {
-    margin-bottom: 10px !important;
-}
-
-.mb-3 {
-    margin-bottom: 15px !important;
-}
-
-.mb-4 {
-    margin-bottom: 20px !important;
-}
 </style>

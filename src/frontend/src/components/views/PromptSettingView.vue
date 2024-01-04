@@ -7,7 +7,10 @@ import WindowArea from '@/components/elements/WindowArea.vue'
 import InputPrompt from '@/components/elements/InputPrompt.vue'
 
 const prompt = ref("")
+const promptList = ref([])
 
+const nPrompt = ref("")
+const nPromptList = ref([])
 </script>
 
 <template>
@@ -70,18 +73,18 @@ const prompt = ref("")
             </div>
         </div>
         <div class="right-area">
-            <div class="prompt-area">
-                <InputPrompt
-                    id="prompt"
-                    label="プロンプト"
-                    v-model="prompt"
-                />
-            </div>
-            <div class="prompt-area">
-                ネガティブプロンプト<br />
-                <textarea placeholder=""></textarea>
-                <textarea placeholder=""></textarea>
-            </div>
+            <InputPrompt
+                id="prompt"
+                label="プロンプト"
+                v-model="prompt"
+                :prompt-list="promptList"
+            />
+            <InputPrompt
+                id="nPrompt"
+                label="ネガティブプロンプト"
+                v-model="nPrompt"
+                :prompt-list="nPromptList"
+            />
             <div class="prompt-area">
                 メモ<br />
                 <textarea placeholder=""></textarea>
