@@ -15,13 +15,13 @@ def init_routes (app:Flask):
 
     api.register_blueprint(import_module('yt_diffuser.web.api.health').bp)
     api.register_blueprint(import_module('yt_diffuser.web.api.download').bp)
+
     api.register_blueprint(import_module('yt_diffuser.web.api.generate.image').bp)
+    api.register_blueprint(import_module('yt_diffuser.web.api.generate.status').bp)
    
     api.register_blueprint(import_module('yt_diffuser.web.api.res.form.latest').bp)
     api.register_blueprint(import_module('yt_diffuser.web.api.res.form.prompt').bp)
     api.register_blueprint(import_module('yt_diffuser.web.api.res.model').bp)
     api.register_blueprint(import_module('yt_diffuser.web.api.res.output').bp)
-
-    api.register_blueprint(import_module('yt_diffuser.web.api.sse.sse').bp)
 
     app.register_blueprint(api)

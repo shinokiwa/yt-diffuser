@@ -9,7 +9,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
-            //"@/": `${__dirname}/src/`,
+            "@mocks": fileURLToPath(new URL("./specs/mock", import.meta.url)),
         },
     },
     server: {
@@ -27,7 +27,9 @@ export default defineConfig({
         environment: "happy-dom",
         include: ["specs/unit/**/*.spec.js"],
         coverage: {
+            providers: ["v8"],
             all: true,
+            reporter: ["text", "html"],
         }
     },
 });

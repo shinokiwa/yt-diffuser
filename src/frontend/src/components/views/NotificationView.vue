@@ -1,85 +1,71 @@
 <script setup>
 /**
  * 通知エリアおよび通知トーストのコンポーネント
- * notificationStateがtrueになったら右端からスライドインで表示する。
- * また、newNotificationsに通知を追加すると、トーストで通知を表示する。
+ * notificationArea.stateがtrueになったら右端からスライドインで表示する。
+ * また、notification.listに通知を追加すると、トーストで通知を表示する。
  * トーストは通知エリアと連動してスライドするため同一のコンポーネントで実装している。
  */
 
-import { ref, watch, onMounted, onUnmounted } from 'vue'
-import ProgressView from '@/components/views/ProgressView.vue'
-
-import { useMessage } from '@/composables/api/sse/message'
-const {openMessage} = useMessage()
-
-const messageSource = ref(null)
-
-onMounted(()=>{
-    messageSource.value = openMessage()
-})
-
-onUnmounted(()=>{
-    messageSource.value.close()
-})
-
+import { ref, watch } from 'vue'
 import { useNotificationStore } from '@/composables/store/notification';
-const {
-    notificationState,
-    showNotificationArea,
-    hideNotificationArea,
-    newNotifications,
-    clearNewNotifications
-} = useNotificationStore()
+import { useViewStore } from '@/composables/store/view';
 
-const notifications = ref([])
-const toastQueue = ref([])
+const { notificationArea } = useViewStore()
+const { notification, toast } = useNotificationStore()
+
+const onToast = ref(false)
 const isShownToast = ref(false)
 const toastMessage = ref('')
 
-watch(newNotifications, ()=>{
-    // 新規通知を追加
-    if (newNotifications.value.length === 0) {
-        return;
-    }
-    notifications.value = notifications.value.concat(newNotifications.value)
-    toastQueue.value = toastQueue.value.concat(newNotifications.value)
+const areaState = notificationArea.getState()
+const toastQueue = toast.getQueue()
+const notificationList = notification.getList()
 
-    clearNewNotifications()
-    showToast()
+// トーストの状態が変化したらトースト処理開始
+watch(toastQueue, ()=>{
+    if (toastQueue.value.length > 0) {
+        onToast.value = true
+    }
 }, {deep: true})
 
-function showToast() {
-    if (toastQueue.value.length === 0) {
-        return; // キューが空の場合は何もしない
+// 一度onToastのウォッチを挟むことで、連続してトーストキューが更新されても
+// 一定の間隔でトーストが表示されるようにする
+watch(onToast, (value)=>{
+    if (value) {
+        showToast()
     }
+})
 
-    isShownToast.value = true;
-    toastMessage.value = toastQueue.value[0]; // キューの先頭のメッセージを表示
-
-    setTimeout(() => {
-        isShownToast.value = false;
-        toastQueue.value.shift(); // 表示したメッセージをキューから削除
-        if (toastQueue.value.length > 0) {
-            setTimeout(showToast, 500); // 次のメッセージを表示
-        }
-    }, 3000); // メッセージを3秒間表示
+function showToast() {
+    const message = toast.get()
+    if (message) {
+        toastMessage.value = message
+        isShownToast.value = true
+        setTimeout(() => {
+            isShownToast.value = false
+            if (toastQueue.value.length > 0) {
+                setTimeout(showToast, 500)
+            } else {
+                setTimeout(() => {
+                    onToast.value = false
+                }, 500)
+            }
+        }, 3000)
+    }
 }
 </script>
 
 <template>
 <div id="NotificationView">
-  <div class="notification-panel" :class="{ 'show': notificationState }">
+  <div class="notification-panel" :class="{ 'show': areaState }">
     <ul class="notifications">
-        <li class="notify-box" v-for="notification in notifications" :key="notification.id">
-            {{ notification }}
+        <li class="notify-box" v-for="item in notificationList" :key="notification.id">
+            {{ item }}
         </li>
     </ul>
     <ul class="bottom">
         <li class="close">
-            <a href="#" @click="hideNotificationArea()">閉じる</a>
-        </li>
-        <li class="progress notify-box">
-            <ProgressView />
+            <a href="#" @click="notificationArea.hide()">閉じる</a>
         </li>
     </ul>
   </div>
@@ -144,10 +130,6 @@ function showToast() {
 
 .notification-panel ul.bottom li.close a {
     color: var(--font-color-light);
-}
-
-.notification-panel .progress {
-    height: 140px;
 }
 
 .toast {

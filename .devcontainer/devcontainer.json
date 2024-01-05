@@ -1,21 +1,8 @@
 {
   "name": "yt_diffuser_devcontainer",
-  "dockerFile": "Dockerfile",
-  "context": "..",
   "overrideCommand": false,
-  "runArgs": [
-    "-v", "${localWorkspaceFolder}:/workspace",
-    "-v", "dev_data_volume:/workspace/data",
-    "-v", "dev_npm_volume:/workspace/src/frontend/node_modules",
-    "-p", "20080:80"
-  ],
-  "remoteEnv": {
-    "LANG": "ja_JP.UTF-8",
-    "LANGUAGE": "ja_JP:ja",
-    "LC_ALL": "ja_JP.UTF-8",
-    "TZ": "JST-9",
-    "DEBUG": "1"
-  },
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "devcontainer",
   "workspaceFolder": "/workspace/",
   "customizations": {
     "vscode": {

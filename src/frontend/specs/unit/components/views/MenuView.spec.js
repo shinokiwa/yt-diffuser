@@ -4,10 +4,17 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 
+import { useViewStoreMock } from '@mocks/composables/store/view.mock'
+vi.mock('@/composables/store/view', () => ({ useViewStore: useViewStoreMock }))
+
 import MenuView from '@/components/views/MenuView.vue'
-import { useViewStore } from '@/composables/store/view'
 
 describe('メニューボタン', async () => {
+
+    const wrapper = mount(MenuView)
+    const { view, notificationArea } = useViewStoreMock()
+    const currentView = view.getCurrent()
+
 
     describe('ナビボタン モデル管理', async () => {
 
@@ -15,30 +22,33 @@ describe('メニューボタン', async () => {
             vi.resetAllMocks()
         })
 
-        it('currentViewがMODEL_MANAGEの場合のみactiveクラスが付与される。押下するとchangeViewが呼ばれる。', async () => {
-            const wrapper = mount(MenuView)
-            const changeView = vi.spyOn(wrapper.vm, 'changeView')
-            const { currentView, MODEL_MANAGE, GENERATE, GALLERY } = useViewStore()
+        it('現在のビューに応じたボタンにactiveクラスが付与される。押下するとchangeViewが呼ばれる。', async () => {
+            // 通知ボタン以外は全て同じ処理なので、テストを共通化
+            const list =[
+                { id: 'MenuItemModelManage', view: view.views.MODEL_MANAGE },
+                { id: 'MenuItemPromptSetting', view: view.views.PROMPT_SETTING },
+                { id: 'MenuItemGenerateBatch', view: view.views.GENERATE_BATCH },
+                { id: 'MenuItemGallery', view: view.views.GALLERY },
+                { id: 'MenuItemEditor', view: view.views.EDITOR },
+            ]
 
-            currentView.value = -1
-            await wrapper.vm.$nextTick()
-            let item = wrapper.find('li[role="modelmanage"]')
-            expect(item.classes()).not.toContain('active')
+            for (const btn of list) {
+                currentView.value = view.views.INITIALIZING
+                await wrapper.vm.$nextTick()
 
-            currentView.value = MODEL_MANAGE
-            await wrapper.vm.$nextTick()
-            expect(item.classes()).toContain('active')
+                const item = wrapper.find(`li#${btn.id}`)
 
-            await item.trigger('click')
-            expect(changeView).toHaveBeenCalledWith(MODEL_MANAGE)
+                expect(item.exists()).toBe(true)
+                expect(item.classes()).not.toContain('active')
 
-            item = wrapper.find('li[role="generate"]')
-            await item.trigger('click')
-            expect(changeView).toHaveBeenCalledWith(GENERATE)
+                await item.trigger('click')
+                expect(view.change).toHaveBeenCalledWith(btn.view)
+                view.change.mockClear()
 
-            item = wrapper.find('li[role="gallery"]')
-            await item.trigger('click')
-            expect(changeView).toHaveBeenCalledWith(GALLERY)
+                currentView.value = btn.view
+                await wrapper.vm.$nextTick()
+                expect(item.classes()).toContain('active')
+            }
         })
     })
 
@@ -49,12 +59,9 @@ describe('メニューボタン', async () => {
         })
 
         it('通知ボタンを押すとtoggleNotificationが呼ばれる。', async () => {
-            const wrapper = mount(MenuView)
-            const toggleNotificationArea = vi.spyOn(wrapper.vm, 'toggleNotificationArea')
-
-            const item = wrapper.find('li[role="notification"]')
+            const item = wrapper.find('li#MenuItemNotification')
             await item.trigger('click')
-            expect(toggleNotificationArea).toHaveBeenCalled()
+            expect(notificationArea.toggle).toHaveBeenCalled()
         })
     })
 })

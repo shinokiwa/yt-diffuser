@@ -9,13 +9,12 @@ import queue
 
 from queue import Empty # このモジュールでは使わないが、インポート先で確定的に使うのでここでインポートしておく
 
-from yt_diffuser.utils.message_queue import EVENT_TYPE_FILESYSTEM, EVENT_TYPE_MESSAGE
+from yt_diffuser.utils.message_queue import EventType
 
 _listeners = {}
 _latest_messages = {}
 _NO_CACHE_EVENT = [
-    EVENT_TYPE_MESSAGE,
-    EVENT_TYPE_FILESYSTEM
+    EventType.FILESYSTEM.value,
 ] # 最終メッセージをキャッシュしないイベント
 
 def get_event_listener(event_name:str) -> queue.Queue:
@@ -38,8 +37,9 @@ def get_event_listener(event_name:str) -> queue.Queue:
         _listeners[event_name] = []
 
     q = queue.Queue()
-    latest_message = _latest_messages.get(event_name, "")
-    q.put(latest_message)
+    latest_message = _latest_messages.get(event_name)
+    if latest_message != None:
+        q.put(latest_message)
 
     _listeners[event_name].append(q)
 
@@ -124,7 +124,8 @@ def message_listener() -> None:
 
         for listener in _listeners.get(event, []):
             logger.debug(f"Put message to listener. id={id(listener)}")
-            listener.put(data)
+            _data = data.copy() if type(data) == dict else data
+            listener.put(_data)
     logger.debug("Exit message listener.")
 
 

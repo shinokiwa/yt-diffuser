@@ -2,14 +2,23 @@
 /**
  * プロンプト設定画面
  */
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import InputPrompt from '@/components/elements/InputPrompt.vue'
 
-const prompt = ref("")
-const promptList = ref([])
+import { useForm } from '@/composables/store/form'
+import { useLatestForm } from '@/composables/api/res/form/latest'
 
-const nPrompt = ref("")
+
+onUnmounted(() => {
+    // 本来このタイミングでやることではないが暫定。
+    const { updateLatestForm } = useLatestForm()
+    updateLatestForm()
+})
+
+const { prompt, nPrompt } = useForm()
+
+const promptList = ref([])
 const nPromptList = ref([])
 </script>
 

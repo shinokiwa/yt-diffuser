@@ -35,12 +35,12 @@ async function copy () {
     ></textarea>
 
     <div class="btn-menu">
-        <button type="button" title="プロンプトを表示" @click='store.dispatch("image/prompt")'>
-            <i class="bi-info-circle"></i>
+        <button type="button" title="プロンプトを保存" @click='store.dispatch("image/prompt")'>
+            <i class="bi-save2"></i>
         </button>
 
-        <button type="button" title="詳細編集" @click='detailEditor=true'>
-            <i class="bi-pen"></i>
+        <button type="button" title="保存したプロンプトを読み込む" @click='detailEditor=true'>
+            <i class="bi-folder-symlink"></i>
         </button>
 
         <button type="button" title="クリップボードにコピー" @click='copy'>
@@ -116,8 +116,8 @@ textarea::placeholder {
     background-color: var(--color-bg-base);
 }
 
-.btn-menu button:disabled:hover {
-    background-color: transparent;
+.btn-menu button:hover {
+    background-color: var(--color-bg-gray);
 }
 
 </style>

@@ -49,7 +49,7 @@ def test_get_form_prompt (app:Flask):
             ]
         }
 
-def test_put_form_prompt (app:Flask):
+def test_post_form_prompt (app:Flask):
     """
     put_form_prompt
 
@@ -63,7 +63,7 @@ def test_put_form_prompt (app:Flask):
         # データ初期化
         conn.executescript("DELETE FROM prompt_archive; UPDATE sqlite_sequence SET seq = 0 WHERE name = 'prompt_archive';")
 
-        response = client.put('/api/res/form/prompt', json={
+        response = client.post('/api/res/form/prompt', json={
             'prompt': 'test_prompt'
         })
         assert response.status_code == 200
@@ -76,7 +76,7 @@ def test_put_form_prompt (app:Flask):
         assert result[0]['type'] == 'p'
         assert result[0]['prompt'] == 'test_prompt'
 
-def test_get_form_n_prompt (app:Flask):
+def test_post_form_n_prompt (app:Flask):
     """
     get_form_n_prompt
 
@@ -90,7 +90,7 @@ def test_get_form_n_prompt (app:Flask):
         # データ初期化
         conn.executescript("DELETE FROM prompt_archive; UPDATE sqlite_sequence SET seq = 0 WHERE name = 'prompt_archive';")
 
-        response = client.get('/api/res/form/n_prompt')
+        response = client.post('/api/res/form/n_prompt')
         assert response.status_code == 200
 
         data = response.get_json()
@@ -113,7 +113,7 @@ def test_get_form_n_prompt (app:Flask):
             ]
         }
 
-def test_put_form_n_prompt (app:Flask):
+def test_post_form_n_prompt (app:Flask):
     """
     put_form_n_prompt
 
@@ -127,7 +127,7 @@ def test_put_form_n_prompt (app:Flask):
         # データ初期化
         conn.executescript("DELETE FROM prompt_archive; UPDATE sqlite_sequence SET seq = 0 WHERE name = 'prompt_archive';")
 
-        response = client.put('/api/res/form/n_prompt', json={
+        response = client.post('/api/res/form/n_prompt', json={
             'prompt': 'test_n_prompt'
         })
         assert response.status_code == 200
@@ -141,7 +141,7 @@ def test_put_form_n_prompt (app:Flask):
         assert result[0]['type'] == 'n'
         assert result[0]['prompt'] == 'test_n_prompt'
 
-def test_post_prompt (app:Flask):
+def test_post_prompt_id (app:Flask):
     """
     post_prompt
 

@@ -1,0 +1,46 @@
+# DevContainer構成用docker-compose
+
+version: '3.6'
+
+services:
+    devcontainer:
+        build:
+            context: ../
+            dockerfile: .devcontainer/Dockerfile
+        tty: true
+        volumes:
+            - type: bind 
+              source: ../
+              target: /workspace/
+            - type: bind 
+              source: ../.devcontainer/nginx.conf
+              target: /etc/nginx/nginx.conf
+            - type: volume
+              source: dev_data_volume
+              target: /workspace/data
+            - type: volume
+              source: dev_npm_volume
+              target: /workspace/src/frontend/node_modules
+        environment:
+            LANG: ja_JP.UTF-8
+            LANGUAGE: ja_JP:ja
+            LC_ALL: ja_JP.UTF-8
+            TZ: JST-9
+            DEBUG: 1
+        ports:
+            - target: 80
+              published: 20080
+              protocol: tcp
+              mode: host
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - capabilities: [gpu]
+
+
+volumes:
+    # データファイル用ボリューム
+    dev_data_volume:
+    # node_modules用ボリューム
+    dev_npm_volume:

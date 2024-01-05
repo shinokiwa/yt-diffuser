@@ -16,21 +16,33 @@ import PromptSettingView from '@/components/views/PromptSettingView.vue'
 import GeneratorView from '@/components/views/GeneratorView.vue'
 import GalleryView from '@/components/views/GalleryView.vue'
 
-import { useAppStore } from '@/composables/store/app';
 import { useViewStore } from '@/composables/store/view';
 import { useModel } from '@/composables/api/res/model'
+import { useLatestForm } from '@/composables/api/res/form/latest'
+import { useForm } from '@/composables/store/form'
+import { useGenerateStatus } from '@/composables/api/generate/status'
 
-const { readyState, ready } = useAppStore()
-const {
-    changeView,
-    currentView,
-    MODEL_MANAGE,
-    PROMPT_SETTING,
-    GENERATE_BATCH,
-    GALLERY,
-    EDITOR
-} = useViewStore()
-const { getModels, allModels } = useModel()
+useGenerateStatus()
+
+const { view } = useViewStore()
+
+onMounted(healthCheck)
+
+/**
+ * サーバーが起動するのを待つ
+ */
+async function healthCheck () {
+    try {
+        const response = await fetch('/api/health')
+        if (response.ok) {
+            await init()
+        } else {
+            setTimeout(healthCheck, 3000)
+        }
+    } catch (e) {
+        setTimeout(healthCheck, 3000)
+    }
+}
 
 /**
  * 初期化処理
@@ -41,29 +53,34 @@ const { getModels, allModels } = useModel()
  * モデルがある場合はモデルセットアップ表示
  * モデルがない場合はモデル管理表示
  */
-onMounted(async ()=>{
+async function init () {
+    const { getModels, allModels } = useModel()
     await getModels()
 
+    const { getLatestForm } = useLatestForm()
+    await getLatestForm()
+
     if (allModels.value.length == 0) {
-        changeView(MODEL_MANAGE)
+        view.change(view.views.MODEL_MANAGE)
+    } else {
+        view.change(view.views.MODEL_MANAGE)
     }
+}
 
-    ready()
-})
-
+const viewNumber = view.getCurrent()
 const selectedView = shallowRef(null)
 watchEffect(()=>{
-    switch (currentView.value) {
-        case (MODEL_MANAGE):
+    switch (viewNumber.value) {
+        case (view.views.MODEL_MANAGE):
             selectedView.value = ModelManageView
             break
-        case (PROMPT_SETTING):
+        case (view.views.PROMPT_SETTING):
             selectedView.value = PromptSettingView
             break
-        case (GENERATE_BATCH):
+        case (view.views.GENERATE_BATCH):
             selectedView.value = GeneratorView
             break
-        case (GALLERY):
+        case (view.views.GALLERY):
             selectedView.value = GalleryView
             break
     }
@@ -75,7 +92,7 @@ watchEffect(()=>{
 <div id="AppWrapper">
     <HeaderView class="header-view"></HeaderView>
 
-    <div id="InitializingView" class="main-wrapper" v-if="readyState == false">
+    <div id="InitializingView" class="main-wrapper" v-if="viewNumber === view.views.INITIALIZING">
         <div class="main">
             <div class="main-view">
                 <p>初期化中...</p>
@@ -86,7 +103,7 @@ watchEffect(()=>{
        </div>
     </div>
 
-    <div class="main-wrapper" v-if="readyState == true">
+    <div class="main-wrapper" v-if="viewNumber !== view.views.INITIALIZING">
         <MenuView class="menu-view"></MenuView>
         <div class="main">
             <component class="main-view" ref="content" v-bind:is="selectedView"></component>

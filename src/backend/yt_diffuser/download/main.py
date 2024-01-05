@@ -27,7 +27,7 @@ from huggingface_hub.hf_api import (
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.tqdm import WorkerProgress
-from yt_diffuser.utils.message_queue import send_message
+from yt_diffuser.utils.message_queue import send_generate_status
 
 def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:str, revision:str):
     """
@@ -41,7 +41,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         logging.basicConfig(level=logging.DEBUG)
 
     logger.debug(f"download_procedure start: {repo_id}:{revision}")
-    send_message(queue, "download-start", target=f"{repo_id}:{revision}")
+    send_generate_status(queue, "download-start", target=f"{repo_id}:{revision}")
 
     cache_dir = config.STORE_HF_MODEL_DIR
     offline = config.offline == True
@@ -71,7 +71,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         EnvironmentError
     ) as e:
         logger.error (f"download_procedure error! {e.__class__.__name__}")
-        send_message(queue, "download-error", target=e.__class__.__name__)
+        send_generate_status(queue, "download-error", target=e.__class__.__name__)
         return
 
     # model_index.jsonに記載されている項目のうち、_から始まらない項目をダウンロード対象のフォルダ名として取得する。
@@ -111,7 +111,7 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
 
         if os.path.exists(snapshot_folder) == False:
             logger.error (f"download_procedure error! {e.__class__.__name__}")
-            send_message(queue, "download-error", target=e.__class__.__name__)
+            send_generate_status(queue, "download-error", target=e.__class__.__name__)
             return
         
         repo_info = ModelInfo(sha=commit_hash, siblings=[], id="0", private=True)
@@ -180,6 +180,6 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
         target=f"{repo_id}:{revision}",
     )
 
-    send_message(queue, "download-complete", target=f"{repo_id}:{revision}")
+    send_generate_status(queue, "download-complete", target=f"{repo_id}:{revision}")
 
     logger.debug(f"download_procedure complete: {repo_id}:{revision}")

@@ -42,8 +42,8 @@ def get_form_prompt ():
     
     return {"prompts": prompts}
 
-@bp.route('/api/res/form/prompt', methods=['PUT'])
-def put_form_prompt ():
+@bp.route('/api/res/form/prompt', methods=['POST'])
+def post_form_prompt ():
     """
     プロンプトを新規保存する。
     """
@@ -77,8 +77,8 @@ def get_form_n_prompt ():
     
     return {"prompts": prompts}
 
-@bp.route('/api/res/form/n_prompt', methods=['PUT'])
-def put_form_n_prompt ():
+@bp.route('/api/res/form/n_prompt', methods=['POST'])
+def post_form_n_prompt ():
     """
     ネガティブプロンプトを保存する。
     """
@@ -95,7 +95,7 @@ def put_form_n_prompt ():
     return {"status": "OK"}
 
 @bp.route('/api/res/form/prompt/<int:id>', methods=['POST'])
-def post_form_prompt (id:int):
+def post_form_prompt_id (id:int):
     """
     プロンプトを更新する。
     今の所更新日付を更新するだけ。

@@ -96,16 +96,23 @@ def test_message_listener_spec(mocker:MockerFixture):
     _latest_messages = mocker.patch.dict("yt_diffuser.web.message_listener._latest_messages", {})
     _NO_CACHE_EVENT = mocker.patch("yt_diffuser.web.message_listener._NO_CACHE_EVENT", ["test2"])
 
-    q = queue.Queue()
-    _listeners["test"] = [q]
+    q1 = queue.Queue()
+    q2 = queue.Queue()
+    _listeners["test"] = [q1, q2]
 
     message_queue = get_message_queue()
-    message_queue.put(("test", "data"))
-    message_queue.put(("test2", "data"))
+    message_queue.put(("test", {"test": "data"}))
+    message_queue.put(("test2", {"test2": "data2"}))
     message_queue.put(("exit", None))
     message_listener()
-    assert q.get_nowait() == "data"
-    assert _latest_messages["test"] == "data"
+
+    r1 = q1.get_nowait()
+    r2 = q2.get_nowait()
+    assert r1 == {"test": "data"}
+    assert r2 == {"test": "data"}
+    # コピーなので、r1とr2は別オブジェクト
+    assert id(r1) != id(r2)
+    assert _latest_messages["test"] == {"test": "data"}
     assert "test2" not in _latest_messages
 
 

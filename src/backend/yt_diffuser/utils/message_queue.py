@@ -3,26 +3,43 @@
 
 主に形式の統一のためのもの。
 """
+from enum import Enum
 import logging; logger = logging.getLogger(__name__)
 
 from multiprocessing import Queue
 
-EVENT_TYPE_MESSAGE = 'message'
-EVENT_TYPE_FILESYSTEM = 'file'
-
-
-def send_message (queue: Queue, label: str, **kwargs):
+class EventType (Enum):
     """
-    メッセージイベントを送信する。
+    イベントの種類
+    """
+    GENERATE_STATUS = 'generator'
+    FILESYSTEM = 'filesystem'
+
+class GenerateStatus (Enum):
+    """
+    生成ステータス
+    """
+    EXIt = 'exit'
+    LOADING = 'loading'
+    READY = 'ready'
+    GENERATING = 'generating'
+
+
+def send_generate_status (queue: Queue, status: GenerateStatus, **kwargs):
+    """
+    生成ステータスイベントを送信する。
 
     params:
         queue: 送信キュー
-        label: メッセージラベル
+        status: ステータス
         kwargs: その他のパラメータ
     """
+    if kwargs is None:
+        kwargs = {}
+
     data = kwargs
-    data['label'] = label
-    queue.put((EVENT_TYPE_MESSAGE, data), timeout=1)
+    data['status'] = status.value
+    queue.put((EventType.GENERATE_STATUS.value, data), timeout=1)
 
 
 def send_ready (queue: Queue, event: str, target: str):
@@ -81,7 +98,7 @@ def send_filesystem (queue: Queue, type: str, target: str):
             - deleted: 削除
         target: 対象ファイルパス
     """
-    queue.put((EVENT_TYPE_FILESYSTEM, {
+    queue.put((EventType.FILESYSTEM.value, {
         'type': type,
         'target': target
     }))

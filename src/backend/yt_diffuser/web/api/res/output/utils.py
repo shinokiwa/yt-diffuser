@@ -10,7 +10,7 @@ from pathlib import Path
 StrOrPath = Union[str, Path]
 
 from yt_diffuser.web.message_listener import get_event_listener, remove_event_listener, Empty
-from yt_diffuser.utils.message_queue import EVENT_TYPE_FILESYSTEM
+from yt_diffuser.utils.message_queue import EventType
 
 
 def is_child (parent:StrOrPath, child:StrOrPath) -> bool:
@@ -30,7 +30,7 @@ def is_child (parent:StrOrPath, child:StrOrPath) -> bool:
     return parent == child or parent in child.parents
 
 
-def stream_list (path:Path, timeout:float=20.0) -> Generator[str, None, None]:
+def stream_list (path:Path, timeout:float=5.0) -> Generator[str, None, None]:
     """
     ファイル一覧をstreamで返し、その後はFILESYSTEMイベントを受け取って返す。
 
@@ -49,6 +49,7 @@ def stream_list (path:Path, timeout:float=20.0) -> Generator[str, None, None]:
         queue = get_event_listener('file')
 
         while True:
+            response = ""
             try:
                 data = queue.get(timeout=timeout)
                 if type(data) == dict:
@@ -60,9 +61,11 @@ def stream_list (path:Path, timeout:float=20.0) -> Generator[str, None, None]:
                         event_path = (path / event_path).resolve()
                     data['target'] = str(event_path.relative_to(path))
                     data = json.dumps(data)
+                
+                response = f"data: {data}\n\n"
             except Empty:
-                data = ""
+                response = ": keep-alive\n\n"
 
-            yield f"data: {data}\n\n"            
+            yield response
     except GeneratorExit:
-        remove_event_listener(EVENT_TYPE_FILESYSTEM, queue)
+        remove_event_listener(EventType.FILESYSTEM.value, queue)

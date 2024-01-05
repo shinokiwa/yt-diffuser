@@ -19,7 +19,7 @@ def test_send_message (queue):
     it:
         - メッセージイベントを送信する。
     """
-    send_message(queue, 'test', a=1, b=2)
+    send_generate_status(queue, 'test', a=1, b=2)
 
     assert queue.put.call_count == 1
     (event, data) = queue.put.call_args[0][0]

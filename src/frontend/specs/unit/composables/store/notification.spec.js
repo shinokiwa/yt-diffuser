@@ -3,54 +3,79 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { useNotificationStore } from '@/composables/store/notification'
 
-describe('通知の状態管理', () => {
+describe('notification 通知の状態管理', () => {
         
-    const {
-        newNotifications,
-        addNewNotification,
-        clearNewNotifications,
-        toggleNotificationArea,
-        notificationState,
-        showNotificationArea,
-        hideNotificationArea
-    } = useNotificationStore()
+    const { notification } = useNotificationStore()
 
-    describe ('通知エリアの表示状態', () => {
-        it ('初期状態は非表示', () => {
-            expect(notificationState.value).toBe(false)
-        })
+    it ('初期状態は空', () => {
+        expect(notification.getList().value).toEqual([])
+    })
 
-        it ('showNotificationAreaで通知エリアを表示できる', () => {
-            showNotificationArea()
-            expect(notificationState.value).toBe(true)
-        })
-
-        it ('hideNotificationAreaで通知エリアを非表示にできる', () => {
-            hideNotificationArea()
-            expect(notificationState.value).toBe(false)
-        })
-
-        it ('toggleNotificationAreaで通知エリアの表示状態を切り替えられる', () => {
-            toggleNotificationArea()
-            expect(notificationState.value).toBe(true)
-            toggleNotificationArea()
-            expect(notificationState.value).toBe(false)
+    describe('notification.add 通知の追加', () => {
+        it ('通知を追加できる', () => {
+            notification.add('test')
+            expect(notification.getList().value).toEqual(['test'])
         })
     })
 
-    describe('新規通知の管理', () => {
+    describe('notification.remove 通知の削除', () => {
+        it ('通知を削除できる', () => {
+            notification.getList().value = ['test', 'test2', 'test3', 'test4']
+            notification.remove(0)
+            expect(notification.getList().value).toEqual(['test2', 'test3', 'test4'])
+
+            notification.remove(1)
+            expect(notification.getList().value).toEqual(['test2', 'test4'])
+        })
+    })
+
+    describe('notification.clear 通知のクリア', () => {
+        it ('通知をクリアできる', () => {
+            notification.getList().value = ['test', 'test2', 'test3', 'test4']
+            notification.clear()
+            expect(notification.getList().value).toEqual([])
+        })
+    })
+})
+
+describe('toast トーストのキュー', () => {
+            
+        const { toast, notification } = useNotificationStore()
+    
         it ('初期状態は空', () => {
-            expect(newNotifications.value).toEqual([])
+            expect(toast.getQueue().value).toEqual([])
         })
     
-        it ('addNewNotificationで通知を追加できる', () => {
-            addNewNotification('test')
-            expect(newNotifications.value).toEqual(['test'])
+        describe('toast.put トーストキューの追加', () => {
+            it ('トーストキューを追加できる', () => {
+                toast.put('test')
+                expect(toast.getQueue().value).toEqual(['test'])
+            })
+    
+            it ('通知リストにも追加できる', () => {
+                toast.getQueue().value = []
+                notification.getList().value = []
+
+                toast.put('test', true)
+                toast.put('test2', false)
+
+                expect(toast.getQueue().value).toEqual(['test', 'test2'])
+                expect(notification.getList().value).toEqual(['test'])
+            })
         })
     
-        it ('clearNewNotificationで通知を削除できる', () => {
-            clearNewNotifications('test')
-            expect(newNotifications.value).toEqual([])
+        describe('toast.get トーストキューから内容を取り出す', () => {
+            it ('トーストキューから内容を取り出す', () => {
+                toast.getQueue().value = ['test', 'test2']
+
+                expect (toast.get()).toEqual('test')
+                expect(toast.getQueue().value).toEqual(['test2'])
+
+                expect (toast.get()).toEqual('test2')
+                expect(toast.getQueue().value).toEqual([])
+
+                expect (toast.get()).toEqual(undefined)
+                expect(toast.getQueue().value).toEqual([])
+            })
         })
-    })
 })
