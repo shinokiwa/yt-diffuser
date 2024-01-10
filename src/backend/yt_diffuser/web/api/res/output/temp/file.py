@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.api.res.output.temp.utils import PostTempRequest, get_temp_file_path
+from yt_diffuser.utils.event import FilesystemEvent
 
 
 bp = Blueprint('api_res_output_temp_file', __name__)
@@ -57,7 +58,10 @@ def post_temp_file (subpath:str):
     full_target.mkdir(parents=True, exist_ok=True)
 
     # ファイルを正式に保存
-    request_file.rename(full_target / request_file.name)
+    new_path = request_file.rename(full_target / request_file.name)
+
+    FilesystemEvent.send(FilesystemEvent.Type.DELETE, str(request_file))
+    FilesystemEvent.send(FilesystemEvent.Type.CREATE, str(new_path))
 
     return {'status': 'ok'}
 
@@ -77,5 +81,6 @@ def delete_temp_file (subpath:str):
     
     # ファイルを削除
     request_file.unlink(missing_ok=True)
+    FilesystemEvent.send(FilesystemEvent.Type.DELETE, str(request_file))
 
     return {'status': 'ok'}

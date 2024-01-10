@@ -10,7 +10,7 @@ class AppConfig:
     def __init__(self,
                  debug:bool=False,
                  BASE_DIR:Union[Path, str]=None,
-                 offilne:bool=False
+                 offline:bool=False
                  ) -> None:
         """
         コンストラクタ
@@ -20,7 +20,7 @@ class AppConfig:
         Args:
             debug: デバッグモード
             BASE_DIR: ベースディレクトリ
-            offilne: オフラインモード
+            offline: オフラインモード
         """
 
         #### 都度変更する可能性のある設定値 ####
@@ -39,7 +39,7 @@ class AppConfig:
         デバッグモード
         """
 
-        self.offline: bool = offilne
+        self.offline: bool = offline
         """
         オフラインモード
         主にテスト用で、ネットワークからモデルをダウンロードしない。
@@ -66,3 +66,4 @@ class AppConfig:
         self.OUTPUT_DIR: Path = self.DATA_DIR / "output"
         self.OUTPUT_TEMP_DIR: Path = self.OUTPUT_DIR / "temp"
         self.OUTPUT_IMAGE_DIR: Path = self.OUTPUT_DIR / "images"
+        self.OUTPUT_PREVIEW_PATH: Path = self.OUTPUT_DIR / "preview/preview.png"

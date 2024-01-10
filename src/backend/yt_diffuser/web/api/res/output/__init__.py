@@ -7,3 +7,6 @@ bp.register_blueprint(bp_image)
 
 from .temp import bp as bp_temp
 bp.register_blueprint(bp_temp)
+
+from .preview import bp as bp_preview
+bp.register_blueprint(bp_preview)

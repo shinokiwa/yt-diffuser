@@ -14,7 +14,7 @@ def mock_config() -> AppConfig:
     config = AppConfig(
         debug=True,
         BASE_DIR=tempfile.mkdtemp(),
-        offilne=True
+        offline=True
     )
 
     config.STORE_HF_MODEL_DIR = Path(__file__).parent / "data/basic/models/huggingface"

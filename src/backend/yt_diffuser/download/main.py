@@ -1,35 +1,24 @@
 """ ダウンロードプロセスのメイン処理
 """
 import multiprocessing
-import os
-import json
-from requests import HTTPError
 import logging; logger = logging.getLogger(__name__)
 
-from tqdm.contrib.concurrent import thread_map
-from huggingface_hub.file_download import (
-    hf_hub_download,
-    repo_folder_name,
-    REGEX_COMMIT_HASH
-)
-from huggingface_hub.utils import (
-    EntryNotFoundError, RepositoryNotFoundError, RevisionNotFoundError,
-    filter_repo_objects
-)
-# プログレスバーは表示しない
-from huggingface_hub.utils import disable_progress_bars; disable_progress_bars()
-from huggingface_hub.constants import REPO_TYPE_MODEL
-from huggingface_hub.hf_api import (
-    HfApi,
-    ModelInfo,
-    RepoFile
-)
+from pydantic import BaseModel, ValidationError
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.utils.tqdm import WorkerProgress
-from yt_diffuser.utils.message_queue import send_generate_status
+from yt_diffuser.store.enums import ModelClass
+from yt_diffuser.download.base_model import download_base_model
+from yt_diffuser.download.lora_model import download_lora_model
 
-def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:str, revision:str):
+
+class DownloadRequest(BaseModel):
+    repo_id:str
+    revision:str
+    model_class:ModelClass
+    filename:str = None
+
+
+def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:str, revision:str, model_class:ModelClass, filename:str=None) -> None:
     """
     モデルファイルのダウンロードを実行する。
 
@@ -39,147 +28,15 @@ def download_procedure (config:AppConfig, queue: multiprocessing.Queue, repo_id:
     """
     if config.debug:
         logging.basicConfig(level=logging.DEBUG)
-
-    logger.debug(f"download_procedure start: {repo_id}:{revision}")
-    send_generate_status(queue, "download-start", target=f"{repo_id}:{revision}")
-
-    cache_dir = config.STORE_HF_MODEL_DIR
-    offline = config.offline == True
-
-    # 指定したrepo_idとrevisionのmodel_index.jsonをダウンロードし、必要なファイルの一覧を取得する。
+    
     try:
-        config_file = hf_hub_download(
-            repo_id,
-            repo_type=REPO_TYPE_MODEL,
-            filename="model_index.json",
-            cache_dir=cache_dir,
-            force_download=False,
-            proxies=None,
-            resume_download=False,
-            local_files_only=offline,
-            use_auth_token=None,
-            #user_agent=user_agent,
-            subfolder=None,
-            revision=revision,
-        )
-    except (
-        RepositoryNotFoundError,
-        RevisionNotFoundError,
-        EntryNotFoundError,
-        HTTPError,
-        ValueError,
-        EnvironmentError
-    ) as e:
-        logger.error (f"download_procedure error! {e.__class__.__name__}")
-        send_generate_status(queue, "download-error", target=e.__class__.__name__)
+        data = DownloadRequest(repo_id=repo_id, revision=revision, model_class=model_class, filename=filename).dict()
+    except ValidationError as e:
+        logger.error(e)
         return
-
-    # model_index.jsonに記載されている項目のうち、_から始まらない項目をダウンロード対象のフォルダ名として取得する。
-    with open(config_file, "r", encoding="utf-8") as reader:
-        text = reader.read()
-
-    config_dict = json.loads(text)
-
-    folder_names = [k for k in config_dict.keys() if not k.startswith("_")]
-    allow_patterns = [os.path.join(k, "*") for k in folder_names]
-    allow_patterns += [
-        "diffusion_pytorch_model.bin",  # WEIGHTS_NAME 
-        "config.json",                  # CONFIG_NAME 
-        "scheduler_config.json",        # SCHEDULER_CONFIG_NAME
-        "model.onnx",                   # ONNX_WEIGHTS_NAME
-        "model_index.json",             # PIPELINE_CONFIG_NAME
-    ]
-
-    # make sure we don't download flax weights
-    ignore_patterns = "*.msgpack"
-
-    # 必要な全ファイルをダウンロード
-    # snapshot_downloadがそのままでは使えないので、コピペして修正
-    storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=REPO_TYPE_MODEL))
-
-    # オフラインモードの時は、storage_folderの内容をそのまま使う。
-    if offline:
-        if REGEX_COMMIT_HASH.match(revision):
-            commit_hash = revision
-        else:
-            # retrieve commit_hash from file
-            ref_path = os.path.join(storage_folder, "refs", revision)
-            with open(ref_path) as f:
-                commit_hash = f.read()
-
-        snapshot_folder = os.path.join(storage_folder, "snapshots", commit_hash)
-
-        if os.path.exists(snapshot_folder) == False:
-            logger.error (f"download_procedure error! {e.__class__.__name__}")
-            send_generate_status(queue, "download-error", target=e.__class__.__name__)
-            return
-        
-        repo_info = ModelInfo(sha=commit_hash, siblings=[], id="0", private=True)
-        for root, dirs, files in os.walk(snapshot_folder):
-            for file in files:
-                relative_path = os.path.relpath(os.path.join(root, file), snapshot_folder)
-                repo_info.siblings.append(RepoFile(rfilename=relative_path))
-        
-
-    else:
-        # HuggingFace Hub APIからすべてのファイル情報を取得する。
-        api = HfApi()
-        repo_info = api.repo_info(repo_id=repo_id, repo_type=REPO_TYPE_MODEL, revision=revision, token=None)
-        assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
-
-    # 取得したファイル情報から、許可パターンと拒否パターンを使って、ダウンロード対象のファイルを絞り込む。
-    filtered_repo_files = list(
-        filter_repo_objects(
-            items=[f.rfilename for f in repo_info.siblings],
-            allow_patterns=allow_patterns,
-            ignore_patterns=ignore_patterns,
-        )
-    )
-    commit_hash = repo_info.sha
-
-    # リビジョンはコミットハッシュである必要があるが、
-    # ブランチ名やタグ名を指定することもできる。
-    # その場合はrefsディレクトリのブランチ名やタグ名のファイルに
-    # コミットハッシュを参照として保存する。
-    if revision != commit_hash:
-        ref_path = os.path.join(storage_folder, "refs", revision)
-        os.makedirs(os.path.dirname(ref_path), exist_ok=True)
-        with open(ref_path, "w") as f:
-            f.write(commit_hash)
-
-    # コミットハッシュを指定してダウンロードする。
-    # 既に同一のコミットハッシュでダウンロード済みの場合は、
-    # ネットワーク通信は発生しない。
-    def _inner_hf_hub_download(repo_file: str):
-        return hf_hub_download(
-            repo_id,
-            filename=repo_file,
-            repo_type=REPO_TYPE_MODEL,
-            revision=commit_hash,
-            endpoint=None,
-            cache_dir=cache_dir,
-            local_dir=None,
-            local_dir_use_symlinks="auto",
-            local_files_only=offline,
-            library_name=None,
-            library_version=None,
-            user_agent=None,
-            proxies=None,
-            resume_download=True,
-            force_download=False,
-            token=None,
-        )
-
-    thread_map(
-        _inner_hf_hub_download,
-        filtered_repo_files,
-        max_workers=8,
-        tqdm_class=WorkerProgress,
-        event="download",
-        queue=queue,
-        target=f"{repo_id}:{revision}",
-    )
-
-    send_generate_status(queue, "download-complete", target=f"{repo_id}:{revision}")
-
-    logger.debug(f"download_procedure complete: {repo_id}:{revision}")
+    
+    if data["model_class"] == ModelClass.BASE_MODEL:
+        download_base_model(config, queue, data["repo_id"], data["revision"])
+    
+    elif data["model_class"] == ModelClass.LORA_MODEL:
+        download_lora_model(config, queue, data["repo_id"], data["revision"], data["filename"])

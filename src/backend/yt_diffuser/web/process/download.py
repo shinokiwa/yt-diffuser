@@ -14,7 +14,7 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.process.exceptions import DuplicateProcessError
-from yt_diffuser.web.message_listener import get_context, get_message_queue
+from yt_diffuser.utils.event.process import get_context, get_message_queue
 from yt_diffuser.download.main import download_procedure
 
 _process: multiprocessing.Process = None

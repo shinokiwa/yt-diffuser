@@ -7,7 +7,7 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from flask import Blueprint, Response
 
-from yt_diffuser.web.message_listener import get_event_listener, remove_event_listener, Empty
+from yt_diffuser.utils.event import GenerateStatusEvent, Empty
 
 bp = Blueprint('api_generate_status', __name__)
 
@@ -34,7 +34,7 @@ def event_stream(timeout:float=5.0) -> Generator[str, None, None]:
         Str: イベントデータ
     """
     event_name = "generator"
-    queue = get_event_listener(event_name)
+    queue = GenerateStatusEvent.get_listener()
 
     try:
         while True:
@@ -50,4 +50,4 @@ def event_stream(timeout:float=5.0) -> Generator[str, None, None]:
             yield response
 
     except GeneratorExit:
-        remove_event_listener(event_name, queue)
+        GenerateStatusEvent.remove_listener(queue)

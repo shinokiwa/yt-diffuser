@@ -1,107 +1,66 @@
-""" モデルストアクラス
 """
-import shutil
-from sqlite3 import Connection
-from pathlib import Path
+モデル情報クラス
+"""
+from typing import List, Dict
 from logging import getLogger; logger = getLogger(__name__)
 
-from yt_diffuser.config import AppConfig
-from yt_diffuser.store.lock import StoreLock, StoreLockedError
-from yt_diffuser.store.db.op.model_info import (
-    get,
-    save,
-    delete
-)
+from yt_diffuser.store.enums import ModelClass, ModelSource
 
-class ModelStore:
-    """ モデルストアクラス
+class ModelInfo:
     """
-    def __init__(self, config: AppConfig,
-                 model_name: str,
-                 screen_name: str = None,
+    モデル情報クラス
+    """
+
+    def __init__ (self,
+        model_name:str,
+        model_class:ModelClass,
+        source: ModelSource,
     ):
-        self.base_dir: Path = config.STORE_MODEL_DIR
-        self.model_name: str = model_name  
-        self.revision: str = "main"
-        self.screen_name: str = screen_name
+        self.model_name:str = model_name
+        self.model_class:str = model_class
+        self.source:str = source
+        self.revisions:List[str] = []
+        self.screen_name:str = None
+        self.appends:Dict[str, str] = {}
 
-    
-    @property
-    def path(self) -> Path:
+        if self.model_class == ModelClass.BASE_MODEL:
+            self.appends['pipeline_name'] = ''
+        
+        elif self.model_class == ModelClass.LORA_MODEL:
+            self.appends['weight_name'] = ''
+        
+        else:
+            raise ValueError(f"ModelClass is invalid: {self.model_class}")
+
+    def add_revision (self, revision:str):
         """
-        モデルストアのパス
+        リビジョンを追加する。
         """
-        return self.base_dir / self.model_name
-    
-    def get_info (self, conn: Connection) -> None:
+        self.revisions.append(revision)
+
+    def set_screen_name (self, screen_name:str):
         """
-        DBから追加情報を取得する。
-
-        Args:
-            conn (Connection): DBコネクション
+        スクリーン名を設定する。
         """
-        info = get(conn, self.model_name, self.revision)
-        if info is None:
-            return
+        self.screen_name = screen_name
 
-        self.screen_name = info['screen_name']
 
-    
-    def save_info (self, conn: Connection) -> None:
+    def set_append (self, key:str, value:str):
         """
-        DBに追加情報を保存する。
-
-        Args:
-            conn (Connection): DBコネクション
+        付加情報を設定する。
         """
-        save(conn, self.model_name, self.revision, self.__class__.__name__, self.screen_name)
-        return
-    
-    def get_lock (self) -> StoreLock:
+        self.appends[key] = value
+
+
+    def to_dict (self):
         """
-        ロックを取得する。
-
-        Returns:
-            StoreLock: ロックオブジェクト
+        辞書に変換する。
         """
-        return StoreLock(self.path)
-
-
-    def exists(self) -> bool:
-        """
-        ストアディレクトリが存在するかどうかを返す。
-
-        returns:
-            bool: ストアディレクトリが存在する場合はTrue
-        """
-        return self.path.exists()
-    
-    def mkdir(self) -> None:
-        """
-        ストアディレクトリを作成する。
-
-        ストアディレクトリが存在していてもエラーにはならないが、
-        ロックされているときは StoreLockedError が送出される。
-
-        raises:
-            StoreLockedError: ストアディレクトリがロックされている場合
-        """
-        if self.get_lock().is_locked():
-            raise StoreLockedError(self.path)
-
-        self.path.mkdir(parents=True, exist_ok=True)
-
-    def to_dict (self, keys:set) -> dict:
-        """
-        辞書形式に変換する。
-
-        - 存在しないキーはNoneになる。
-
-        Args:
-            keys (set): 変換するキーの集合
-
-        Returns:
-            dict: 辞書形式のオブジェクト
-        """
-        return {key: getattr(self, key, None) for key in keys}
-
+        return {
+            'model_name': self.model_name,
+            'model_class': self.model_class.value,
+            'source': self.source.value,
+            'revisions': self.revisions,
+            'screen_name': self.screen_name,
+            'appends': self.appends,
+        }

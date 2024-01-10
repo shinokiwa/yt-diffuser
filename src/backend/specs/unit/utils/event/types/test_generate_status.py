@@ -1,0 +1,21 @@
+"""
+yt_diffuser.utils.event.types.generate_status のテスト
+"""
+import pytest
+from pytest_mock import MockerFixture
+
+from yt_diffuser.utils.event.types.generate_status import *
+
+class TestGenerateStatusEvent:
+
+    def test_send_process_spec(self, mocker:MockerFixture):
+        """
+        send_process
+
+        it:
+            - 別プロセスにイベントを送信する。
+        """
+        q = multiprocessing.Queue()
+
+        GenerateStatusEvent.send_process(q, GenerateStatusEvent.Status.READY, "test", "error")
+        assert q.get() == ("generator", True, {'status': 'ready', 'label': 'test', 'error': 'error'})

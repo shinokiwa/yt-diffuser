@@ -22,8 +22,6 @@ import { useLatestForm } from '@/composables/api/res/form/latest'
 import { useForm } from '@/composables/store/form'
 import { useGenerateStatus } from '@/composables/api/generate/status'
 
-useGenerateStatus()
-
 const { view } = useViewStore()
 
 onMounted(healthCheck)
@@ -54,6 +52,8 @@ async function healthCheck () {
  * モデルがない場合はモデル管理表示
  */
 async function init () {
+    useGenerateStatus()
+
     const { getModels, allModels } = useModel()
     await getModels()
 

@@ -2,67 +2,113 @@
 yt_diffuser.store.model のテスト
 """
 import pytest
-import tempfile
-from pathlib import Path
 
-from yt_diffuser.store.model import ModelStore, AppConfig, StoreLockedError
+from yt_diffuser.store.model import *
 
-class TestModelStore:
+class TestModelInfo:
     """
-    ModelStore のテスト
+    ModelInfo のテスト
     """
-    
-    def test_path(self):
+
+    def test_init (self):
         """
-        path プロパティ
+        初期化テスト
         """
-        config = AppConfig()
-        store = ModelStore(config, "test")
-        assert store.path == Path(config.STORE_MODEL_DIR, "test")
-    
-    def test_get_info(self, mocker):
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.BASE_MODEL,
+            source=ModelSource.HUB,
+        )
+
+        assert model_info.model_name == "model_name"
+        assert model_info.model_class == ModelClass.BASE_MODEL
+        assert model_info.source == ModelSource.HUB
+        assert model_info.revisions == []
+        assert model_info.screen_name == None
+        assert model_info.appends == {"pipeline_name": ""}
+
+
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.LORA_MODEL,
+            source=ModelSource.HUB
+        )
+
+        assert model_info.model_name == "model_name"
+        assert model_info.model_class == ModelClass.LORA_MODEL
+        assert model_info.source == ModelSource.HUB
+        assert model_info.revisions == []
+        assert model_info.screen_name == None
+        assert model_info.appends == {"weight_name": ""}
+
+        with pytest.raises(ValueError):
+            model_info = ModelInfo(
+                model_name="model_name",
+                model_class="invalid",
+                source=ModelSource.HUB
+            )
+
+
+    def test_add_revision (self):
         """
-        get_info
-
-        it:
-            DBから追加情報を取得する。
+        リビジョン追加テスト
         """
-        config = AppConfig()
-        store = ModelStore(config, "test")
-        mock_get = mocker.patch("yt_diffuser.store.model.get", return_value={"screen_name": "test"})
-        conn = "conn"
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.LORA_MODEL,
+            source=ModelSource.HUB,
+        )
 
-        store.get_info(conn)
-        assert store.screen_name == "test"
+        model_info.add_revision("revision3")
+        assert model_info.revions == ["revision3"]
 
-    def test_exists(self, mocker):
+    def test_set_screen_name (self):
         """
-        exists
-
-        TODO: mkdirとテストが混ざってる
-
-        it:
-            ストアディレクトリが存在する場合はTrueを返す。
-            ストアディレクトリが存在しない場合はFalseを返す。
-
-        mkdir
-
-        it:
-            ストアディレクトリを作成する。
-            ストアディレクトリが存在していてもエラーにはならないが、
-            ロックされているときは StoreLockedError が送出される。
+        スクリーン名設定テスト
         """
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            config = AppConfig()
-            config.STORE_MODEL_DIR = Path(tmp_dir)
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.LORA_MODEL,
+            source=ModelSource.HUB,
+        )
 
-            store = ModelStore(config, "test")
-            assert store.exists() == False
+        model_info.set_screen_name("screen_name")
+        assert model_info.screen_name == "screen_name"
 
-            store.mkdir()
-            assert store.exists() == True
+    def test_set_append (self):
+        """
+        付加情報設定テスト
+        """
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.LORA_MODEL,
+            source=ModelSource.HUB,
+        )
 
-            # ロックされている場合
-            mocker.patch("yt_diffuser.store.model.StoreLock.is_locked", return_value=True)
-            with pytest.raises(StoreLockedError):
-                store.mkdir()
+        model_info.set_append("key", "value")
+        assert model_info.appends == {
+            "weight_name": "",
+            "key": "value"
+        }
+
+    def test_to_dict (self):
+        """
+        辞書変換テスト
+        """
+        model_info = ModelInfo(
+            model_name="model_name",
+            model_class=ModelClass.LORA_MODEL,
+            source=ModelSource.HUB,
+        )
+
+        model_info.add_revision("revision1")
+        model_info.add_revision("revision2")
+
+        assert model_info.to_dict() == {
+            'model_name': "model_name",
+            'model_class': ModelClass.LORA_MODEL.value,
+            'source': ModelSource.HUB.value,
+            'revisions': ["revision1", "revision2"],
+            'screen_name': None,
+            'appends': {"weight_name": ""},
+        }

@@ -3,33 +3,11 @@ yt_diffuser.store.store_utils のテスト
 """
 import pytest
 
-from specs.utils.test_utils.config import make_config
-from specs.utils.test_utils.db import make_db
+from specs.mock.mock_config import mock_config
+from specs.mock.store.db import connect_database
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import store_utils
-
-def test_model_store_factory():
-    """
-    model_store_factory
-
-    it:
-        モデルストアクラスのインスタンスを生成する。
-    """
-
-    config = AppConfig()
-    model_name = "test"
-    revision = "test"
-    class_name = "test"
-
-    with pytest.raises(ValueError):
-        store_utils.model_store_factory(config, model_name, revision, class_name)
-
-    class_name = "ModelStore"
-    assert isinstance(store_utils.model_store_factory(config, model_name, revision, class_name), store_utils.ModelStore)
-
-    class_name = "HFModelStore"
-    assert isinstance(store_utils.model_store_factory(config, model_name, revision, class_name), store_utils.HFModelStore)
+from yt_diffuser.store.store_utils import *
 
 def test_scan_model_dir():
     """
@@ -38,44 +16,32 @@ def test_scan_model_dir():
     it:
         ディレクトリをスキャンし、モデルストアのリストを取得する。
     """
-    config = make_config()
-    conn = make_db(config)
+    config = mock_config()
+    conn = connect_database()
 
-    results = store_utils.scan_model_dir(config, conn)
+    results = scan_model_dir(config, conn)
     assert isinstance(results, list)
-    assert len(results) == 4
+    assert len(results) == 2
 
-    # model_name、revisionでソート
-    results.sort(key=lambda x: (x.model_name, x.revision))
+    # model_nameでソート
+    results.sort(key=lambda x: (x.model_name))
 
     r = results[0]
-    assert isinstance(r, store_utils.HFModelStore)
+    assert isinstance(r, ModelInfo)
     assert r.model_name == "test/repo_id"
-    assert r.revision == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-    assert r.commit_hash == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-    assert r.ref == None
+    assert r.model_class == ModelClass.BASE_MODEL
+    assert r.source == ModelSource.HUB
     assert r.screen_name == None
+    assert len(r.revisions) == 2
+    r.revisions.sort()
+    assert r.revisions == ["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "test_revision"]
 
     r = results[1]
-    assert isinstance(r, store_utils.HFModelStore)
-    assert r.model_name == "test/repo_id"
-    assert r.revision == "test_revision"
-    assert r.commit_hash == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    assert r.ref == "test_revision"
-    assert r.screen_name == None
-
-    r = results[2]
-    assert isinstance(r, store_utils.HFModelStore)
+    assert isinstance(r, ModelInfo)
     assert r.model_name == "test/repo_id2"
-    assert r.revision == "fp16"
-    assert r.commit_hash == "cccccccccccccccccccccccccccccccccccccccc"
-    assert r.ref == "fp16"
+    assert r.model_class == ModelClass.BASE_MODEL
+    assert r.source == ModelSource.HUB
     assert r.screen_name == None
-
-    r = results[3]
-    assert isinstance(r, store_utils.HFModelStore)
-    assert r.model_name == "test/repo_id2"
-    assert r.revision == "main"
-    assert r.commit_hash == "cccccccccccccccccccccccccccccccccccccccc"
-    assert r.ref == "main"
-    assert r.screen_name == None
+    assert len(r.revisions) == 2
+    r.revisions.sort()
+    assert r.revisions == ["fp16", "main"]

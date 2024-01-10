@@ -23,8 +23,10 @@ class FormData(BaseModel):
     model_name: str = None
     revision: str = None
 
+    seed: int = None
     prompt: str = None
-    n_prompt: str = None
+    negative_prompt: str = None
+    inference_steps: int = None
 
 
 @bp.route('/api/res/form/latest', methods=['GET'])

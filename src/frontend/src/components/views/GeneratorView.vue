@@ -1,20 +1,26 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import TempGalleryWindow from '@/components/views/windows/TempGalleryWindow.vue'
 
-import Overlay from '@/components/elements/Overlay.vue'
-import FormGrid from '@/components/elements/FormGrid.vue'
-import InputText from '@/components/elements/InputText.vue'
+import { useForm } from '@/composables/store/form'
 
 import { useGenerateImage } from '@/composables/api/generate/image'
 const { start_generate } = useGenerateImage()
 
+const { prompt, nPrompt, inferenceSteps } = useForm()
+
+const generateCount = ref(1)
+
 function submit () {
-    start_generate(prompt.value)
+    start_generate(
+        generateCount.value,
+        prompt.value,
+        nPrompt.value,
+        inferenceSteps.value
+    )
 }
 
-const prompt = ref(null)
 
 </script>
 
@@ -24,7 +30,8 @@ const prompt = ref(null)
         <WindowArea id="InputArea" window-title="入力情報">
             <div class="body">
                 <div class="input">
-                    <textarea placeholder="入力テキストを入力して下さい。" v-model="prompt"></textarea>
+                    <label for="count">生成枚数</label>
+                    <input id="count" type="number" v-model="generateCount" />
                 </div>
                 <div class="button">
                     <button @click="submit()">生成</button>

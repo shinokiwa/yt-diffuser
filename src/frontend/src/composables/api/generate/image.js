@@ -20,9 +20,17 @@ async function loadModel (model_name, revision) {
 /**
  * 画像を生成する
  */
-async function start_generate (prompt) {
-    await post('/api/generate/image/generate', {
-        text: prompt
+async function start_generate (
+    generate_count,
+    prompt,
+    negative_prompt,
+    inference_steps
+) {
+    await post('/api/generate/image/text_to_image', {
+        generate_count: generate_count,
+        prompt: prompt,
+        negative_prompt: negative_prompt,
+        inference_steps: inference_steps
     })
 }
 

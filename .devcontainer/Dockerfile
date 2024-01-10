@@ -1,7 +1,7 @@
 # Baseステージは本番用とDevContainer用で共通
 
-# NVIDIA CUDA 11.7 Ubuntu用をベースイメージにする
-FROM nvidia/cuda:11.7.1-base-ubuntu22.04 AS base
+# NVIDIA CUDA 12.1 Ubuntu用をベースイメージにする
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04 AS base
 
 # 必要なパッケージをインストール
 RUN apt-get update && apt-get install -y --no-install-recommends \

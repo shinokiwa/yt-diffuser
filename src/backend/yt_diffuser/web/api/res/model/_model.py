@@ -22,8 +22,7 @@ def get_model ():
 
         models = []
         for model in _models:
-            data = model.to_dict({'model_name', 'revision', 'screen_name', 'commit_hash'})
-            data['class_name'] = model.__class__.__name__
+            data = model.to_dict()
             models.append(data)
 
         data = {'models': models}

@@ -20,13 +20,13 @@ function refresh () {
         if (event.data.length > 0) {
             const data = JSON.parse(event.data)
 
-            if (data.type === 'deleted' || data.type === 'modified') {
+            if (data.type === 'delete' || data.type === 'modify') {
                 imageList.value = imageList.value.filter((item) => {
                     return item.url !== data.target
                 })
             }
     
-            if (data.type === 'created' || data.type === 'list' || data.type === 'modified') {
+            if (data.type === 'create' || data.type === 'list' || data.type === 'modify') {
                 imageList.value.push({
                     id: imageList.value.length,
                     url: data.target,

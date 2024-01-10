@@ -25,7 +25,7 @@ else
 fi
 
 # フロントエンドサーバー起動
-if ps aux | grep -v grep | grep -q '/usr/bin/npm run dev'; then
+if ps aux | grep -v grep | grep -q 'npm run dev'; then
     echo "フロントエンドサービスは既に起動しています。"
 else
     cd /workspace/src/frontend

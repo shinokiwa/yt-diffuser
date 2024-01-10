@@ -4,9 +4,9 @@ from multiprocessing.queues import Queue
 
 from tqdm import tqdm
 
-from yt_diffuser.utils.message_queue import send_progress
+from yt_diffuser.utils.event import DownloadStatusEvent
 
-class WorkerProgress(tqdm):
+class DownloadProgress(tqdm):
     """
     tqdmをオーバーライドし、進捗を標準出力ではなく送信キューに入れる。
 
@@ -19,13 +19,13 @@ class WorkerProgress(tqdm):
                  miniters=None,
                  initial=0,
                  queue: Queue = None,
-                 event: str = None,
-                 target: str = None,
+                 model_name: str = None,
+                 revision: str = None,
                  **kwargs):
 
         self.queue: Queue = queue
-        self.event: str = event
-        self.target: str = target
+        self.model_name: str = model_name
+        self.revision: str = revision
 
         super().__init__(
             iterable=iterable,
@@ -66,15 +66,16 @@ class WorkerProgress(tqdm):
         
         # 出力
         if self.queue:
-            send_progress(
-                queue=self.queue,
-                event=self.event,
-                target=self.target,
+            DownloadStatusEvent.send_process(
+                process_queue=self.queue,
+                status=DownloadStatusEvent.Status.DOWNLOADING,
+                model_name=self.model_name,
+                revision=self.revision,
                 total=total,
                 progress=self.n,
                 percentage=percentage,
                 elapsed=elapsed,
-                remaining=remaining
+                remaining=remaining,
             )
 
         return True

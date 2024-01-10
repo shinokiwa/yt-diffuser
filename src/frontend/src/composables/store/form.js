@@ -3,13 +3,17 @@
  */
 import { ref } from 'vue'
 
-const prompt = ref(null)
-const nPrompt = ref(null)
+const seed = ref(0)
+const prompt = ref("")
+const nPrompt = ref("")
+const inferenceSteps = ref(30)
 
 
 export function useForm() {
     return {
+        seed,
         prompt,
-        nPrompt
+        nPrompt,
+        inferenceSteps
     }
 }

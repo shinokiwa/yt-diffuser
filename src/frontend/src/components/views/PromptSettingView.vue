@@ -2,13 +2,18 @@
 /**
  * プロンプト設定画面
  */
-import { ref, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import InputPrompt from '@/components/elements/InputPrompt.vue'
+import FormElement from '@/components/elements/FormElement.vue'
+import InputSeed from '@/components/elements/InputSeed.vue'
 
 import { useForm } from '@/composables/store/form'
 import { useLatestForm } from '@/composables/api/res/form/latest'
+import { useGeneratePreview } from '@/composables/api/generate/preview'
+import { useOutputPreview } from '@/composables/api/res/output/preview'
 
+const { previewSrc } = useOutputPreview()
 
 onUnmounted(() => {
     // 本来このタイミングでやることではないが暫定。
@@ -16,10 +21,23 @@ onUnmounted(() => {
     updateLatestForm()
 })
 
-const { prompt, nPrompt } = useForm()
+const { seed, prompt, nPrompt, inferenceSteps } = useForm()
 
 const promptList = ref([])
 const nPromptList = ref([])
+
+function preview () {
+    const { updateLatestForm } = useLatestForm()
+    updateLatestForm()
+
+    const { start_generate } = useGeneratePreview()
+    start_generate(
+        seed.value,
+        prompt.value,
+        nPrompt.value,
+        inferenceSteps.value
+    )
+}
 </script>
 
 <template>
@@ -27,11 +45,11 @@ const nPromptList = ref([])
     <div id="PromptSettingArea">
         <div class="left-area">
             <div class="image-area">
-                <img src="https://via.placeholder.com/300x300" />
+                <img class="preview-image" :src="previewSrc" />
             </div>
             <div clss="option-area">
                 <div>
-                    <button>プレビュー</button>
+                    <button @click="preview">プレビュー</button>
                 </div>
                 <div>
                     <input type="checkbox" id="RealTimePreview" />
@@ -39,12 +57,7 @@ const nPromptList = ref([])
                         リアルタイムプレビュー
                     </label>
                 </div>
-                <div>
-                    <label>
-                        SEED値
-                    </label>
-                    <input type="text" placeholder="未入力で自動設定"/>
-                </div>
+                <InputSeed label="SEED値" v-model="seed" />
                 <div>
                     画像サイズ
                     <label>
@@ -68,10 +81,10 @@ const nPromptList = ref([])
                     </select>
                 </div>
                 <div>
-                    <label>
+                    <label for="InferenceSteps">
                         ステップ数
                     </label>
-                    <input type="number" placeholder="1" />
+                    <input id="InferenceSteps" type="number" v-model="inferenceSteps" />
                 </div>
                 <div>
                     <label>
@@ -114,6 +127,13 @@ const nPromptList = ref([])
     width: 400px;
     margin-right: 10px;
 }
+
+.preview-image {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+}
+
 
 .right-area {
     flex-grow: 1;

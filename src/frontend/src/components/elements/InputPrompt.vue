@@ -1,5 +1,6 @@
 <script setup>
 import {ref, defineProps, defineEmits, watchEffect} from 'vue'
+import FormElement from '@/components/elements/FormElement.vue'
     
 const props = defineProps({
     id: String,
@@ -25,9 +26,8 @@ async function copy () {
 }
 </script>
 
-<template>    
-<div class="prompt-area">
-    <label :for="id">{{ label }}</label>
+<template>
+<FormElement :label="label">
     <textarea
         :id="id"
         placeholder="ここに入力"
@@ -51,47 +51,24 @@ async function copy () {
             <i class="bi-trash"></i>
         </button>
     </div>    
-</div>
+</FormElement>
 </template>
     
-    
 <style scoped>
-.prompt-area {
-    position: relative;
-    width: 100%;
-    margin: 0;
-    margin: 11px 0 22px;
-    border: 1px solid var(--color-border-window);
-    border-radius: 5px;
-    background-color: var(--color-bg-base);
-    box-sizing: border-box;
+.form-element {
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
 }
-
-.prompt-area:has(*:focus) {
-    box-shadow: 0 0 2px 3px var(--color-shadow);
-}
-
-label {
-    position: absolute;
-    display: block;
-    top: -11px;
-    left: 10px;
-    z-index: 1;
-    color: var(--font-color-gray);
-    background-color: var(--color-bg-base);
-    width: auto !important;
-}
-
 textarea {
-    width: 100%;
     height: 8em;
-    font-size: var(--font-size-base);
-    margin-top: 10px;
-    padding: 10px;
+    padding: 0 10px;
+    resize: vertical;
+    width: 100%;
     border: none;
     background-color: transparent;
     box-sizing: border-box;
-    resize: vertical;
+    font-size: var(--font-size-base);
     border: 0 solid var(--color-border-window);
     border-bottom-width: 1px;
 }

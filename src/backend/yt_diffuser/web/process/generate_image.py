@@ -13,8 +13,8 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.process.exceptions import DuplicateProcessError
-from yt_diffuser.web.message_listener import get_context, get_message_queue
-from yt_diffuser.workers.generate_image.generator import procedure
+from yt_diffuser.utils.event.process import get_context, get_message_queue
+from yt_diffuser.workers.generate_image.main import procedure
 
 _process: SpawnProcess = None
 _input_queue: multiprocessing.Queue = None
@@ -86,14 +86,14 @@ def input_message(message:str, data:dict=None) -> None:
     _input_queue.put((message, data))
 
 
-def generate_image(text:str) -> None:
+def text_to_image(data:dict) -> None:
     """
     画像生成プロセスに画像生成メッセージを送信する。
 
     Args:
-        text (str): テキスト
+        data (dict): t2iデータ
     """
-    input_message("generate-image", {"text": text})
+    input_message("text-to-image", data)
 
 
 def terminate() -> None:

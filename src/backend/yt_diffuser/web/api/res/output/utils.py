@@ -9,8 +9,7 @@ from pathlib import Path
 
 StrOrPath = Union[str, Path]
 
-from yt_diffuser.web.message_listener import get_event_listener, remove_event_listener, Empty
-from yt_diffuser.utils.message_queue import EventType
+from yt_diffuser.utils.event import FilesystemEvent, Empty
 
 
 def is_child (parent:StrOrPath, child:StrOrPath) -> bool:
@@ -46,21 +45,22 @@ def stream_list (path:Path, timeout:float=5.0) -> Generator[str, None, None]:
                 _data = json.dumps(data)
                 yield f"data: {_data}\n\n"            
         
-        queue = get_event_listener('file')
+        queue = FilesystemEvent.get_listener()
 
         while True:
             response = ""
             try:
                 data = queue.get(timeout=timeout)
-                if type(data) == dict:
-                    event_path = Path(data['target'])
-                    if is_child(path, event_path) == False:
-                        continue
+                logger.debug(f"Event: {data}")
+                event_path = Path(data['target'])
+                if is_child(path, event_path) == False:
+                    logger.debug(f"Skip event: {event_path}")
+                    continue
 
-                    if not event_path.is_absolute():
-                        event_path = (path / event_path).resolve()
-                    data['target'] = str(event_path.relative_to(path))
-                    data = json.dumps(data)
+                if not event_path.is_absolute():
+                    event_path = (path / event_path).resolve()
+                data['target'] = str(event_path.relative_to(path))
+                data = json.dumps(data)
                 
                 response = f"data: {data}\n\n"
             except Empty:
@@ -68,4 +68,4 @@ def stream_list (path:Path, timeout:float=5.0) -> Generator[str, None, None]:
 
             yield response
     except GeneratorExit:
-        remove_event_listener(EventType.FILESYSTEM.value, queue)
+        FilesystemEvent.remove_listener(queue)

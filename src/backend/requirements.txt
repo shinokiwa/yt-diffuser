@@ -1,11 +1,11 @@
-git+https://github.com/huggingface/diffusers.git@v0.21.4
+git+https://github.com/huggingface/diffusers.git@v0.25.0
 huggingface-hub>=0.13.2
 tqdm
 scipy
 ftfy
 
-invisible_watermark===0.2.0
-transformers===4.36.2
+invisible-watermark>=0.2.0
+transformers
 safetensors
 
 xformers==0.0.18

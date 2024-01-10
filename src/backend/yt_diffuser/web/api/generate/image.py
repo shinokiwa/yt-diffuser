@@ -4,7 +4,9 @@
 from flask import Blueprint, current_app, request
 from pydantic import BaseModel, ValidationError
 
-from yt_diffuser.web.process.generate_image import is_running, load, generate_image, terminate
+from yt_diffuser.config import AppConfig
+from yt_diffuser.web.process.generate_image import is_running, load, text_to_image, terminate
+from yt_diffuser.workers.generate_image.validations import TextToImageRequest
 
 bp = Blueprint('api_generate_image', __name__)
 
@@ -48,14 +50,10 @@ def process_terminate () -> str:
     return "OK"
 
 
-class GenerateRequest(BaseModel):
-    text: str
-
-
-@bp.route('/api/generate/image/generate', methods=['POST'])
+@bp.route('/api/generate/image/text_to_image', methods=['POST'])
 def process_generate () -> str:
     """
-    画像を生成する。
+    Text to Imageで画像を生成する。
 
     Returns:
         str: "OK"
@@ -63,10 +61,20 @@ def process_generate () -> str:
     if not is_running():
         return "process is not running", 400
 
+    config:AppConfig = current_app.config['APP_CONFIG']
+
+    fixed_data = {
+        "output_dir": str(config.OUTPUT_TEMP_DIR),
+    }
+
+    req_data = {**request.json, **fixed_data}
+
     try:
-        req = GenerateRequest(**request.json)
+        data = TextToImageRequest(**req_data).dict()
     except ValidationError as e:
         return str(e), 400
+
+    config.OUTPUT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
     
-    generate_image(req.text)
+    text_to_image(data)
     return "OK"
