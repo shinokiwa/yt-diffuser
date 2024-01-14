@@ -96,6 +96,13 @@ def text_to_image(data:dict) -> None:
     input_message("text-to-image", data)
 
 
+def remove_lora() -> None:
+    """
+    画像生成プロセスにLORA解放メッセージを送信する。
+    """
+    input_message("remove-lora")
+
+
 def terminate() -> None:
     """
     画像生成プロセスを終了する。

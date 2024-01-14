@@ -1,36 +1,39 @@
 <script setup>
 import { useViewStore } from '@/composables/store/view';
-const { view, notificationArea } = useViewStore()
+const { views, currentView, changeView } = useViewStore()
 
-const currentView = view.getCurrent()
+import { useNotificationAreaStore } from '@/composables/store/notificationArea';
+const { toggle } = useNotificationAreaStore()
+
+
 </script>
 
 <template>
 <nav id="MenuView">
     <ul class="top-menu">
-        <li id="MenuItemModelManage" v-bind:class="{ 'active': currentView === view.views.MODEL_MANAGE }" v-on:click="view.change(view.views.MODEL_MANAGE)">
+        <li id="MenuItemModelManage" v-bind:class="{ 'active': currentView === views.MODEL_MANAGE }" v-on:click="changeView(views.MODEL_MANAGE)">
             <i class="bi-gpu-card"></i>
             <span>モデル管理</span>
         </li>
-        <li id="MenuItemPromptSetting" v-bind:class="{ 'active': currentView === view.views.PROMPT_SETTING }" v-on:click="view.change(view.views.PROMPT_SETTING)">
+        <li id="MenuItemPromptSetting" v-bind:class="{ 'active': currentView === views.PROMPT_SETTING }" v-on:click="changeView(views.PROMPT_SETTING)">
             <i class="bi-cpu"></i>
             <span>プロンプト設定</span>
         </li>
-        <li id="MenuItemGenerateBatch" v-bind:class="{ 'active': currentView === view.views.GENERATE_BATCH }" v-on:click="view.change(view.views.GENERATE_BATCH)">
+        <li id="MenuItemGenerateBatch" v-bind:class="{ 'active': currentView === views.GENERATE_BATCH }" v-on:click="changeView(views.GENERATE_BATCH)">
             <i class="bi-cpu"></i>
             <span>連続生成</span>
         </li>
-        <li id="MenuItemGallery" v-bind:class="{ 'active': currentView === view.views.GALLERY }" v-on:click="view.change(view.views.GALLERY)">
+        <li id="MenuItemGallery" v-bind:class="{ 'active': currentView === views.GALLERY }" v-on:click="changeView(views.GALLERY)">
             <i class="bi-images"></i>
             <span>ギャラリー</span>
         </li>
-        <li id="MenuItemEditor" v-bind:class="{ 'active': currentView === view.views.EDITOR }" v-on:click="view.change(view.views.EDITOR)">
+        <li id="MenuItemEditor" v-bind:class="{ 'active': currentView === views.EDITOR }" v-on:click="changeView(views.EDITOR)">
             <i class="bi-pencil-square"></i>
             <span>画像編集</span>
         </li>
     </ul>
     <ul class="bottom-menu">
-        <li id="MenuItemNotification" v-on:click="notificationArea.toggle()">
+        <li id="MenuItemNotification" v-on:click="toggle()">
             <i class="bi-chat-right"></i>
             <span>通知を表示</span>
         </li>

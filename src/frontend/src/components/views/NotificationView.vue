@@ -7,19 +7,18 @@
  */
 
 import { ref, watch } from 'vue'
-import { useNotificationStore } from '@/composables/store/notification';
-import { useViewStore } from '@/composables/store/view';
+import { useNotificationStore } from '@/composables/store/notification'
+import { useToastStore } from '@/composables/store/toast'
+import { useNotificationAreaStore } from '@/composables/store/notificationArea'
 
-const { notificationArea } = useViewStore()
-const { notification, toast } = useNotificationStore()
+const { notificationAreaState, hide } = useNotificationAreaStore()
+const { notificationList } = useNotificationStore()
+const { toastQueue, getToastQueue } = useToastStore()
 
 const onToast = ref(false)
 const isShownToast = ref(false)
 const toastMessage = ref('')
 
-const areaState = notificationArea.getState()
-const toastQueue = toast.getQueue()
-const notificationList = notification.getList()
 
 // トーストの状態が変化したらトースト処理開始
 watch(toastQueue, ()=>{
@@ -37,7 +36,7 @@ watch(onToast, (value)=>{
 })
 
 function showToast() {
-    const message = toast.get()
+    const message = getToastQueue()
     if (message) {
         toastMessage.value = message
         isShownToast.value = true
@@ -46,9 +45,7 @@ function showToast() {
             if (toastQueue.value.length > 0) {
                 setTimeout(showToast, 500)
             } else {
-                setTimeout(() => {
-                    onToast.value = false
-                }, 500)
+                onToast.value = false
             }
         }, 3000)
     }
@@ -57,7 +54,7 @@ function showToast() {
 
 <template>
 <div id="NotificationView">
-  <div class="notification-panel" :class="{ 'show': areaState }">
+  <div class="notification-panel" :class="{ 'show': notificationAreaState }">
     <ul class="notifications">
         <li class="notify-box" v-for="item in notificationList" :key="notification.id">
             {{ item }}
@@ -65,7 +62,7 @@ function showToast() {
     </ul>
     <ul class="bottom">
         <li class="close">
-            <a href="#" @click="notificationArea.hide()">閉じる</a>
+            <a href="#" @click="hide()">閉じる</a>
         </li>
     </ul>
   </div>

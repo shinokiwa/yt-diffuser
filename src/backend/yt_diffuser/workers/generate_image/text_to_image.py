@@ -6,8 +6,9 @@ import torch
 from diffusers import StableDiffusionXLPipeline
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.utils.event import FilesystemEvent, GenerateStatusEvent
+from yt_diffuser.utils.event import FilesystemEvent
 from yt_diffuser.workers.generate_image.validations import TextToImageRequest, ValidationError
+from yt_diffuser.workers.generate_image.scheduler import set_scheduler
 
 def text_to_image (
         pipe:StableDiffusionXLPipeline,
@@ -21,13 +22,12 @@ def text_to_image (
     try:
         data = TextToImageRequest(**req).dict()
     except ValidationError as e:
-        GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.ERROR, error=str(e))
-        return
+        raise e
 
-    if data["generate_count"] > 0:
-        GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.GENERATING)
-
+    set_scheduler(pipe, data["scheduler"])
     output_dir = Path(data["output_dir"])
+
+    pipe
 
     i = 0
     for cnt in range(0, data["generate_count"]):
@@ -53,10 +53,12 @@ def text_to_image (
             initial_seed.manual_seed(torch.Generator(device="cpu").seed())
         image = pipe(
             prompt=data["prompt"],
-            prompt_2=data["negative_prompt"],
+            negative_prompt=data["negative_prompt"],
+            width=data["width"],
+            height=data["height"],
             num_inference_steps=data["inference_steps"],
             generator=initial_seed,
-            guidance_scale=0
+            guidance_scale=data["guidance_scale"]
         ).images[0]
 
         image.save(output_path)

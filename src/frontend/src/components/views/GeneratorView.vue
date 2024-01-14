@@ -3,21 +3,25 @@ import { ref } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import TempGalleryWindow from '@/components/views/windows/TempGalleryWindow.vue'
 
-import { useForm } from '@/composables/store/form'
+import { useFormStore } from '@/composables/store/form'
 
 import { useGenerateImage } from '@/composables/api/generate/image'
 const { start_generate } = useGenerateImage()
 
-const { prompt, nPrompt, inferenceSteps } = useForm()
+const { width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale } = useFormStore()
 
 const generateCount = ref(1)
 
 function submit () {
     start_generate(
         generateCount.value,
+        width.value,
+        height.value,
         prompt.value,
-        nPrompt.value,
-        inferenceSteps.value
+        negativePrompt.value,
+        scheduler.value,
+        inferenceSteps.value,
+        guidanceScale.value,
     )
 }
 

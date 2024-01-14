@@ -21,6 +21,19 @@ class GenerateStatusEvent (BaseEvent):
         ERROR = 'error'
     
     @classmethod
-    def send_process(cls, process_queue: multiprocessing.Queue, status: Status, label: str = "", error: str = ""):
-        data = {'status': status.value, 'label': label, 'error': error}
+    def send_process(cls,
+        process_queue: multiprocessing.Queue,
+        status: Status,
+        *,
+        base_model_label: str = "",
+        lora_model_label: str = "",
+        controlnet_model_label: str = "",
+        error: str = ""
+    ):
+        data = {
+            'status': status.value,
+            'base_model_label': base_model_label,
+            'lora_model_label': lora_model_label,
+            'controlnet_model_label': controlnet_model_label,
+            'error': error}
         return super().send_process(process_queue, data)

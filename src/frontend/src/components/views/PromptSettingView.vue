@@ -5,37 +5,45 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import InputPrompt from '@/components/elements/InputPrompt.vue'
-import FormElement from '@/components/elements/FormElement.vue'
 import InputSeed from '@/components/elements/InputSeed.vue'
+import InputText from '@/components/elements/InputText.vue'
+import InputSize from '@/components/elements/InputSize.vue'
 
-import { useForm } from '@/composables/store/form'
+import { useFormStore } from '@/composables/store/form'
 import { useLatestForm } from '@/composables/api/res/form/latest'
 import { useGeneratePreview } from '@/composables/api/generate/preview'
 import { useOutputPreview } from '@/composables/api/res/output/preview'
 
 const { previewSrc } = useOutputPreview()
 
+async function doUpdateLatestForm () {
+    const { updateLatestForm } = useLatestForm()
+    updateLatestForm({ seed, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, memo })
+}
+
 onUnmounted(() => {
     // 本来このタイミングでやることではないが暫定。
-    const { updateLatestForm } = useLatestForm()
-    updateLatestForm()
+    doUpdateLatestForm()
 })
 
-const { seed, prompt, nPrompt, inferenceSteps } = useForm()
+const { seed, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, memo } = useFormStore()
 
 const promptList = ref([])
 const nPromptList = ref([])
 
 function preview () {
-    const { updateLatestForm } = useLatestForm()
-    updateLatestForm()
+    doUpdateLatestForm()
 
     const { start_generate } = useGeneratePreview()
     start_generate(
         seed.value,
+        width.value,
+        height.value,
         prompt.value,
-        nPrompt.value,
-        inferenceSteps.value
+        negativePrompt.value,
+        scheduler.value,
+        inferenceSteps.value,
+        guidanceScale.value,
     )
 }
 </script>
@@ -57,41 +65,25 @@ function preview () {
                         リアルタイムプレビュー
                     </label>
                 </div>
-                <InputSeed label="SEED値" v-model="seed" />
-                <div>
-                    画像サイズ
-                    <label>
-                        縦
-                    </label>
-                    <input size="3" type="number" placeholder="1" />px<br />
-                    <label>
-                        横
-                    </label>
-                    <input size="3" type="number" placeholder="1" />px
-                </div>
+                <InputSeed id="Seed" label="SEED値" v-model="seed" />
+                <InputSize id="ImageSize" label="画像サイズ" v-model:width="width" v-model:height="height" />
                 <div>
                     <label>
                         スケジューラー
                     </label>
-                    <select>
-                        <option value="0">なし</option>
-                        <option value="1">毎日</option>
-                        <option value="2">毎週</option>
-                        <option value="3">毎月</option>
+                    <select v-model="scheduler">
+                        <option value="ddim">DDIM</option>
+                        <option value="pndm">PNDM</option>
+                        <option value="deis">DEIS Multi</option>
+                        <option value="dpms-singlestep">DPMS Singlestep</option>
+                        <option value="dpms-multistep">DPMS Multistep</option>
+                        <option value="euler">Euler Dscrete</option>
+                        <option value="euler-ancestral">Euler Ancestral</option>
+                        <option value="lcm">LCM</option>
                     </select>
                 </div>
-                <div>
-                    <label for="InferenceSteps">
-                        ステップ数
-                    </label>
-                    <input id="InferenceSteps" type="number" v-model="inferenceSteps" />
-                </div>
-                <div>
-                    <label>
-                        ガイダンススケール
-                    </label>
-                    <input type="number" placeholder="1" />
-                </div>
+                <InputText id="InferenceSteps" label="ステップ数" type="number" v-model="inferenceSteps" />
+                <InputText id="GuidanceScale" label="ガイダンススケール" v-model="guidanceScale" />
             </div>
         </div>
         <div class="right-area">
@@ -104,12 +96,12 @@ function preview () {
             <InputPrompt
                 id="nPrompt"
                 label="ネガティブプロンプト"
-                v-model="nPrompt"
+                v-model="negativePrompt"
                 :prompt-list="nPromptList"
             />
             <div class="prompt-area">
                 メモ<br />
-                <textarea placeholder=""></textarea>
+                <textarea v-model="memo"></textarea>
             </div>
         </div>
     </div>

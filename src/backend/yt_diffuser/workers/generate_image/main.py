@@ -7,7 +7,7 @@ import logging; logger = logging.getLogger(__name__)
 import torch
 from diffusers import DiffusionPipeline
 from diffusers import StableDiffusionXLPipeline
-from diffusers import LCMScheduler
+from diffusers import LCMScheduler, EulerDiscreteScheduler
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.event import GenerateStatusEvent
@@ -28,7 +28,16 @@ def procedure(config:AppConfig,
         message_queue (multiprocessing.Queue): この処理から出力されるメッセージを格納するキュー
         input_queue (multiprocessing.Queue): この処理への入力を格納するキュー
     """
-    GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.LOADING, label=f"{model_name}:{revision}")
+    if config.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    adapter_id = "latent-consistency/lcm-lora-sdxl"
+
+    lora_model_label = ""
+    GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.LOADING,
+        base_model_label=f"{model_name}({revision}):fp16",
+        lora_model_label=lora_model_label
+    )
 
     pipe:StableDiffusionXLPipeline = DiffusionPipeline.from_pretrained(
         pretrained_model_name_or_path=model_name,
@@ -40,21 +49,14 @@ def procedure(config:AppConfig,
         variant="fp16",
     )
 
-    adapter_id = "latent-consistency/lcm-lora-sdxl"
-    pipe.load_lora_weights(adapter_id,
-        revision=revision,
-        cache_dir=config.STORE_HF_MODEL_DIR,
-        local_files_only=True,
-        weight_name="pytorch_lora_weights.safetensors"
-    )
-    pipe.fuse_lora()
-    pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-
     pipe.enable_model_cpu_offload()
 
     while True:
 
-        GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.READY, label=f"{model_name}:{revision}")
+        GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.READY,
+            base_model_label=f"{model_name}({revision}):fp16",
+            lora_model_label=lora_model_label
+        )
 
         recv = input_queue.get()
 
@@ -67,7 +69,29 @@ def procedure(config:AppConfig,
             GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.EXIT)
             break
         
+        if message == "load-lora":
+            pipe.load_lora_weights(adapter_id,
+                revision=revision,
+                cache_dir=config.STORE_HF_MODEL_DIR,
+                local_files_only=True,
+                weight_name="pytorch_lora_weights.safetensors"
+            )
+            lora_model_label = f"{adapter_id}({revision}):pytorch_lora_weights.safetensors"
+            pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
+            continue
+
+        if message == "remove-lora":
+            pipe.unload_lora_weights()
+            lora_model_label = ""
+            pipe.scheduler = EulerDiscreteScheduler.from_config(pipe.scheduler.config)
+            continue
+        
         if message == "text-to-image":
 
-            text_to_image(pipe, config, message_queue, data)
+            try:
+                text_to_image(pipe, config, message_queue, data)
+            except Exception as e:
+                logger.exception(e)
+                GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.ERROR, error=str(e))
+
             continue

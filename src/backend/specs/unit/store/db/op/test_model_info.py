@@ -1,5 +1,5 @@
 """
-yt_diffuser.store.db.op.models のテスト
+yt_diffuser.store.db.op.model_info のテスト
 """
 import pytest
 

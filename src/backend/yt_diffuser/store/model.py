@@ -25,6 +25,7 @@ class ModelInfo:
 
         if self.model_class == ModelClass.BASE_MODEL:
             self.appends['pipeline_name'] = ''
+            self.appends['precision'] = ''
         
         elif self.model_class == ModelClass.LORA_MODEL:
             self.appends['weight_name'] = ''

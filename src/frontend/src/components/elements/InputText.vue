@@ -1,63 +1,46 @@
 <script setup>
 /**
  * テキスト入力フォーム 基本パターン
- * v-model対応
  **/
-defineProps({
+import FormElement from '@/components/elements/FormElement.vue'
+    
+const props = defineProps({
     id: {
         type: String,
-        default: ''
     },
     label: {
         type: String,
-        default: ''
     },
     placeholder: {
         type: String,
         default: ''
     },
-    modelValue: {
-        type: String,
-        default: ''
-    }
 })
-defineEmits(['update:modelValue'])
+const modelValue = defineModel({ type: [String, Number], defaultValue: '' })
 </script>
 
 <template>
-<div>
-    <label :for="id">{{ label }}</label>
-    <input type="text"
+<FormElement :label="label" :id="id">
+    <input
+        type="text"
         :id="id"
         :placeholder="placeholder"
-        :value="modelValue"
-        @input="$emit('update:modelValue', $event.target.value)"
+        v-model="modelValue"
     >
-</div>
-
+</FormElement>
 </template>
 
 <style scoped>
-div {
-    display: flex; flex-direction: row;
-}
-
-.grid div {
-    display: contents;
-}
-
-div > label, div > input {
-    margin: 5px 0;
-    display: block;
-    border-bottom: 1px solid var(--color-border-window);
-}
-label {
-    flex-shrink: 0;
-    padding-right: 40px;
-}
 input {
-    border: none;
     flex-grow: 1;
-    width: auto;
+    border: none;
+    background-color: transparent;
+    box-sizing: border-box;
+    font-size: var(--font-size-base);
+    border: 0 solid var(--color-border-window);
+}
+
+input::placeholder {
+    color: var(--font-color-gray);
 }
 </style>

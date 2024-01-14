@@ -30,6 +30,7 @@ export default defineConfig({
             providers: ["v8"],
             all: true,
             reporter: ["text", "html"],
+            exclude: ["specs/**/*"],
         }
     },
 });

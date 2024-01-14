@@ -20,3 +20,20 @@ class ModelSource (Enum):
 
     HUB = "hub"
     LOCAL = "local"
+
+class PrecisionName (Enum):
+    """
+    モデル精度
+    """
+
+    DEFAULT = "default"
+    FP16 = "fp16"
+
+
+class PipelineName (Enum):
+    """
+    パイプライン名
+    """
+
+    SD = "sd"
+    SDXL = "sdxl"

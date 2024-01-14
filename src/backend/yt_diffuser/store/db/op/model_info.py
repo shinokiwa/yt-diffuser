@@ -1,5 +1,5 @@
 """
-モデル追加情報テーブル model_info
+モデル情報テーブル model_info
 """
 from typing import Dict, List
 from sqlite3 import Connection

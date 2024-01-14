@@ -25,7 +25,7 @@ class TestModelInfo:
         assert model_info.source == ModelSource.HUB
         assert model_info.revisions == []
         assert model_info.screen_name == None
-        assert model_info.appends == {"pipeline_name": ""}
+        assert model_info.appends == {"pipeline_name": "", "precision": ""}
 
 
         model_info = ModelInfo(

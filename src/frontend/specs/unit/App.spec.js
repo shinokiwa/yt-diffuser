@@ -19,32 +19,18 @@ import App from '@/App.vue'
 
 describe('App アプリルート', async () => {
 
-    await it ('初期状態ではInitializingViewが表示される。初期化完了するとビューが表示される。', async ()=> {
-        const { view } = useViewStoreMock()
-        const { getModels } = useModelMock()
-        const { getLatestForm } = useLatestFormMock()
-
-
+    await it ('初期状態ではInitializingViewが表示される。InitializingViewが初期化処理を行い、ビューが変更される想定。', async ()=> {
         const com = shallowMount(App)
-        expect(com.find('#InitializingView').isVisible()).toBe(true)
-
-        expect(getModels).toHaveBeenCalled()
-        await com.vm.$nextTick()
-        expect(getLatestForm).toHaveBeenCalled()
-        await com.vm.$nextTick()
-
-        expect(view.change).toHaveBeenCalledWith(view.views.MODEL_MANAGE)
-        com.unmount()
+        expect(com.find('initializing-view-stub').exists()).toBe(true)
     })
 
     await it ('現在のビューの内容が変更されると表示するコンポーネントが変わる。', async ()=> {
         const com = shallowMount(App)
-        const { view } = useViewStoreMock()
-        view.getCurrent().value = view.views.MODEL_MANAGE
+        const { currentView, views } = useViewStoreMock()
+        currentView.value = views.MODEL_MANAGE
 
         await com.vm.$nextTick()
 
         expect(com.find('.main-view').html()).toContain('model-manage-view-stub');
-        com.unmount()
     })
 })

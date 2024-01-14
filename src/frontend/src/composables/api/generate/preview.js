@@ -8,12 +8,25 @@ const { get, post } = useApi()
 /**
  * プレビュー画像を生成する
  */
-async function start_generate (seed, prompt, negative_prompt, inference_steps) {
+async function start_generate (
+    seed,
+    width,
+    height,
+    prompt,
+    negative_prompt,
+    scheduler,
+    inference_steps,
+    guidance_scale
+) {
     await post('/api/generate/preview/text_to_image', {
         seed: seed,
+        width: width,
+        height: height,
         prompt: prompt,
         negative_prompt: negative_prompt,
-        inference_steps: inference_steps
+        scheduler: scheduler,
+        inference_steps: inference_steps,
+        guidance_scale: guidance_scale
     })
 }
 

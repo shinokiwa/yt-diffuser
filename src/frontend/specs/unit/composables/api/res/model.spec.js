@@ -3,50 +3,49 @@
  */
 import { describe, it, expect, vi } from 'vitest'
 
+import { useApiMock } from '@mocks/composables/api/api.mock'
+vi.mock('@/composables/api', () => ({ useApi: useApiMock }))
+
 import { useModel } from '@/composables/api/res/model'
-import { useApi } from '@/composables/api'
 
-vi.mock('@/composables/api', () => {
-    const api = {
-        get: vi.fn()
-    }
+describe ('getModels', async () => {
+    const { get } = useApiMock()
+    const { modelList, getModels } = useModel()
 
-    const useApi = ()=> {
-        return { api }
-    }
-
-    return { useApi }
-})
-
-describe ('loadModels', async () => {
-    const { api } = useApi()
-    const { baseModels, loraModels, upscaleModels, loadModels } = useModel()
-
-    it ('モデルをロードすると各Modelsに値が入る', async () => {
-        api.get.mockReturnValueOnce({
-            data: {
-                base: ['base1', 'base2'],
-                lora: ['lora1', 'lora2'],
-                upscale: ['upscale1', 'upscale2']
-            }
+    it ('/api/res/model からモデル一覧を取得し、modelListに格納する。', async () => {
+        get.mockReturnValueOnce({
+            json: async () => ({
+                models: [
+                    { model_class: 'base-model', model_name: 'base1' },
+                    { model_class: 'base-model', model_name: 'base2' },
+                    { model_class: 'lora-model', model_name: 'lora1' },
+                    { model_class: 'lora-model', model_name: 'lora2' },
+                    { model_class: 'controlnet-model', model_name: 'upscale1' },
+                    { model_class: 'controlnet-model', model_name: 'upscale2' }
+                ]
+            })
         })
 
-        await loadModels()
-        expect(api.get).toHaveBeenCalledWith('/api/res/model')
-        expect(baseModels.value).toEqual(['base1', 'base2'])
-        expect(loraModels.value).toEqual(['lora1', 'lora2'])
-        expect(upscaleModels.value).toEqual(['upscale1', 'upscale2'])
+        await getModels()
+        expect(get).toHaveBeenCalledWith('/api/res/model')
+
+        expect(modelList.value).toEqual([
+            { model_class: 'base-model', model_name: 'base1' },
+            { model_class: 'base-model', model_name: 'base2' },
+            { model_class: 'lora-model', model_name: 'lora1' },
+            { model_class: 'lora-model', model_name: 'lora2' },
+            { model_class: 'controlnet-model', model_name: 'upscale1' },
+            { model_class: 'controlnet-model', model_name: 'upscale2' }
+        ])
     })
 
-    it ('レスポンスが空のときは各Modelsも空になる', async () => {
-        api.get.mockReturnValueOnce({
-            data: {}
+    it ('レスポンスが空のときはmodelListも空になる', async () => {
+        get.mockReturnValueOnce({
+            json: async () => ({ models: [] })
         })
 
-        await loadModels()
-        expect(api.get).toHaveBeenCalledWith('/api/res/model')
-        expect(baseModels.value).toEqual([])
-        expect(loraModels.value).toEqual([])
-        expect(upscaleModels.value).toEqual([])
+        await getModels()
+        expect(get).toHaveBeenCalledWith('/api/res/model')
+        expect(modelList.value).toEqual([])
     })
 })

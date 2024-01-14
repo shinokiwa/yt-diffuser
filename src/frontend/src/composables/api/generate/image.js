@@ -1,20 +1,8 @@
 /**
  * /api/generate/image に関する処理をまとめたコンポーザブル
  */
-import { ref } from 'vue'
 import { useApi } from '@/composables/api'
-const { get, post } = useApi()
-
-
-/**
- * モデルをロードする
- */
-async function loadModel (model_name, revision) {
-    await post('/api/generate/image/load', {
-        model_name,
-        revision
-    })
-}
+const { post } = useApi()
 
 
 /**
@@ -22,22 +10,29 @@ async function loadModel (model_name, revision) {
  */
 async function start_generate (
     generate_count,
+    width,
+    height,
     prompt,
     negative_prompt,
-    inference_steps
+    scheduler,
+    inference_steps,
+    guidance_scale
 ) {
     await post('/api/generate/image/text_to_image', {
         generate_count: generate_count,
+        width: width,
+        height: height,
         prompt: prompt,
         negative_prompt: negative_prompt,
-        inference_steps: inference_steps
+        scheduler: scheduler,
+        inference_steps: inference_steps,
+        guidance_scale: guidance_scale
     })
 }
 
 
 export function useGenerateImage () {
     return {
-        loadModel,
         start_generate
     }
 }

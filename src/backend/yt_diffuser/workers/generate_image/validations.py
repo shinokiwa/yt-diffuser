@@ -10,7 +10,11 @@ class TextToImageRequest(BaseModel):
     generate_count: int = 1
 
     seed: int = None
-    prompt: str
-    negative_prompt: str
-    inference_steps: int
+    width: int
+    height: int
 
+    prompt: str = None
+    negative_prompt: str = None
+    scheduler: str
+    inference_steps: int
+    guidance_scale: float

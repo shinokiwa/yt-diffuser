@@ -4,13 +4,14 @@
  */
 import { defineProps } from 'vue'
 const props = defineProps({
+    id: String,
     label: String,
 })
 </script>
 
 <template>    
 <div class="form-element">
-    <label>{{ label }}</label>
+    <label :for="id">{{ label }}</label>
     <slot />
 </div>
 </template>

@@ -17,5 +17,16 @@ class TestGenerateStatusEvent:
         """
         q = multiprocessing.Queue()
 
-        GenerateStatusEvent.send_process(q, GenerateStatusEvent.Status.READY, "test", "error")
-        assert q.get() == ("generator", True, {'status': 'ready', 'label': 'test', 'error': 'error'})
+        GenerateStatusEvent.send_process(q, GenerateStatusEvent.Status.READY,
+            base_model_label="base",
+            lora_model_label="lora",
+            controlnet_model_label="controlnet",
+            error="error"
+        )
+        assert q.get() == ("generator", True, {
+            'status': 'ready',
+            'base_model_label': 'base',
+            'lora_model_label': 'lora',
+            'controlnet_model_label': 'controlnet',
+            'error': 'error'
+        })

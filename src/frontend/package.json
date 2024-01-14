@@ -11,9 +11,8 @@
     "test-cov": "vitest run --coverage"
   },
   "dependencies": {
-    "axios": "1.4.x",
     "bootstrap-icons": "1.10.x",
-    "vue": "3.2.x"
+    "vue": "3.4.x"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "4.5.x",
