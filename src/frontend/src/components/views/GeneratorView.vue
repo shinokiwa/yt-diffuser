@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
-import TempGalleryWindow from '@/components/views/windows/TempGalleryWindow.vue'
+import TempGalleryWindow from '@/components/views/common/TempGalleryWindow.vue'
 
 import { useFormStore } from '@/composables/store/form'
 

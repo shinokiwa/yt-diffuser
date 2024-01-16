@@ -6,9 +6,11 @@ import torch
 from diffusers import StableDiffusionXLPipeline
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.utils.event import FilesystemEvent
-from yt_diffuser.workers.generate_image.validations import TextToImageRequest, ValidationError
-from yt_diffuser.workers.generate_image.scheduler import set_scheduler
+from yt_diffuser.utils.event import FilesystemEvent, GenerateProgressEvent
+
+from .validations import TextToImageRequest, ValidationError
+from .scheduler import set_scheduler
+from .tqdm import GenerateProgressTqdm
 
 def text_to_image (
         pipe:StableDiffusionXLPipeline,
@@ -27,10 +29,23 @@ def text_to_image (
     set_scheduler(pipe, data["scheduler"])
     output_dir = Path(data["output_dir"])
 
-    pipe
+
 
     i = 0
     for cnt in range(0, data["generate_count"]):
+
+        # 後でちゃんと実装するけど、とりあえず
+        # progress_barを無理やり差し替える
+        def progress_bar(iterable=None, total=None):
+            if iterable is not None:
+                return GenerateProgressTqdm(iterable, queue=message_queue, generate_total=data["generate_count"], generate_count=cnt)
+            elif total is not None:
+                return GenerateProgressTqdm(total=total, queue=message_queue, generate_total=data["generate_count"], generate_count=cnt)
+            else:
+                raise ValueError("Either `total` or `iterable` has to be defined.")
+
+        pipe.progress_bar = progress_bar
+
 
         if data["filename"] == "":
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
@@ -51,6 +66,7 @@ def text_to_image (
             initial_seed.manual_seed(data["seed"])
         else:
             initial_seed.manual_seed(torch.Generator(device="cpu").seed())
+
         image = pipe(
             prompt=data["prompt"],
             negative_prompt=data["negative_prompt"],
@@ -64,3 +80,4 @@ def text_to_image (
         image.save(output_path)
 
         FilesystemEvent.send_process(message_queue, FilesystemEvent.Type.CREATE, str(output_path))
+

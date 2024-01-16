@@ -13,6 +13,7 @@ from .process import (
 
 from .types.file_system import FilesystemEvent
 from .types.generate_status import GenerateStatusEvent
+from .types.generate_progress import GenerateProgressEvent
 from .types.download_status import DownloadStatusEvent
 
 from multiprocessing import Queue as ProcessQueue

@@ -10,6 +10,7 @@ import { ref, watch } from 'vue'
 import { useNotificationStore } from '@/composables/store/notification'
 import { useToastStore } from '@/composables/store/toast'
 import { useNotificationAreaStore } from '@/composables/store/notificationArea'
+import ProgressView from '@/components/views/common/ProgressView.vue'
 
 const { notificationAreaState, hide } = useNotificationAreaStore()
 const { notificationList } = useNotificationStore()
@@ -63,6 +64,9 @@ function showToast() {
     <ul class="bottom">
         <li class="close">
             <a href="#" @click="hide()">閉じる</a>
+        </li>
+        <li class="progress notify-box">
+            <ProgressView />
         </li>
     </ul>
   </div>

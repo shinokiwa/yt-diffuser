@@ -7,14 +7,14 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from flask import Blueprint, Response
 
-from yt_diffuser.utils.event import GenerateStatusEvent, Empty
+from yt_diffuser.utils.event import GenerateProgressEvent, Empty
 
-bp = Blueprint('api_generate_status', __name__)
+bp = Blueprint('api_generate_progress', __name__)
 
-@bp.route('/api/generate/status', methods=['GET'])
+@bp.route('/api/generate/progress', methods=['GET'])
 def get_status ():
     """
-    生成ワーカーのステータスを返すSSE
+    生成ワーカーの進捗状況を返すSSE
     """
     return Response(event_stream(), mimetype='text/event-stream')
 
@@ -33,7 +33,7 @@ def event_stream(timeout:float=5.0) -> Generator[str, None, None]:
     Yields:
         Str: イベントデータ
     """
-    queue = GenerateStatusEvent.get_listener()
+    queue = GenerateProgressEvent.get_listener()
 
     try:
         while True:
@@ -49,4 +49,4 @@ def event_stream(timeout:float=5.0) -> Generator[str, None, None]:
             yield response
 
     except GeneratorExit:
-        GenerateStatusEvent.remove_listener(queue)
+        GenerateProgressEvent.remove_listener(queue)
