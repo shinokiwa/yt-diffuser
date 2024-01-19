@@ -1,20 +1,15 @@
 <script setup>
-import {ref, defineProps, defineEmits, watchEffect} from 'vue'
+import { ref } from 'vue'
 import FormElement from '@/components/elements/FormElement.vue'
-    
+
 const props = defineProps({
     id: String,
     label: String,
     promptList: Array,
-    modelValue: String
 })
-const emits = defineEmits(['update:modelValue'])
+const prompt = defineModel()
 
-const prompt = ref(props.modelValue)
-
-watchEffect(()=>{
-    emits('update:modelValue', prompt.value)
-})
+const events = defineEmits(['save', 'load'])
 
 async function copy () {
     try {
@@ -35,7 +30,7 @@ async function copy () {
     ></textarea>
 
     <div class="btn-menu">
-        <button type="button" title="プロンプトを保存" @click='store.dispatch("image/prompt")'>
+        <button type="button" title="プロンプトを保存" @click="events('save', prompt)">
             <i class="bi-save2"></i>
         </button>
 

@@ -8,7 +8,8 @@ from .process import (
     get_context,
     get_message_queue,
     message_listener,
-    start_message_listener
+    start_message_listener,
+    stop_message_listener
 )
 
 from .types.file_system import FilesystemEvent

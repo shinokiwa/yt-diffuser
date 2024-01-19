@@ -21,11 +21,13 @@ class GenerateProgressTqdm(tqdm):
                  queue: Queue = None,
                  generate_total: int = None,
                  generate_count: int = None,
+                 average: float = 0,
                  **kwargs):
 
         self.queue: Queue = queue
         self.generate_total: int = generate_total
         self.generate_count: int = generate_count
+        self.average: float = average
 
         super().__init__(
             iterable=iterable,
@@ -77,6 +79,7 @@ class GenerateProgressTqdm(tqdm):
                 percentage=percentage,
                 elapsed=elapsed,
                 remaining=remaining,
+                average=self.average
             )
 
         return True

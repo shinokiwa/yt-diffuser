@@ -5,12 +5,29 @@
  * スロット内のコンテンツを残したまま、背景を暗くする
  * 背景部分をクリックすると、スロットコンテンツおよびオーバーレイを閉じる
  */ 
-import { ref } from 'vue';
+const props = defineProps({
+    id: {
+        type: String,
+        default: ''
+    }
+})
 
-const isShow = ref(false)
+const isShow = defineModel('isShow', {
+    type: Boolean,
+    default: false
+})
 
-const show = ()=> isShow.value = true
-const hide = ()=> isShow.value = false
+const emit = defineEmits(['open', 'close']);
+
+function show () {
+    isShow.value = true
+    emit('open')
+}
+
+function hide () {
+    isShow.value = false
+    emit('close')
+}
 
 defineExpose({
     show,
@@ -21,7 +38,7 @@ defineExpose({
 
 <template>
 <Teleport to="body">
-    <div class="modal-window" v-if="isShow">
+    <div :id="id" class="modal-window" v-if="isShow">
         <div class="overlay" @click="hide"></div>
         <div class="modal-view">
             <slot />

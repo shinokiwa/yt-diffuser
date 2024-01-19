@@ -16,3 +16,5 @@ def connect_database (db_file:Path = None) -> Connection:
         db_file = ":memory:"
     conn = _connect_database(db_file)
     init_database(conn, 1)
+
+    return conn

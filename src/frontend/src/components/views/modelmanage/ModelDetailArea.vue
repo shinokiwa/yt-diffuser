@@ -53,7 +53,10 @@ const screenName = ref("")
 
 function load () {
     const { updateLatestForm } = useLatestForm()
-    updateLatestForm({})
+    updateLatestForm({
+        baseModel,
+        baseModelRevision,
+    })
 
     const { loadModel } = useGenerateProcess()
     loadModel(props.selectedModel, selectedRevision.value)

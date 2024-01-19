@@ -62,7 +62,7 @@ def load(config:AppConfig, model_name:str, revision:str) -> SpawnProcess:
     _process = context.Process(
         target=procedure,
         args=(config, model_name, revision, message_queue, _input_queue),
-        daemon=True
+        #daemon=True
     )
 
     _process.start()
@@ -116,7 +116,10 @@ def terminate() -> None:
     if is_running():
         logger.debug("Terminate generate_image")
         input_message("exit")
-        _process.join()
+        _process.join(timeout=30)
+        if _process.is_alive():
+            logger.debug("Force terminate generate_image")
+            _process.terminate()
         _process = None
 
 atexit.register(terminate)

@@ -11,12 +11,17 @@ from yt_diffuser.utils.event import FilesystemEvent, GenerateProgressEvent
 from .validations import TextToImageRequest, ValidationError
 from .scheduler import set_scheduler
 from .tqdm import GenerateProgressTqdm
+from .image_utils import save_image
+
 
 def text_to_image (
         pipe:StableDiffusionXLPipeline,
         config:AppConfig,
+        input_queue:multiprocessing.Queue,
         message_queue:multiprocessing.Queue,
-        req:dict) -> None:
+        model_name:str,
+        req:dict
+    ) -> None:
     """
     Text to Imageで画像を生成する。
     """
@@ -29,23 +34,26 @@ def text_to_image (
     set_scheduler(pipe, data["scheduler"])
     output_dir = Path(data["output_dir"])
 
-
-
+    elapsed_list = []
     i = 0
+    average = 0
     for cnt in range(0, data["generate_count"]):
+        tqdm = GenerateProgressTqdm(queue=message_queue, generate_total=data["generate_count"], generate_count=cnt, average=average)
 
         # 後でちゃんと実装するけど、とりあえず
         # progress_barを無理やり差し替える
         def progress_bar(iterable=None, total=None):
             if iterable is not None:
-                return GenerateProgressTqdm(iterable, queue=message_queue, generate_total=data["generate_count"], generate_count=cnt)
+                tqdm.iterable = iterable
+                tqdm.total = len(iterable) + 2
+                return tqdm
             elif total is not None:
-                return GenerateProgressTqdm(total=total, queue=message_queue, generate_total=data["generate_count"], generate_count=cnt)
+                tqdm.total = total + 2
+                return tqdm
             else:
                 raise ValueError("Either `total` or `iterable` has to be defined.")
 
         pipe.progress_bar = progress_bar
-
 
         if data["filename"] == "":
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
@@ -63,9 +71,11 @@ def text_to_image (
 
         initial_seed = torch.Generator(device="cpu")
         if data["seed"] is not None:
-            initial_seed.manual_seed(data["seed"])
+            seed = data["seed"]
         else:
-            initial_seed.manual_seed(torch.Generator(device="cpu").seed())
+            seed = initial_seed.seed()
+
+        initial_seed.manual_seed(seed)
 
         image = pipe(
             prompt=data["prompt"],
@@ -77,7 +87,27 @@ def text_to_image (
             guidance_scale=data["guidance_scale"]
         ).images[0]
 
-        image.save(output_path)
+        tqdm.update(1)
+
+        save_image(image, output_path, model_name, seed, data)
 
         FilesystemEvent.send_process(message_queue, FilesystemEvent.Type.CREATE, str(output_path))
+
+        tqdm.update(1)
+        elapsed_list.append(tqdm.format_dict['elapsed'])
+        average = sum(elapsed_list) / len(elapsed_list) if len(elapsed_list) > 0 else 0
+
+    GenerateProgressEvent.send_process(
+        process_queue=message_queue,
+        generate_total=data["generate_count"],
+        generate_count=data["generate_count"],
+
+        steps_total=0,
+        steps_count=0,
+
+        percentage=0,
+        elapsed=0,
+        remaining=0,
+        average=average
+    )
 

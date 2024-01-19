@@ -59,8 +59,8 @@ def post_form_prompt ():
 
     return {"status": "OK"}
 
-@bp.route('/api/res/form/n_prompt', methods=['GET'])
-def get_form_n_prompt ():
+@bp.route('/api/res/form/negative_prompt', methods=['GET'])
+def get_form_negative_prompt ():
     """
     ネガティブプロンプトを取得する。
     """
@@ -77,8 +77,8 @@ def get_form_n_prompt ():
     
     return {"prompts": prompts}
 
-@bp.route('/api/res/form/n_prompt', methods=['POST'])
-def post_form_n_prompt ():
+@bp.route('/api/res/form/negative_prompt', methods=['POST'])
+def post_form_negative_prompt ():
     """
     ネガティブプロンプトを保存する。
     """

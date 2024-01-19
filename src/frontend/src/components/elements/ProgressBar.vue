@@ -1,19 +1,12 @@
-<template>
-<div class="progress-bar">
-    <div 
-        class="bar"
-        :style='{
-            width: progress + "%"
-        }'
-    ></div>
-</div>
-</template>
-
 <script setup>
 import { ref, defineProps, watchEffect } from 'vue';
 
 const props = defineProps ({
-    value: Number
+    value: Number,
+    height: {
+        type: [Number, String],
+        default: 20
+    }
 })
 
 const progress = ref(0)
@@ -23,11 +16,21 @@ watchEffect(()=> {
 
 </script>
 
+<template>
+<div class="progress-bar" :style="'height:' + height + 'px;'">
+    <div 
+        class="bar"
+        :style='{
+            width: progress + "%"
+        }'
+    ></div>
+</div>
+</template>
+
 <style scoped>
 .progress-bar {
     position: relative;
     width: 100%;
-    height: 20px;
     background-color: #cccccc;
     border: 1px solid #999999;
     border-radius: 5px;

@@ -2,10 +2,13 @@
 import { ref } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
 import TempGalleryWindow from '@/components/views/common/TempGalleryWindow.vue'
+import ProgressBar from '@/components/elements/ProgressBar.vue'
 
+import { useGenerateProgress } from '@/composables/api/generate/progress'
 import { useFormStore } from '@/composables/store/form'
-
 import { useGenerateImage } from '@/composables/api/generate/image'
+
+const { generateTotal: total, generateCount: count, percentage } = useGenerateProgress()
 const { start_generate } = useGenerateImage()
 
 const { width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale } = useFormStore()
@@ -25,7 +28,6 @@ function submit () {
     )
 }
 
-
 </script>
 
 <template>
@@ -39,6 +41,12 @@ function submit () {
                 </div>
                 <div class="button">
                     <button @click="submit()">生成</button>
+                </div>
+                <div class="progress">
+                    <ProgressBar :value="percentage" height="10" />
+                    <div>
+                        {{ count }} / {{ total }}
+                    </div>
                 </div>
             </div>
         </WindowArea>

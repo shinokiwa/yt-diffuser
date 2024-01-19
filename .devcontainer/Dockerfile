@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     git curl \
     python3-pip python3-venv \
+    python3.10-dev \
     libgl1-mesa-glx libglib2.0-0 \
     nginx \
     && rm -rf /var/lib/apt/lists/*

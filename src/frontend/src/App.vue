@@ -14,6 +14,7 @@ import ModelManageView from '@/components/views/ModelManageView.vue'
 import PromptSettingView from '@/components/views/PromptSettingView.vue'
 import GeneratorView from '@/components/views/GeneratorView.vue'
 import GalleryView from '@/components/views/GalleryView.vue'
+import ImageView from '@/components/views/ImageView.vue'
 
 import { useViewStore } from '@/composables/store/view';
 const { views, currentView } = useViewStore()
@@ -53,6 +54,8 @@ watch(currentView, ()=>{
         </div>
         <NotificationView />
     </div>
+
+    <ImageView />
 </div>
 </template>
 

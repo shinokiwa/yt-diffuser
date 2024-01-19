@@ -8,7 +8,7 @@ from flask import Flask
 from specs.mock.mock_config import mock_config
 
 from yt_diffuser.web.app import create_app
-from yt_diffuser.web.message_listener import stop_message_listener
+from yt_diffuser.utils.event import stop_message_listener
 
 @pytest.fixture(scope='module')
 def app() -> Generator[Flask, None, None]:

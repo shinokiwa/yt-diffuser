@@ -5,6 +5,7 @@ import multiprocessing
 import logging; logger = logging.getLogger(__name__)
 
 import torch
+import torch._inductor.config
 from diffusers import DiffusionPipeline
 from diffusers import StableDiffusionXLPipeline
 from diffusers import LCMScheduler, EulerDiscreteScheduler
@@ -39,17 +40,34 @@ def procedure(config:AppConfig,
         lora_model_label=lora_model_label
     )
 
+    torch._inductor.config.conv_1x1_as_mm = True
+    torch._inductor.config.coordinate_descent_tuning = True
+    torch._inductor.config.epilogue_fusion = False
+    torch._inductor.config.coordinate_descent_check_all_directions = True
+    # ここ自体がデーモンプロセスなので、マルチプロセスは使えない。
+    #torch._inductor.config.compile_threads = 1
+    #torch._inductor.config.force_fuse_int_mm_with_mul = True
+    #torch._inductor.config.use_mixed_mm = True
+
     pipe:StableDiffusionXLPipeline = DiffusionPipeline.from_pretrained(
         pretrained_model_name_or_path=model_name,
         revision=revision,
         cache_dir=config.STORE_HF_MODEL_DIR,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16,
         use_safetensors=True,
         local_files_only=True,
         variant="fp16",
     )
 
-    pipe.enable_model_cpu_offload()
+    if torch.cuda.is_available():
+        pipe = pipe.to("cuda")
+    
+    pipe.unet.to(memory_format=torch.channels_last)
+    pipe.vae.to(memory_format=torch.channels_last)
+
+    pipe.unet = torch.compile(pipe.unet, mode="max-autotune", fullgraph=True)
+    # VAEのコンパイルはPyTorch2.2以降っぽい？ stableビルドだとエラーになる。
+    #pipe.vae.decode = torch.compile(pipe.vae.decode, mode="max-autotune", fullgraph=True)
 
     while True:
 
@@ -89,7 +107,14 @@ def procedure(config:AppConfig,
         if message == "text-to-image":
 
             try:
-                text_to_image(pipe, config, message_queue, data)
+                text_to_image(
+                    pipe,
+                    config,
+                    input_queue,
+                    message_queue,
+                    model_name,
+                    data
+                )
             except Exception as e:
                 logger.exception(e)
                 GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.ERROR, error=str(e))

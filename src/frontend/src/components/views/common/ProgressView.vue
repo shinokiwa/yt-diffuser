@@ -16,6 +16,7 @@ const {
     percentage,
     elapsed,
     remaining,
+    average,
 
     close
 } = useGenerateProgress()
@@ -25,7 +26,7 @@ const {
 <template>
 <div id="ProgressView">
     <div class="progress" v-if="generateTotal > 0">
-        <div>生成数 {{ generateCount }} / {{ generateTotal }}</div>
+        <div>{{ generateCount }} / {{ generateTotal }} 完了(平均時間 {{ average.toFixed(2) }}秒)</div>
         <div><ProgressBar :value="percentage" /></div>
 
         <div class="row">

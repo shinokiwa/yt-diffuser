@@ -10,6 +10,7 @@ const stepsCount = ref(0)
 const percentage = ref(0)
 const elapsed = ref(0)
 const remaining = ref(0)
+const average = ref(0)
 
 let eventSource = null
 
@@ -36,6 +37,7 @@ export function useGenerateProgress() {
                 percentage.value = data.percentage
                 elapsed.value = data.elapsed
                 remaining.value = data.remaining
+                average.value = data.average
             }
         }
     }
@@ -50,6 +52,7 @@ export function useGenerateProgress() {
         percentage,
         elapsed,
         remaining,
+        average,
 
         eventSource,
         close

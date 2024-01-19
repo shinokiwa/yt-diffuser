@@ -3,7 +3,9 @@
  * ファイルギャラリーのエリア
  */
 import { ref } from 'vue'
-import Overlay from '@/components/elements/Overlay.vue'
+import Thumbnail from '@/components/elements/Thumbnail.vue'
+import { useViewerStore } from '@/composables/store/viewer';
+
 const props = defineProps({
     'baseDir': {
         type: String,
@@ -113,7 +115,12 @@ function selectItem (target, ctrlKey=false, shiftKey=false) {
     } else {
         emit('select')
     }
-    focus.value = target.dataset.index
+
+    if (focus.value === target.dataset.index) {
+        showViewer(target.dataset.imageUrl, target.dataset.timestamp)
+    } else {
+        focus.value = target.dataset.index
+    }
     window.scrollTo(0, target.offsetTop)
     return false
 }
@@ -132,7 +139,6 @@ function keyDown (event) {
         focusToDown(event)
     } else if (event.key === 'Delete') {
         event.preventDefault()
-        deleteSelected()
     } else if (event.key === 'Enter') {
         const selected = getItem(focus.value)
         if (selected) {
@@ -234,14 +240,15 @@ function focusToDown (event) {
     if (selectImgs.length > 0) {
         emit('delete', selectImgs)
     }
+    viewer.value.hide()
 }
 
 /**
  * 画像を拡大表示する
  */
 function showViewer (url, timestamp) {
-    viewImage.value = props.baseDir + url + '?t=' + timestamp
-    viewer.value.show()
+    const { showViewer, isShowViewer } = useViewerStore()
+    showViewer(props.baseDir + url + '?t=' + timestamp)
 }
 
 defineExpose({
@@ -273,17 +280,10 @@ defineExpose({
 
         @dblclick="showViewer(image.url, image.timestamp)"
     >
-        <img
+        <Thumbnail
             :src="baseDir + image.url + '?t=' + image.timestamp"
         />
     </div>
-    <Overlay ref="viewer">
-        <div class="viewer">
-            <a :href="viewImage" target="_blank">
-                <img :src="viewImage" />
-            </a>
-        </div>
-    </Overlay>
 </div>
 </template>
 
@@ -328,10 +328,4 @@ defineExpose({
     background-color: rgba(50, 70, 221, 0.3);
 }
 
-.viewer img {
-    display: block;
-    padding: 20px;
-    max-height: 100vh;
-    object-fit: contain;
-}
 </style>

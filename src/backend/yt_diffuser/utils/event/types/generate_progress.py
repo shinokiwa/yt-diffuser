@@ -21,6 +21,7 @@ class GenerateProgressEvent (BaseEvent):
         percentage: float = 0,
         elapsed: float = 0,
         remaining: float = 0,
+        average: float = 0
     ):
         data = {
             "generate_total": generate_total,
@@ -29,6 +30,7 @@ class GenerateProgressEvent (BaseEvent):
             "steps_count": steps_count,
             "percentage": percentage,
             "elapsed": elapsed,
-            "remaining": remaining
+            "remaining": remaining,
+            "average": average
         }
         return super().send_process(process_queue, data)

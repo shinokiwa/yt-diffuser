@@ -4,17 +4,24 @@
  */
 import { ref, onMounted, onUnmounted } from 'vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
+import ProgressBar from '@/components/elements/ProgressBar.vue'
+
 import InputPrompt from '@/components/elements/InputPrompt.vue'
 import InputSeed from '@/components/elements/InputSeed.vue'
 import InputText from '@/components/elements/InputText.vue'
 import InputSize from '@/components/elements/InputSize.vue'
 
-import { useFormStore } from '@/composables/store/form'
 import { useLatestForm } from '@/composables/api/res/form/latest'
+import { useFormPrompt } from '@/composables/api/res/form/prompt'
 import { useGeneratePreview } from '@/composables/api/generate/preview'
+import { useGenerateProgress } from '@/composables/api/generate/progress'
 import { useOutputPreview } from '@/composables/api/res/output/preview'
+import { useFormStore } from '@/composables/store/form'
 
+const { percentage } = useGenerateProgress()
 const { previewSrc } = useOutputPreview()
+
+const { savePrompt, saveNegativePrompt } = useFormPrompt()
 
 async function doUpdateLatestForm () {
     const { updateLatestForm } = useLatestForm()
@@ -54,6 +61,8 @@ function preview () {
         <div class="left-area">
             <div class="image-area">
                 <img class="preview-image" :src="previewSrc" />
+
+                <ProgressBar :value="percentage" height="10" />
             </div>
             <div clss="option-area">
                 <div>
@@ -92,12 +101,14 @@ function preview () {
                 label="プロンプト"
                 v-model="prompt"
                 :prompt-list="promptList"
+                @save="savePrompt"
             />
             <InputPrompt
                 id="nPrompt"
                 label="ネガティブプロンプト"
                 v-model="negativePrompt"
                 :prompt-list="nPromptList"
+                @save="saveNegativePrompt"
             />
             <div class="prompt-area">
                 メモ<br />

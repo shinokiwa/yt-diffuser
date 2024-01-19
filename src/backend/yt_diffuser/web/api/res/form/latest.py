@@ -32,7 +32,7 @@ class FormData(BaseModel):
     controlnet_model_revision: str = None
     controlnet_model_weight: str = None
 
-    seed: int = None
+    seed: str = None
     width: int = None
     height: int = None
 
