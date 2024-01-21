@@ -10,10 +10,10 @@ from huggingface_hub.hf_api import (
     ModelInfo,
     RepoFile
 )
+from u_dam.sqlite3 import setup_database
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import connect_database
-from yt_diffuser.store.db.setup import setup_database
+from yt_diffuser.database import connect_database
 from yt_diffuser.download.main import download_procedure
 
 def dummy_hf_hub_download(*args, **kwargs):
@@ -46,7 +46,7 @@ def test_download_procedure_spec (mocker):
                                     )
 
     config = AppConfig(BASE_DIR=tempfile.mkdtemp())
-    setup_database(config.DB_FILE, config.DB_UPDATE_FILE, config.DB_VERSION)
+    #setup_database(config.DB_FILE, config.DB_UPDATE_FILE, config.DB_VERSION)
     (config.STORE_HF_MODEL_DIR / "models--repo_id").mkdir(parents=True, exist_ok=True)
     repo_id = "repo_id"
     revision = "revision"

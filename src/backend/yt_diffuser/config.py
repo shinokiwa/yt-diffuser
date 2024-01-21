@@ -59,7 +59,7 @@ class AppConfig:
 
         # データベース関連
         self.DB_DIR: Path = self.DATA_DIR / "db"
-        self.DB_FILE: Path = self.DB_DIR / "yt_diffuser.db"
+        self.DB_FILE: Path = self.DB_DIR / "yt_diffuser.sqlite3"
         self.DB_UPDATE_FILE: Path = self.DB_DIR /"yt_diffuser_update.db"
 
         # 出力データ関連

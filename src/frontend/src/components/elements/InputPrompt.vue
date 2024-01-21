@@ -1,15 +1,21 @@
 <script setup>
 import { ref } from 'vue'
 import FormElement from '@/components/elements/FormElement.vue'
+import Overlay from '@/components/elements/Overlay.vue'
+import WindowArea from '@/components/elements/WindowArea.vue'
 
 const props = defineProps({
     id: String,
     label: String,
-    promptList: Array,
+    load: Function,
+    trash: Function,
 })
 const prompt = defineModel()
 
-const events = defineEmits(['save', 'load'])
+const events = defineEmits(['save'])
+
+const promptList = ref([])
+const savedArea = ref(null)
 
 async function copy () {
     try {
@@ -19,6 +25,29 @@ async function copy () {
         toast.emit('コピーに失敗しました。')
     }
 }
+
+async function showSavedArea () {
+    if (props.load === undefined) {
+        return
+    }
+    const data = await props.load()
+    promptList.value = data
+    savedArea.value.show()
+}
+
+function selectPrompt (value) {
+    prompt.value = value
+    savedArea.value.hide()
+}
+
+async function trash (id) {
+    if (props.trash === undefined) {
+        return
+    }
+    await props.trash(id)
+    promptList.value = promptList.value.filter(item => item.id !== id)
+}
+
 </script>
 
 <template>
@@ -34,7 +63,7 @@ async function copy () {
             <i class="bi-save2"></i>
         </button>
 
-        <button type="button" title="保存したプロンプトを読み込む" @click='detailEditor=true'>
+        <button type="button" title="保存したプロンプトを読み込む" @click='showSavedArea'>
             <i class="bi-folder-symlink"></i>
         </button>
 
@@ -45,7 +74,21 @@ async function copy () {
         <button type="button" title="プロンプトを全削除" @click='prompt = ""'>
             <i class="bi-trash"></i>
         </button>
-    </div>    
+    </div>
+    <Overlay ref="savedArea">
+        <WindowArea window-title="保存したプロンプト" v-bind:close-button="savedArea.hide">
+            <ul class="saved-list">
+                <li v-for="item in promptList" :key="item.id">
+                    <div class="trash-button" @click="trash(item.id)">
+                        <i class="bi-trash"></i>
+                    </div>
+                    <div class="prompt" @click="selectPrompt(item.prompt)">
+                        {{ item.prompt }}
+                    </div>
+                </li>
+            </ul>
+        </WindowArea>
+    </Overlay>
 </FormElement>
 </template>
     
@@ -91,5 +134,42 @@ textarea::placeholder {
 .btn-menu button:hover {
     background-color: var(--color-bg-gray);
 }
+
+.saved-list {
+    margin: 10px;
+    border-top: 1px solid var(--color-border-window);
+}
+
+.saved-list > li {
+    padding: 5px;
+    border-bottom: 1px solid var(--color-border-window);
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.saved-list > li > div:hover {
+    background-color: var(--color-bg-focus);
+    color: var(--font-color-light);
+}
+
+.saved-list > li > .trash-button {
+    margin-left: 10px;
+    width: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.saved-list > li > .prompt {
+    flex-grow: 1;
+    flex-shrink: 1;
+    width: 100%;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
 
 </style>

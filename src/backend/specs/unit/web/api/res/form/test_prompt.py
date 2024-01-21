@@ -4,9 +4,9 @@ yt_diffuser.web.api.res.form.latest のテスト
 import pytest
 from flask import Flask
 
-from specs.utils.test_utils.app import app
+from specs.mock.web.mock_app import app
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store.db import connect_database
+from yt_diffuser.database import connect_database
 from yt_diffuser.web.api.res.form.latest import *
 
 

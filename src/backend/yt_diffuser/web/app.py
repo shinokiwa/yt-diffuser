@@ -4,10 +4,10 @@ import atexit
 from logging import getLogger; logger = getLogger(__name__)
 
 from flask import Flask
+from u_dam.sqlite3 import setup_database, connect_database
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.web.route import init_routes
-from yt_diffuser.store.db.setup import setup_database
 from yt_diffuser.utils.event import start_message_listener
 
 def create_app (config:AppConfig):
@@ -19,11 +19,12 @@ def create_app (config:AppConfig):
     init_routes(app)
 
     start_message_listener()
+    config.DB_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     setup_database(
-        db_file=config.DB_FILE,
-        db_update_file=config.DB_UPDATE_FILE,
-        db_version=config.DB_VERSION
+        connection_method=connect_database,
+        database_path=str(config.DB_FILE),
+        package_name="yt_diffuser.database",
     )
 
     return app

@@ -1,10 +1,10 @@
 """
-yt_diffuser.store.db.op.model_appends のテスト
+yt_diffuser.database.tables.model_appends のテスト
 """
 import pytest
 
-from yt_diffuser.store.db import connect_database
-from yt_diffuser.store.db.op.model_appends import *
+from yt_diffuser.database import connect_database
+from yt_diffuser.database.tables.model_appends import *
 
 @pytest.fixture(scope="function")
 def conn():

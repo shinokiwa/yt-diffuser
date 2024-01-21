@@ -19,7 +19,7 @@ from pathlib import Path
 from flask import Blueprint, current_app, Response
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import connect_database
+from yt_diffuser.database import connect_database
 
 bp = Blueprint('api_res_output_image', __name__)
 

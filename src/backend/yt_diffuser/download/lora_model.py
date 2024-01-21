@@ -13,8 +13,8 @@ from yt_diffuser.utils.download import (
     HTTPError,
 )
 from yt_diffuser.utils.event import DownloadStatusEvent
-from yt_diffuser.store.db import connect_database
-from yt_diffuser.store.db.op.model_info import save, ModelClass
+from yt_diffuser.database import connect_database
+from yt_diffuser.database.tables.model_info import save, ModelClass
 
 def download_lora_model (config:AppConfig, queue: multiprocessing.Queue, repo_id:str, revision:str, filename:str):
     """

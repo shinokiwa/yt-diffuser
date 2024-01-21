@@ -1,11 +1,11 @@
 """
-yt_diffuser.store.db.op.prompt_archive のテスト
+yt_diffuser.database.tables.prompt_archive のテスト
 """
 import pytest
 from datetime import datetime
 
-from yt_diffuser.store.db import connect_database
-from yt_diffuser.store.db.op.prompt_archive import *
+from yt_diffuser.database import connect_database
+from yt_diffuser.database.tables.prompt_archive import *
 
 @pytest.fixture(scope="function")
 def conn():

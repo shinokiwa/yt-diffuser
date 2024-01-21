@@ -17,5 +17,7 @@ waitress>=2.1,<2.2
 pydantic>=1.10,<1.11
 watchdog==3.0.0
 
+git+https://github.com/shinokiwa/u-dam.git@main
+
 datasets>=2.9,<2.10
 bitsandbytes==0.37.0

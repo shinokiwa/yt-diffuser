@@ -1,13 +1,6 @@
 [tool.pytest.ini_options]
 log_cli_level = "DEBUG"
-markers = [
-    "describe: Description of the test context",
-    "it: Description of the test case",
-    "test: Description of the test context"
-]
-env = [
-    "TEST=1"
-]
+addopts = "--cov-report term-missing"
 
 [tool.coverage.run]
 branch = true

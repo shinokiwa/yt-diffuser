@@ -5,7 +5,7 @@ from flask import Flask
 
 from specs.mock.web.mock_app import app
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store.db import connect_database
+from yt_diffuser.database import connect_database
 from yt_diffuser.web.api.res.form.latest import bp
 
 def test_get_form_latest (app:Flask):

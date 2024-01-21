@@ -3,7 +3,7 @@
 from flask import Blueprint, current_app
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store import connect_database
+from yt_diffuser.database import connect_database
 from yt_diffuser.store.store_utils import scan_model_dir
 
 bp = Blueprint('api_res_model', __name__)

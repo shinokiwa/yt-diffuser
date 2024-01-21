@@ -4,9 +4,9 @@ yt_diffuser.store.store_utils のテスト
 import pytest
 
 from specs.mock.mock_config import mock_config
-from specs.mock.store.db import connect_database
 
 from yt_diffuser.config import AppConfig
+from yt_diffuser.database import connect_database
 from yt_diffuser.store.store_utils import *
 
 def test_scan_model_dir():
@@ -17,7 +17,7 @@ def test_scan_model_dir():
         ディレクトリをスキャンし、モデルストアのリストを取得する。
     """
     config = mock_config()
-    conn = connect_database()
+    conn = connect_database(":memory:")
 
     results = scan_model_dir(config, conn)
     assert isinstance(results, list)

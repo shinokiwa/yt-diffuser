@@ -1,13 +1,5 @@
 {
     "files.exclude": {
         "**/__pycache__": true
-    },
-    "python.testing.cwd": "src/backend/",
-    "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": [
-        "-s",
-        "-v"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.defaultInterpreterPath": "python3"
+    }
 }

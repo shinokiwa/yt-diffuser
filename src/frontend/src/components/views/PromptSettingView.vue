@@ -21,7 +21,7 @@ import { useFormStore } from '@/composables/store/form'
 const { percentage } = useGenerateProgress()
 const { previewSrc } = useOutputPreview()
 
-const { savePrompt, saveNegativePrompt } = useFormPrompt()
+const { savePrompt, getPrompt, saveNegativePrompt, getNegativePrompt, deletePrompt } = useFormPrompt()
 
 async function doUpdateLatestForm () {
     const { updateLatestForm } = useLatestForm()
@@ -100,15 +100,19 @@ function preview () {
                 id="prompt"
                 label="プロンプト"
                 v-model="prompt"
-                :prompt-list="promptList"
+
+                :load="getPrompt"
                 @save="savePrompt"
+                :trash="deletePrompt"
             />
             <InputPrompt
                 id="nPrompt"
                 label="ネガティブプロンプト"
                 v-model="negativePrompt"
-                :prompt-list="nPromptList"
+
+                :load="getNegativePrompt"
                 @save="saveNegativePrompt"
+                :trash="deletePrompt"
             />
             <div class="prompt-area">
                 メモ<br />

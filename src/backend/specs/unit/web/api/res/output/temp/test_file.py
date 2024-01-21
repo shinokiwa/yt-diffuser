@@ -1,20 +1,12 @@
 """
-yt_diffuser.web.api.res.output.temp のテスト
+yt_diffuser.web.api.res.output.temp.file のテスト
 """
 import pytest
 
 from flask import Flask
 
-from specs.utils.test_utils.config import make_config
+from specs.mock.web.mock_app import app
 from yt_diffuser.web.api.res.output.temp.file import *
-
-@pytest.fixture
-def app ():
-    app = Flask(__name__)
-    app.config['APP_CONFIG'] = make_config()
-    app.register_blueprint(bp)
-    return app
-
 
 def test_get_temp_file (app, mocker):
     """

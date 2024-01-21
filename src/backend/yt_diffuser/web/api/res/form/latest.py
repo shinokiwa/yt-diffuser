@@ -5,8 +5,8 @@ from flask import Blueprint, request, current_app
 from pydantic import BaseModel, ValidationError
 
 from yt_diffuser.config import AppConfig
-from yt_diffuser.store.db import connect_database
-from yt_diffuser.store.db.op.form_data import (
+from yt_diffuser.database import connect_database
+from yt_diffuser.database.tables.form_data import (
     save,
     get_all,
     delete
