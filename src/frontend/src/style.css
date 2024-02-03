@@ -1,11 +1,13 @@
 :root {
     --color-bg-back: #e2e2e2;
     --color-bg-base: #ffffff;
-    --color-bg-gray: #e5e5e5;
     --color-bg-header: #001166;
     --color-bg-menu: #000322;
-    --color-bg-focus: #0033ff;
+
     --color-bg-activewindow: #0033ff;
+    --color-bg-weight: #d3d3f3;
+    --color-bg-focus: #cccccf;
+    --color-bg-sectionheader: #31549b;
 
     --color-border-window: #cccccc;
     --color-border-dark: #000322;
@@ -16,6 +18,8 @@
     --font-color-gray: #cccccc;
     --font-color-light: #eeeeee;
     --font-color-activewindow: #eeeeee;
+    --font-color-blue: #0033ff;
+
     --font-size-base: 16px;
 
     --size-header-height: 30px;

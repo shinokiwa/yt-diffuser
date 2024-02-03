@@ -86,11 +86,10 @@ def test_get_all(conn):
                  
     result = get_all(conn)
 
-    assert len(result) == 2
-    assert result[0]['name'] == "test_name_1"
-    assert result[0]['value'] == "test_value_1"
-    assert result[1]['name'] == "test_name_2"
-    assert result[1]['value'] == "test_value_2"
+    assert result == {
+        'test_name_1': 'test_value_1',
+        'test_name_2': 'test_value_2',
+    }
 
 
 def test_delete(conn):
@@ -114,3 +113,29 @@ def test_delete(conn):
     assert len(result) == 1
     assert result[0]['name'] == "test_name_2"
     assert result[0]['value'] == "test_value_2"
+
+
+def test_delete_not_in(conn):
+    """
+    delete_not_in
+    
+    it:
+        - 指定したフォーム名以外のフォーム情報を削除する。
+    """
+    conn.execute(
+        "INSERT INTO form_data"
+        " (name, value) VALUES"
+        " ('test_name_1', 'test_value_1')"
+        ",('test_name_2', 'test_value_2')"
+        ",('test_name_3', 'test_value_3')"
+        )
+
+    delete_not_in(conn, ['test_name_1', 'test_name_2'])
+
+    result = conn.execute("SELECT * FROM form_data").fetchall()
+
+    assert len(result) == 2
+    assert result[0]['name'] == "test_name_1"
+    assert result[0]['value'] == "test_value_1"
+    assert result[1]['name'] == "test_name_2"
+    assert result[1]['value'] == "test_value_2"

@@ -19,6 +19,7 @@ class TestAppConfig:
 
     @pytest.mark.it('コンストラクタ引数で一部の設定値を上書きできる')
     def test_init_with_args(self):
-        c = AppConfig(BASE_DIR="test")
+        c = AppConfig(BASE_DIR="test", DB_FILE="file:memdb1?mode=memory&cache=shared")
 
         assert c.BASE_DIR == Path("test")
+        assert c.DB_FILE == "file:memdb1?mode=memory&cache=shared"

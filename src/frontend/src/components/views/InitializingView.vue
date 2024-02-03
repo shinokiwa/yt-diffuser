@@ -46,7 +46,7 @@ async function healthCheck () {
 async function init () {
     useGenerateStatus()
 
-    const { getModels, modelList } = useModel()
+    const { getModels, baseModels } = useModel()
     await getModels()
 
     const { getLatestForm } = useLatestForm()
@@ -54,7 +54,7 @@ async function init () {
 
     const { changeView, views } = useViewStore()
 
-    if (modelList.value.length == 0) {
+    if (baseModels.value.length == 0) {
         changeView(views.MODEL_MANAGE)
     } else {
         changeView(views.MODEL_MANAGE)

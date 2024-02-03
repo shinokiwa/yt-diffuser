@@ -23,6 +23,13 @@ function post (url, data) {
     })
 }
 
+function upload (url, data) {
+    return fetch(url, {
+        method: 'POST',
+        body: data
+    })
+}
+
 /**
  * DELETEリクエスト
  * deleteが予約語なのでdelにしている
@@ -40,6 +47,7 @@ export function useApi () {
     return{
         get,
         post,
+        upload,
         del
     }
 }

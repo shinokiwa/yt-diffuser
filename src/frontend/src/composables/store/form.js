@@ -6,20 +6,25 @@
  */
 import { ref } from 'vue'
 
-const baseModel = ref("")
+const baseModelName = ref("")
 const baseModelRevision = ref("")
+const compile = ref(0)
 
-const loraModel = ref("")
+const loraModelName = ref("")
 const loraModelRevision = ref("")
 const loraModelWeight = ref("")
 
-const controlnetModel = ref("")
+const controlnetModelName = ref("")
 const controlnetModelRevision = ref("")
 const controlnetModelWeight = ref("")
 
 const seed = ref(0)
+const generateType = ref("t2i")
+
 const width = ref(1024)
 const height = ref(1024)
+
+const strength = ref(0.3)
 
 const prompt = ref("")
 const negativePrompt = ref("")
@@ -31,18 +36,21 @@ const memo = ref("")
 
 export function useFormStore() {
     return {
-        baseModel,
+        baseModelName,
         baseModelRevision,
+        compile,
 
-        loraModel,
+        loraModelName,
         loraModelRevision,
         loraModelWeight,
 
-        controlnetModel,
+        controlnetModelName,
         controlnetModelRevision,
         controlnetModelWeight,
 
         seed,
+        generateType,
+
         height,
         width,
 
@@ -51,6 +59,8 @@ export function useFormStore() {
         scheduler,
         inferenceSteps,
         guidanceScale,
+
+        strength,
 
         memo
     }

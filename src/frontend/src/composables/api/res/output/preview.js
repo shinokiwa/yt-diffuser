@@ -13,7 +13,7 @@ export function useOutputPreview() {
         source.onmessage = (event) => {
             if (event.data.length > 0) {
                 const data = JSON.parse(event.data)
-                previewSrc.value = "output/preview/" +  data.target + '?' + new Date().getTime()
+                previewSrc.value = "output/preview/" +  data.target + '?cacheBuster=' + new Date().getTime()
             }
         }
     })

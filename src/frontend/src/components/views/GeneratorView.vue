@@ -11,12 +11,13 @@ import { useGenerateImage } from '@/composables/api/generate/image'
 const { generateTotal: total, generateCount: count, percentage } = useGenerateProgress()
 const { start_generate } = useGenerateImage()
 
-const { width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale } = useFormStore()
+const { generateType, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, strength } = useFormStore()
 
 const generateCount = ref(1)
 
 function submit () {
     start_generate(
+        generateType.value,
         generateCount.value,
         width.value,
         height.value,
@@ -25,6 +26,7 @@ function submit () {
         scheduler.value,
         inferenceSteps.value,
         guidanceScale.value,
+        strength.value,
     )
 }
 

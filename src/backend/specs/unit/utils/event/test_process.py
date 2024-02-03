@@ -1,9 +1,9 @@
-""" message_listener.py のテスト
+"""
+yt_diffuser.utils.event.process のテスト
 """
 import pytest
 from pytest_mock import MockerFixture
 
-import queue
 import multiprocessing
 
 from yt_diffuser.utils.event.process import *
@@ -77,10 +77,11 @@ def test_stop_listener_spec(mocker:MockerFixture):
 
     it:
         - メッセージリスナーを終了する。
+        - 基本的にテスト用
     """
 
     mock_queue = mocker.MagicMock(put_nowait=mocker.MagicMock())
     mock_message_queue = mocker.patch( "yt_diffuser.utils.event.process.get_message_queue", return_value=mock_queue)
     stop_message_listener()
     assert mock_queue.put_nowait.call_count == 1
-    assert mock_queue.put_nowait.call_args_list[0][0][0] == ("exit", None)
+    assert mock_queue.put_nowait.call_args_list[0][0][0] == ("exit", False, None)

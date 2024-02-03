@@ -3,18 +3,19 @@ import multiprocessing
 from pathlib import Path
 
 import torch
-from diffusers import StableDiffusionXLPipeline
+from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
+from diffusers.utils import load_image
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.event import FilesystemEvent, GenerateProgressEvent
 
-from .validations import TextToImageRequest, ValidationError
-from .scheduler import set_scheduler
-from .tqdm import GenerateProgressTqdm
-from .image_utils import save_image
+from .validations import ImageToImageRequest, ValidationError
+from ..utils.scheduler import set_scheduler
+from ..utils.tqdm import GenerateProgressTqdm
+from ..utils.image_utils import save_image
 
 
-def text_to_image (
+def image_to_image (
         pipe:StableDiffusionXLPipeline,
         config:AppConfig,
         input_queue:multiprocessing.Queue,
@@ -27,12 +28,14 @@ def text_to_image (
     """
 
     try:
-        data = TextToImageRequest(**req).dict()
+        data = ImageToImageRequest(**req).dict()
     except ValidationError as e:
         raise e
 
     set_scheduler(pipe, data["scheduler"])
     output_dir = Path(data["output_dir"])
+
+    i2i_pipe = StableDiffusionXLImg2ImgPipeline(**pipe.components)
 
     elapsed_list = []
     i = 0
@@ -53,7 +56,7 @@ def text_to_image (
             else:
                 raise ValueError("Either `total` or `iterable` has to be defined.")
 
-        pipe.progress_bar = progress_bar
+        i2i_pipe.progress_bar = progress_bar
 
         if data["filename"] == "":
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
@@ -77,14 +80,18 @@ def text_to_image (
 
         initial_seed.manual_seed(seed)
 
-        image = pipe(
+        init_image = load_image(str(config.INPUT_SOURCE_FILE)).convert("RGB")
+
+        image = i2i_pipe(
             prompt=data["prompt"],
             negative_prompt=data["negative_prompt"],
             width=data["width"],
             height=data["height"],
             num_inference_steps=data["inference_steps"],
             generator=initial_seed,
-            guidance_scale=data["guidance_scale"]
+            image=init_image,
+            guidance_scale=data["guidance_scale"],
+            strength=data["strength"],
         ).images[0]
 
         tqdm.update(1)

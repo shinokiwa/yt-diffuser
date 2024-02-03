@@ -12,13 +12,19 @@ from diffusers import LCMScheduler, EulerDiscreteScheduler
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.utils.event import GenerateStatusEvent
-from yt_diffuser.workers.generate_image.text_to_image import text_to_image
 
-def procedure(config:AppConfig,
-                   model_name:str,
-                   revision:str,
-                   message_queue:multiprocessing.Queue,
-                   input_queue:multiprocessing.Queue):
+from .tasks.text_to_image import text_to_image
+from .tasks.image_to_image import image_to_image
+from .tasks.compile import compile_current_model
+
+def procedure(
+        config:AppConfig,
+        model_name:str,
+        revision:str,
+        compile:bool,
+        message_queue:multiprocessing.Queue,
+        input_queue:multiprocessing.Queue
+    ):
     """
     画像生成処理
 
@@ -40,15 +46,6 @@ def procedure(config:AppConfig,
         lora_model_label=lora_model_label
     )
 
-    torch._inductor.config.conv_1x1_as_mm = True
-    torch._inductor.config.coordinate_descent_tuning = True
-    torch._inductor.config.epilogue_fusion = False
-    torch._inductor.config.coordinate_descent_check_all_directions = True
-    # ここ自体がデーモンプロセスなので、マルチプロセスは使えない。
-    #torch._inductor.config.compile_threads = 1
-    #torch._inductor.config.force_fuse_int_mm_with_mul = True
-    #torch._inductor.config.use_mixed_mm = True
-
     pipe:StableDiffusionXLPipeline = DiffusionPipeline.from_pretrained(
         pretrained_model_name_or_path=model_name,
         revision=revision,
@@ -61,13 +58,9 @@ def procedure(config:AppConfig,
 
     if torch.cuda.is_available():
         pipe = pipe.to("cuda")
-    
-    pipe.unet.to(memory_format=torch.channels_last)
-    pipe.vae.to(memory_format=torch.channels_last)
 
-    pipe.unet = torch.compile(pipe.unet, mode="max-autotune", fullgraph=True)
-    # VAEのコンパイルはPyTorch2.2以降っぽい？ stableビルドだとエラーになる。
-    #pipe.vae.decode = torch.compile(pipe.vae.decode, mode="max-autotune", fullgraph=True)
+    if compile:
+        compile_current_model(pipe)
 
     while True:
 
@@ -108,6 +101,23 @@ def procedure(config:AppConfig,
 
             try:
                 text_to_image(
+                    pipe,
+                    config,
+                    input_queue,
+                    message_queue,
+                    model_name,
+                    data
+                )
+            except Exception as e:
+                logger.exception(e)
+                GenerateStatusEvent.send_process(message_queue, GenerateStatusEvent.Status.ERROR, error=str(e))
+
+            continue
+
+        if message == "image-to-image":
+
+            try:
+                image_to_image(
                     pipe,
                     config,
                     input_queue,

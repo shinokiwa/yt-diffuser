@@ -9,6 +9,7 @@ const { post } = useApi()
  * 画像を生成する
  */
 async function start_generate (
+    generate_type,
     generate_count,
     width,
     height,
@@ -16,9 +17,15 @@ async function start_generate (
     negative_prompt,
     scheduler,
     inference_steps,
-    guidance_scale
+    guidance_scale,
+    strength
 ) {
-    await post('/api/generate/image/text_to_image', {
+    let url = '/api/generate/image/text_to_image'
+    if (generate_type === 'i2i') {
+        url = '/api/generate/image/image_to_image'
+    }
+
+    await post(url, {
         generate_count: generate_count,
         width: width,
         height: height,
@@ -26,7 +33,8 @@ async function start_generate (
         negative_prompt: negative_prompt,
         scheduler: scheduler,
         inference_steps: inference_steps,
-        guidance_scale: guidance_scale
+        guidance_scale: guidance_scale,
+        strength: strength
     })
 }
 

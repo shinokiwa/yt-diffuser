@@ -8,24 +8,25 @@ import ProgressBar from '@/components/elements/ProgressBar.vue'
 
 import InputPrompt from '@/components/elements/InputPrompt.vue'
 import InputSeed from '@/components/elements/InputSeed.vue'
-import InputText from '@/components/elements/InputText.vue'
-import InputSize from '@/components/elements/InputSize.vue'
+import InputSelect from '@/components/elements/InputSelect.vue'
+import InputText from '../elements/InputText.vue'
+
+import ImageTabArea from '@/components/views/promptsetting/ImageTabArea.vue'
+import DetailArea from '@/components/views/promptsetting/DetailArea.vue'
 
 import { useLatestForm } from '@/composables/api/res/form/latest'
 import { useFormPrompt } from '@/composables/api/res/form/prompt'
 import { useGeneratePreview } from '@/composables/api/generate/preview'
 import { useGenerateProgress } from '@/composables/api/generate/progress'
-import { useOutputPreview } from '@/composables/api/res/output/preview'
 import { useFormStore } from '@/composables/store/form'
 
 const { percentage } = useGenerateProgress()
-const { previewSrc } = useOutputPreview()
 
 const { savePrompt, getPrompt, saveNegativePrompt, getNegativePrompt, deletePrompt } = useFormPrompt()
 
 async function doUpdateLatestForm () {
     const { updateLatestForm } = useLatestForm()
-    updateLatestForm({ seed, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, memo })
+    updateLatestForm({ seed, generateType, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, strength, memo })
 }
 
 onUnmounted(() => {
@@ -33,16 +34,14 @@ onUnmounted(() => {
     doUpdateLatestForm()
 })
 
-const { seed, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, memo } = useFormStore()
-
-const promptList = ref([])
-const nPromptList = ref([])
+const { seed, generateType, width, height, prompt, negativePrompt, scheduler, inferenceSteps, guidanceScale, strength, memo } = useFormStore()
 
 function preview () {
     doUpdateLatestForm()
 
     const { start_generate } = useGeneratePreview()
     start_generate(
+        generateType.value,
         seed.value,
         width.value,
         height.value,
@@ -51,6 +50,7 @@ function preview () {
         scheduler.value,
         inferenceSteps.value,
         guidanceScale.value,
+        strength.value,
     )
 }
 </script>
@@ -59,12 +59,10 @@ function preview () {
 <WindowArea id="PromptSettingView" window-title="プロンプト設定">
     <div id="PromptSettingArea">
         <div class="left-area">
-            <div class="image-area">
-                <img class="preview-image" :src="previewSrc" />
+            <ImageTabArea />
 
-                <ProgressBar :value="percentage" height="10" />
-            </div>
             <div clss="option-area">
+                <ProgressBar :value="percentage" height="10" />
                 <div>
                     <button @click="preview">プレビュー</button>
                 </div>
@@ -75,24 +73,13 @@ function preview () {
                     </label>
                 </div>
                 <InputSeed id="Seed" label="SEED値" v-model="seed" />
-                <InputSize id="ImageSize" label="画像サイズ" v-model:width="width" v-model:height="height" />
-                <div>
-                    <label>
-                        スケジューラー
-                    </label>
-                    <select v-model="scheduler">
-                        <option value="ddim">DDIM</option>
-                        <option value="pndm">PNDM</option>
-                        <option value="deis">DEIS Multi</option>
-                        <option value="dpms-singlestep">DPMS Singlestep</option>
-                        <option value="dpms-multistep">DPMS Multistep</option>
-                        <option value="euler">Euler Dscrete</option>
-                        <option value="euler-ancestral">Euler Ancestral</option>
-                        <option value="lcm">LCM</option>
-                    </select>
-                </div>
-                <InputText id="InferenceSteps" label="ステップ数" type="number" v-model="inferenceSteps" />
-                <InputText id="GuidanceScale" label="ガイダンススケール" v-model="guidanceScale" />
+                <InputSelect id="Process" label="生成方法" v-model="generateType">
+                    <option value="t2i">Text to Image</option>
+                    <option value="i2i">Image to Image</option>
+                    <option value="inpaint">InPaint</option>
+                </InputSelect>
+                <InputText id="Strength" label="強度" v-model="strength" />
+
             </div>
         </div>
         <div class="right-area">
@@ -114,9 +101,20 @@ function preview () {
                 @save="saveNegativePrompt"
                 :trash="deletePrompt"
             />
-            <div class="prompt-area">
-                メモ<br />
-                <textarea v-model="memo"></textarea>
+            <div class="detail-area">
+                <DetailArea
+                    class="detail-form"
+
+                    v-model:width="width"
+                    v-model:height="height"
+                    v-model:scheduler="scheduler"
+                    v-model:inferenceSteps="inferenceSteps"
+                    v-model:guidanceScale="guidanceScale"
+                />
+                <div class="detail-memo">
+                    メモ<br />
+                    <textarea v-model="memo"></textarea>
+                </div>
             </div>
         </div>
     </div>
@@ -135,10 +133,8 @@ function preview () {
     margin-right: 10px;
 }
 
-.preview-image {
-    width: 300px;
-    height: 300px;
-    object-fit: cover;
+.left-area .two-column > * {
+    width: 50%;
 }
 
 
@@ -147,8 +143,22 @@ function preview () {
     width: min-content;
 }
 
-textarea {
-    width: 50%;
+.detail-area {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.detail-area > * {
+    width: calc(50% - 10px);
+}
+
+.detail-area .detail-form {
+    margin-right: 10px;
+}
+
+.detail-area textarea {
+    width: 100%;
     height: 15em;
 }
 </style>

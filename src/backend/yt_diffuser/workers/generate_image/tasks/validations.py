@@ -18,3 +18,6 @@ class TextToImageRequest(BaseModel):
     scheduler: str
     inference_steps: int
     guidance_scale: float
+
+class ImageToImageRequest(TextToImageRequest):
+    strength: float = 0.3

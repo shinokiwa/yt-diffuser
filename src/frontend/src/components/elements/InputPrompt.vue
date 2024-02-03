@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import FormElement from '@/components/elements/FormElement.vue'
 import Overlay from '@/components/elements/Overlay.vue'
 import WindowArea from '@/components/elements/WindowArea.vue'
+import ButtonMenu from '@/components/elements/ButtonMenu.vue'
 
 const props = defineProps({
     id: String,
@@ -58,7 +59,7 @@ async function trash (id) {
         v-model="prompt"
     ></textarea>
 
-    <div class="btn-menu">
+    <ButtonMenu class="button-menu">
         <button type="button" title="プロンプトを保存" @click="events('save', prompt)">
             <i class="bi-save2"></i>
         </button>
@@ -74,7 +75,7 @@ async function trash (id) {
         <button type="button" title="プロンプトを全削除" @click='prompt = ""'>
             <i class="bi-trash"></i>
         </button>
-    </div>
+    </ButtonMenu>
     <Overlay ref="savedArea">
         <WindowArea window-title="保存したプロンプト" v-bind:close-button="savedArea.hide">
             <ul class="saved-list">
@@ -115,24 +116,11 @@ textarea::placeholder {
     color: var(--font-color-gray);
 }
 
-.btn-menu {
-    display: flex;
-    flex-direction: row;
-    justify-content: end;
-    margin-top: -8px;
-}
-.btn-menu button {
-    margin: 0;
-    padding: 2px 3px;
-    font-size: 18px;
-    border-width: 0;
-    border-left-width: 1px;
-    border-color: var(--color-border-window);
-    background-color: var(--color-bg-base);
-}
-
-.btn-menu button:hover {
-    background-color: var(--color-bg-gray);
+.button-menu {
+    margin-top: -9px;
+    border-bottom-width: 0;
+    border-radius: 0 0 5px 5px;
+    overflow: hidden;
 }
 
 .saved-list {

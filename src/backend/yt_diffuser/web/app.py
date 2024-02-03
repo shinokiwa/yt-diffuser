@@ -1,7 +1,7 @@
 """ Flaskのアプリ定義
 """
-import atexit
 from logging import getLogger; logger = getLogger(__name__)
+from pathlib import PurePath
 
 from flask import Flask
 from u_dam.sqlite3 import setup_database, connect_database
@@ -19,7 +19,8 @@ def create_app (config:AppConfig):
     init_routes(app)
 
     start_message_listener()
-    config.DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(config.DB_FILE, PurePath):
+        config.DB_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     setup_database(
         connection_method=connect_database,

@@ -4,7 +4,7 @@ from flask import Blueprint, current_app
 
 from yt_diffuser.config import AppConfig
 from yt_diffuser.database import connect_database
-from yt_diffuser.store.store_utils import scan_model_dir
+from yt_diffuser.store.store_utils import get_model_list
 
 bp = Blueprint('api_res_model', __name__)
 
@@ -18,15 +18,7 @@ def get_model ():
     config:AppConfig = current_app.config['APP_CONFIG']
     with connect_database(config.DB_FILE) as conn:
 
-        _models = scan_model_dir(config, conn)
-
-        models = []
-        for model in _models:
-            data = model.to_dict()
-            models.append(data)
-
+        models = get_model_list(config, conn)
         data = {'models': models}
-
-        conn.commit()
-
+    
     return data

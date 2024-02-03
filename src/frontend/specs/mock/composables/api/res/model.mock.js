@@ -5,7 +5,8 @@ import { vi } from 'vitest'
 import { ref } from 'vue'
 
 const mockObj = {
-    modelList: ref([]),
+    baseModels: ref([]),
+    lastUsedModel: ref(null),
     getModels: vi.fn(),
 }
 

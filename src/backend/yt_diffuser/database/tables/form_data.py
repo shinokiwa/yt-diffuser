@@ -64,14 +64,14 @@ def get_all (conn:Connection) -> List[Dict]:
         conn (Connection): DBコネクション
 
     Returns:
-        Dict: フォーム最新情報
-            - name: フォーム名
-            - value: フォームの値
-            - updated_at: レコードの更新日時
-            - registed_at: レコードの登録日時
+        Dict: フォーム名 : フォーム値 の形式の辞書
     """
-    sql = "SELECT * FROM form_data"
-    result = conn.execute(sql).fetchall()
+    sql = "SELECT name, value FROM form_data"
+    data = conn.execute(sql).fetchall()
+
+    result = {}
+    for r in data:
+        result[r['name']] = r['value']
     return result
 
 def delete (conn:Connection, name:str) -> None:
@@ -87,4 +87,19 @@ def delete (conn:Connection, name:str) -> None:
     """
     sql = "DELETE FROM form_data WHERE name = ?"
     conn.execute(sql, (name,))
+    return
+
+def delete_not_in (conn:Connection, names:List[str]) -> None:
+    """
+    指定したフォーム名以外のフォーム情報を削除する。
+
+    Args:
+        conn (Connection): DBコネクション
+        names (List[str]): 保持するフォーム名のリスト
+    
+    Returns:
+        None
+    """
+    sql = "DELETE FROM form_data WHERE name NOT IN ({})".format(",".join(["?" for _ in names]))
+    conn.execute(sql, names)
     return

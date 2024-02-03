@@ -10,6 +10,7 @@ class AppConfig:
     def __init__(self,
                  debug:bool=False,
                  BASE_DIR:Union[Path, str]=None,
+                 DB_FILE:Union[Path, str]=None,
                  offline:bool=False
                  ) -> None:
         """
@@ -20,20 +21,10 @@ class AppConfig:
         Args:
             debug: デバッグモード
             BASE_DIR: ベースディレクトリ
+            DB_FILE: データベースファイル
             offline: オフラインモード
         """
 
-        #### 都度変更する可能性のある設定値 ####
-
-        self.DB_VERSION = 1
-        """
-        DBのバージョン値
-        この値がDBに保存されているバージョン値より大きい場合、DBのセットアップが必要
-        この値は、DBの構成バージョンであり、アプリケーションのバージョンとは異なる
-        """
-
-
-        #### 基本的に変更されない設定値 ####
         self.debug: bool = debug
         """
         デバッグモード
@@ -56,14 +47,21 @@ class AppConfig:
         self.STORE_DIR: Path  = self.DATA_DIR / "store"
         self.STORE_MODEL_DIR: Path = self.STORE_DIR / "models"
         self.STORE_HF_MODEL_DIR: Path = self.STORE_MODEL_DIR / "huggingface"
+        self.STORE_LAST_USED_MODEL_DIR: Path = self.STORE_MODEL_DIR / "lastused"
 
         # データベース関連
-        self.DB_DIR: Path = self.DATA_DIR / "db"
-        self.DB_FILE: Path = self.DB_DIR / "yt_diffuser.sqlite3"
-        self.DB_UPDATE_FILE: Path = self.DB_DIR /"yt_diffuser_update.db"
+        self.DB_FILE: Union[str, Path] = self.DATA_DIR / "db/yt_diffuser.sqlite3"
+        if DB_FILE is not None:
+            self.DB_FILE = DB_FILE
 
         # 出力データ関連
         self.OUTPUT_DIR: Path = self.DATA_DIR / "output"
         self.OUTPUT_TEMP_DIR: Path = self.OUTPUT_DIR / "temp"
         self.OUTPUT_IMAGE_DIR: Path = self.OUTPUT_DIR / "images"
         self.OUTPUT_PREVIEW_PATH: Path = self.OUTPUT_DIR / "preview/preview.png"
+
+        # 入力データ関連
+        self.INPUT_DIR: Path = self.DATA_DIR / "input"
+        self.INPUT_SOURCE_FILE: Path = self.INPUT_DIR / "source.png"
+        self.INPUT_MASK_FILE: Path = self.INPUT_DIR / "mask.png"
+        self.INPUT_CONTROLNET_FILE: Path = self.INPUT_DIR / "controlnet.png"

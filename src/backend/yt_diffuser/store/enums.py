@@ -12,6 +12,8 @@ class ModelClass (Enum):
     BASE_MODEL = "base-model"
     LORA_MODEL = "lora-model"
 
+    LAST_USED_MODEL = "last-used-model"
+
 class ModelSource (Enum):
     """
     モデルソース

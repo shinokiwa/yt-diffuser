@@ -32,7 +32,7 @@ def is_running() -> bool:
     return _process is not None and _process.is_alive()
 
 
-def load(config:AppConfig, model_name:str, revision:str) -> SpawnProcess:
+def load(config:AppConfig, model_name:str, revision:str, compile:bool) -> SpawnProcess:
     """
     画像生成プロセスを実行する。
     この段階ではモデルを読み込むだけ。
@@ -61,7 +61,7 @@ def load(config:AppConfig, model_name:str, revision:str) -> SpawnProcess:
     logger.debug(f"generate_image call: {model_name}:{revision}")
     _process = context.Process(
         target=procedure,
-        args=(config, model_name, revision, message_queue, _input_queue),
+        args=(config, model_name, revision, compile, message_queue, _input_queue),
         #daemon=True
     )
 
@@ -94,6 +94,21 @@ def text_to_image(data:dict) -> None:
         data (dict): t2iデータ
     """
     input_message("text-to-image", data)
+
+def image_to_image(data:dict) -> None:
+    """
+    画像生成プロセスに画像生成メッセージを送信する。
+
+    Args:
+        data (dict): i2iデータ
+    """
+    input_message("image-to-image", data)
+
+def compile() -> None:
+    """
+    画像生成プロセスにコンパイルメッセージを送信する。
+    """
+    input_message("compile", {})
 
 
 def remove_lora() -> None:

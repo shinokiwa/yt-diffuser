@@ -9,10 +9,11 @@ const { get, post } = useApi()
 /**
  * モデルをロードする
  */
-async function loadModel (model_name, revision) {
+async function loadModel (model_name, revision, compile) {
     await post('/api/generate/process/load', {
         model_name,
-        revision
+        revision,
+        compile
     })
 }
 
@@ -22,6 +23,14 @@ async function loadModel (model_name, revision) {
 async function removeModel () {
     await get('/api/generate/process/terminate')
 }
+
+/**
+ * モデルをコンパイルする
+ */
+async function compileModel () {
+    await get('/api/generate/process/compile')
+}
+
 
 /**
  * LoRAを解放する
@@ -37,5 +46,6 @@ export function useGenerateProcess () {
         loadModel,
         removeModel,
         removeLora,
+        compileModel
     }
 }

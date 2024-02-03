@@ -82,7 +82,7 @@ header h1 {
 
 .main-wrapper {
     display: flex; flex-direction: row;
-    height: 100%;
+    height: calc(100% - var(--size-header-height));
 }
 
 .menu-view {

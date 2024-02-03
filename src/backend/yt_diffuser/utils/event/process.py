@@ -84,5 +84,5 @@ def stop_message_listener () -> None:
     """
     logger.debug("Call stop message listener.")
 
-    get_message_queue().put_nowait(("exit", None))
+    get_message_queue().put_nowait(("exit", False, None))
 

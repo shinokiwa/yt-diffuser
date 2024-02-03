@@ -42,6 +42,9 @@ export function useGenerateStatus() {
                 } else if (data.status === 'ready') {
                     status.value = 'ready'
                     putToastQueue('生成準備完了', false)
+                } else if (data.status === 'compiling') {
+                    status.value = 'compiling'
+                    putToastQueue('コンパイル中...', false)
                 } else if (data.status === 'generating') {
                     status.value = 'generating'
                     putToastQueue('生成中...', false)

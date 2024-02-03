@@ -14,21 +14,21 @@ defineProps({
         type: Function,
         default: null
     },
-    'activate': {
-        type: String,
-        default: ''
+    'contentNoPadding': {
+        type: Boolean,
+        default: false
     }
 })
 
 </script>
 
 <template>
-<div class="window" :class="{activate: activate === '1'}">
+<div class="window">
     <header class="window-header" v-if="windowTitle">
         <div>{{ windowTitle }}</div>
         <button class="close-button" v-if="closeButton" @click="closeButton"><i class="bi-x"></i></button>
     </header>
-    <div class="window-contents">
+    <div class="window-contents" :class="{'no-padding': contentNoPadding}">
         <slot />
     </div>
 </div>
@@ -73,5 +73,9 @@ defineProps({
     padding: 10px;
     height: auto;
     overflow-y: auto;
+}
+
+.window-contents.no-padding {
+    padding: 0;
 }
 </style>

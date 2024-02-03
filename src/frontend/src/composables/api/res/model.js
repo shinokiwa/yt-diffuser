@@ -4,7 +4,9 @@
 import { ref } from 'vue'
 import { useApi } from '@/composables/api'
 
-const modelList = ref([])
+const baseModels = ref([])
+const loraModels = ref([])
+const controlnetModels = ref([])
 
 const { get } = useApi()
 
@@ -17,23 +19,46 @@ const { get } = useApi()
 async function getModels () {
     const response = await get('/api/res/model')
     const data = await response.json()
-    const list = (data.models || []).sort((a, b) => {
-        // model_class、model_nameの順でソートする
-        const order = ['base-model', 'lora-model', 'controlnet-model']
-        const aIndex = order.indexOf(a.model_class)
-        const bIndex = order.indexOf(b.model_class)
-        if (aIndex < bIndex) return -1
-        if (aIndex > bIndex) return 1
-        if (a.model_name < b.model_name) return -1
-        if (a.model_name > b.model_name) return 1
-        return 0
-    })
-    modelList.value = list
+
+    const base = []
+    const lora = []
+    const controlnet = []
+
+    if (data?.models) {
+        data.models.forEach(el => {
+            if (el.model_class === 'base-model') {
+                base.push(el)
+            } else if (el.model_class === 'lora-model') {
+                lora.push(el)
+            } else if (el.model_class === 'controlnet-model') {
+                controlnet.push(el)
+            }
+        });
+
+        // それぞれモデル名でソート
+        function sortModelName (a, b) {
+            if (a.model_name < b.model_name) {
+                return -1
+            } else {
+                return 1
+            }
+        }
+        base.sort(sortModelName)
+        lora.sort(sortModelName)
+        controlnet.sort(sortModelName)
+    }
+
+    baseModels.value = base
+    loraModels.value = lora
+    controlnetModels.value = controlnet
 }
 
 export function useModel() {
     return {
-        modelList,
+        baseModels,
+        loraModels,
+        controlnetModels,
+
         getModels
     }
 }
