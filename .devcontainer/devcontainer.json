@@ -1,0 +1,28 @@
+{
+  "name": "yt_diffuser_devcontainer",
+  "overrideCommand": false,
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace/",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.testing.cwd": "/workspace/src/backend/",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": [
+            "-s",
+            "-v"
+        ],
+        "python.testing.unittestEnabled": false,
+        "python.defaultInterpreterPath": "/usr/bin/python3"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vue.volar",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
+      ] 
+    }
+  }
+}

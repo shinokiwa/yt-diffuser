@@ -1,0 +1,39 @@
+# local env files
+venv
+.env
+.env.local
+.env.*.local
+
+# local cache files
+__pycache__
+.pytest_cache
+.vite
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# local strage
+.DS_Store
+node_modules
+/data/
+/userdata/
+
+# coverage files
+htmlcov/
+.coverage
+.coverage.*
+coverage/
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# etc
+package-lock.json

@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+log_cli_level = "DEBUG"
+addopts = "--cov-report term-missing"
+
+[tool.coverage.run]
+branch = true

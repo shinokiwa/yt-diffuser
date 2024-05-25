@@ -1,0 +1,42 @@
+# DevContainer構成用docker-compose
+#
+# Docker outside of Docker(DooD)を利用しているので、
+# Windowsで利用する場合は以下の環境変数を設定する必要がある。
+# COMPOSE_CONVERT_WINDOWS_PATHS=1
+services:
+  devcontainer:
+    build:
+      context: ../
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - type: bind
+        source: ../
+        target: /workspace/
+      - type: volume
+        source: dev_data_volume
+        target: /workspace/data
+      - type: volume
+        source: dev_npm_volume
+        target: /workspace/src/frontend/node_modules
+      # Docker Outside of Dockerの設定
+      # この機能をWindowsで動かすためには上記の環境変数が必要。
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    environment:
+      LANG: ja_JP.UTF-8
+      LANGUAGE: ja_JP:ja
+      LC_ALL: ja_JP.UTF-8
+      TZ: JST-9
+      DEBUG: 1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+volumes:
+  # データファイル用ボリューム
+  dev_data_volume:
+  # node_modules用ボリューム
+  dev_npm_volume:

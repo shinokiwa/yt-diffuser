@@ -1,0 +1,42 @@
+# ゆとりでふーざー 開発構成用docker-compose
+
+name: yt-diffuser-dev
+services:
+  devserver:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+      target: devserver
+    volumes:
+      - type: bind 
+        source: ${WORK_DIR?err}/
+        target: /workspace/
+      - type: volume
+        source: dev_data_volume
+        target: /workspace/data
+      - type: volume
+        source: dev_npm_volume
+        target: /workspace/src/frontend/node_modules
+    environment:
+      LANG: ja_JP.UTF-8
+      LANGUAGE: ja_JP:ja
+      LC_ALL: ja_JP.UTF-8
+      TZ: JST-9
+      DEBUG: 1
+    ports:
+      - target: 80
+        published: 20080
+        protocol: tcp
+        mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+
+volumes:
+    # データファイル用ボリューム
+    dev_data_volume:
+    # node_modules用ボリューム
+    dev_npm_volume:
