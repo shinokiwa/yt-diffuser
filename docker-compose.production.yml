@@ -1,0 +1,32 @@
+# ゆとりでふーざー 本構成用docker-compose
+
+name: yt-diffuser
+services:
+  yt-diffuser:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+      target: production
+    volumes:
+      - type: volume
+        source: data_volume
+        target: /workspace/data
+    environment:
+      LANG: ja_JP.UTF-8
+      LANGUAGE: ja_JP:ja
+      LC_ALL: ja_JP.UTF-8
+      TZ: JST-9
+    ports:
+      - target: 80
+        published: 20080
+        protocol: tcp
+        mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+volumes:
+    # データファイル用ボリューム
+    data_volume:
