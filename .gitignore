@@ -1,5 +1,8 @@
+#
+# バックエンド(Python)関係
+#
+
 # local env files
-venv
 .env
 .env.local
 .env.*.local
@@ -7,19 +10,6 @@ venv
 # local cache files
 __pycache__
 .pytest_cache
-.vite
-
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# local strage
-.DS_Store
-node_modules
-/data/
-/userdata/
 
 # coverage files
 htmlcov/
@@ -27,7 +17,38 @@ htmlcov/
 .coverage.*
 coverage/
 
-# Editor directories and files
+
+#
+# フロントエンド(Vue.js)関係
+#
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+/cypress/videos/
+/cypress/screenshots/
+
+package-lock.json
+
+#
+# VSCode関係
+#
+
+.vscode/*
+!.vscode/extensions.json
 .idea
 *.suo
 *.ntvs*
@@ -35,5 +56,14 @@ coverage/
 *.sln
 *.sw?
 
-# etc
-package-lock.json
+*.tsbuildinfo
+
+#
+# その他
+#
+
+# local strage
+.DS_Store
+/data/
+/userdata/
+

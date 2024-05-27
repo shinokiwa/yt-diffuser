@@ -32,6 +32,9 @@ COPY ./src/backend/ /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements.txt
 RUN python3 -m pip install -r /workspace/src/backend/requirements-dev.txt
 
+# ポート設定
+EXPOSE 80
+
 #################################
 ## DevServerステージ
 ## 開発用サーバーの場合はここで止める
