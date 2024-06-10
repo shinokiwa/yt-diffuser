@@ -33,11 +33,17 @@ export function ServerStatusUseCase(store, api) {
     }
   }
 
+  /**
+   * タイマー処理
+   * ヘルスチェックを行い、結果に応じて接続状態を更新する
+   * 5分ごとに実行する
+   * @returns
+   */
   async function timer() {
     const result = await check()
     if (result) {
       store.connected()
-      setTimer(30000)
+      setTimer(300000)
     } else if (store.isConnected) {
       disconnected.value = true
       return

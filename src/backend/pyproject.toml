@@ -1,6 +1,21 @@
 [tool.pytest.ini_options]
 log_cli_level = "DEBUG"
 addopts = "--cov-report term-missing"
+testpaths = [
+    "specs"
+]
 
 [tool.coverage.run]
 branch = true
+source = [
+    "yt_diffuser"
+]
+
+[tool.coverage.report]
+
+exclude_lines = [
+    "@abstractmethod",
+]
+exclude_also = [
+    "if __name__ == .__main__.:"
+]

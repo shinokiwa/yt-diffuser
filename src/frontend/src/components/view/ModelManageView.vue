@@ -7,22 +7,31 @@ import { ref } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
 import ListArea from '@/components/area/modelmanage/ListArea.vue'
 import AddArea from '@/components/area/modelmanage/AddArea.vue'
-import CurrentArea from '@/components/area/modelmanage/CurrentArea.vue'
 import DetailArea from '@/components/area/modelmanage/DetailArea.vue'
 
-const viewMode = ref('list')
-const selectedModel = ref('')
+import { useModelUseCase } from '@/composables/model/modelUseCase'
+import { useFormUseCase } from '@/composables/form/formUseCase'
+
+const { getRefs } = useFormUseCase()
+const { baseModelName } = getRefs()
+
+const { findModelByName } = useModelUseCase()
+const selectedModel = ref(findModelByName(baseModelName))
+
+const viewMode = ref('add')
+if (selectedModel.value) {
+  viewMode.value = 'detail'
+}
 </script>
 
 <template>
   <WindowFrame window-title="モデル管理" content-no-padding>
     <div id="ModelManageView">
       <div class="list-area">
-        <ListArea v-model:view="viewMode" v-model:select="selectedModel" />
+        <ListArea v-model:viewMode="viewMode" v-model:selectedModel="selectedModel" />
       </div>
       <div class="detail-area">
         <AddArea v-if="viewMode === 'add'" />
-        <CurrentArea v-else-if="viewMode === 'current'" />
         <DetailArea v-else-if="viewMode === 'detail'" :selected-model="selectedModel" />
       </div>
     </div>
@@ -37,5 +46,17 @@ const selectedModel = ref('')
 
   display: flex;
   flex-direction: row;
+}
+
+.list-area {
+  max-width: 400px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.detail-area {
+  flex-grow: 1;
+  height: 100%;
+  overflow-y: auto;
 }
 </style>

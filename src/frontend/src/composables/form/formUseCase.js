@@ -47,7 +47,7 @@ export function FormUseCase(store, api) {
      */
     async fetch() {
       try {
-        const data = await api.get('/api/res/form/latest')
+        const data = await api.get('/api/form')
         const formEntity = new FormEntity(data)
         store.setData(formEntity.getValues())
       } catch (e) {
@@ -64,7 +64,7 @@ export function FormUseCase(store, api) {
       try {
         const formEntity = new FormEntity(store.data)
         const data = formEntity.getValues()
-        await api.post('/api/res/form/latest', data)
+        await api.post('/api/form', data)
         return true
       } catch (e) {
         console.error(e)

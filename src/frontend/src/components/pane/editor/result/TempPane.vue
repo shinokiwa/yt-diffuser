@@ -2,37 +2,31 @@
 /**
  * エディタービュー 生成結果表示エリア 一時保存ギャラリー
  */
-import { watch, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
 import ImageThumb from '@/components/element/ImageThumb.vue'
 
-import { useAppStateUseCase } from '@/composables/app/appStateUseCase'
-const appState = useAppStateUseCase()
+import { useTempImageUseCase } from '@/composables/tempimage/tempImageUseCase'
+import { useEditorStateUseCase } from '@/composables/app/editorStateUseCase'
+const tempImage = useTempImageUseCase()
+const editor = useEditorStateUseCase()
+
+const imageList = tempImage.getImageList()
 
 //import { useTemp } from '@/composables/api/res/output/temp'
 //const { imageList, refresh, close, deleteAll } = useTemp()
-const { imageList, refresh, close, deleteAll } = {}
+const { refresh, close, deleteAll } = {}
 
-onMounted(() => {
-  //refresh()
+onMounted(async () => {
+  await tempImage.update()
 })
 
 onUnmounted(() => {
   //close()
 })
 
-const { mainImage } = appState.getRefs()
-watch(
-  imageList,
-  (newVal, oldVal) => {
-    if (newVal.length === 0) return
-    mainImage.value = 'output/temp/' + newVal[0].url
-  },
-  { deep: true }
-)
-
 function selectImage(src) {
-  mainImage.value = src
+  editor.changeMainImage(src)
 }
 
 function clickDeleteAll() {
@@ -45,7 +39,7 @@ function clickDeleteAll() {
 <template>
   <div id="EditorResultTempPane">
     <div class="button-area">
-      <button @click="refresh()" title="リロード">
+      <button @click="tempImage.update()" title="リロード">
         <i class="bi-arrow-clockwise"></i>
       </button>
       <button>
@@ -64,10 +58,7 @@ function clickDeleteAll() {
           :key="image.id"
           ref="galleryItems"
         >
-          <ImageThumb
-            :src="'output/temp/' + image.url + '?t=' + image.timestamp"
-            @click="selectImage('output/temp/' + image.url + '?t=' + image.timestamp)"
-          />
+          <ImageThumb :src="'output/temp/' + image" :cacheBuster="true" @click="selectImage" />
         </div>
       </div>
     </div>

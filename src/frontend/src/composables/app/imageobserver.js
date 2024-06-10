@@ -19,6 +19,9 @@ export function useImageObserver(image) {
         if (entry.isIntersecting) {
           const image = entry.target
           image.src = image.dataset.src
+          if (image.dataset.cacheBuster) {
+            image.src += `?${image.dataset.cacheBuster}`
+          }
           observer.unobserve(image)
         }
       })

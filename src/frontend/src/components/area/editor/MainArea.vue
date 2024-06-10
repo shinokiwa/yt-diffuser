@@ -6,7 +6,7 @@ import { ref } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
 
 import { useEditorStateUseCase } from '@/composables/app/editorStateUseCase'
-const { mainImage } = useEditorStateUseCase().getRefs()
+const mainImage = useEditorStateUseCase().getMainImage()
 
 const image = ref(null)
 </script>

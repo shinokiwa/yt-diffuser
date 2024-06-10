@@ -1,6 +1,7 @@
 /**
  * エディターの状態を管理するユースケース
  */
+import { toRef } from 'vue'
 
 import { useEditorStateStore } from '@/stores/app/editorStateStore'
 
@@ -22,12 +23,12 @@ export function useEditorStateUseCase() {
 export function EditorStateUseCase(store) {
   return {
     /**
-     * リアクティブなエディター状態を取得する
+     * リアクティブなメインイメージURLを取得する
      *
-     * @returns {Object} フロントエンド状態
+     * @returns {Ref<string>} メインイメージURL
      */
-    getRefs() {
-      return store.refs
+    getMainImage() {
+      return toRef(store, 'mainImage')
     },
 
     /**

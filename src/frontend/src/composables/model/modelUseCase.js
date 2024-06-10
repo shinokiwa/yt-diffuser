@@ -43,7 +43,7 @@ export function ModelUseCase(store, api) {
      * @returns {Promise<AllModelList>}
      */
     async fetchAll() {
-      const data = await api.get('/api/res/model')
+      const data = await api.get('/api/model')
       const modelList = new AllModelList(data)
       store.setData(modelList.getValues())
 
@@ -52,6 +52,26 @@ export function ModelUseCase(store, api) {
       controlnetModels.value = store.data.controlnetModels
 
       return modelList
+    },
+
+    /**
+     * モデル名からモデルデータを取得する
+     *
+     */
+    findModelByName(name) {
+      const model = store.findModelByName(name)
+      return model
+    },
+
+    /**
+     * モデルをロードする
+     */
+    async loadModel(model_name, revision, compile) {
+      await api.post('/api/model/load', {
+        model_name,
+        revision,
+        compile
+      })
     }
   }
 }

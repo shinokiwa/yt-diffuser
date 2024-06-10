@@ -7,15 +7,26 @@ import { defineProps, ref } from 'vue'
 
 import { useImageObserver } from '@/composables/app/imageobserver'
 
-const props = defineProps({ src: String })
-const emit = defineEmits(['click'])
+const props = defineProps({
+  src: String,
+  cacheBuster: {
+    type: Boolean,
+    default: false
+  }
+})
+defineEmits(['click'])
 
 const image = ref(null)
 useImageObserver(image)
 </script>
 
 <template>
-  <img ref="image" :data-src="props.src" @click="emit('click', this)" />
+  <img
+    ref="image"
+    :data-src="props.src"
+    :data-cache-buster="props.cacheBuster ? Date.now() : null"
+    @click="$emit('click', props.src)"
+  />
 </template>
 
 <style scoped>

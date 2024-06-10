@@ -16,8 +16,6 @@ class AppConfig:
 
         Args:
             debug: デバッグモード
-            BASE_DIR: ベースディレクトリ
-            DB_FILE: データベースファイル
             offline: オフラインモード
         """
 

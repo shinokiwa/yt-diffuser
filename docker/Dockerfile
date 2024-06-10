@@ -28,8 +28,10 @@ COPY ./src/backend/requirements-torch.txt /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements-torch.txt
 
 # Pythonセットアップ
-COPY ./src/backend/ /workspace/src/backend/
+COPY ./src/backend/requirements.txt /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements.txt
+
+COPY ./src/backend/requirements-dev.txt /workspace/src/backend/
 RUN python3 -m pip install -r /workspace/src/backend/requirements-dev.txt
 
 # ポート設定
@@ -49,7 +51,7 @@ RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
 
 # npmインストール
 WORKDIR /workspace/src/frontend
-COPY ./src/frontend/ /workspace/src/frontend/
+COPY ./src/frontend/package.json /workspace/src/frontend/
 RUN npm install
 
 # Nginxの設定
@@ -68,6 +70,9 @@ ENTRYPOINT [ "/entrypoint.sh" ]
 #################################
 FROM devserver AS build
 
+COPY ./src/frontend/ /workspace/src/frontend/
+COPY --from=devserver /workspace/src/frontend/node_modules /workspace/src/frontend/node_modules
+
 WORKDIR /workspace/src/frontend
 RUN npm run build
 
@@ -78,6 +83,9 @@ FROM base AS production
 
 # Nginx設定ファイルをコピー
 COPY ./docker/prod/etc/nginx/nginx.conf /etc/nginx/nginx.conf
+
+# バックエンドをコピー
+COPY ./src/backend/ /workspace/src/backend/
 
 # ビルド済みのフロントエンドをコピー
 RUN mkdir -p /workspace/src/frontend/dist

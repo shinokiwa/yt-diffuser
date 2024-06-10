@@ -3,21 +3,15 @@
  *
  * 仮実装
  */
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 
-export const useEditorStateStore = defineStore('Editor-state', {
+export const useEditorStateStore = defineStore('editor-state', {
   state: () => ({
     /**
      * 現在のメインイメージ
      */
     mainImage: ''
   }),
-
-  getters: {
-    refs() {
-      return storeToRefs(this)
-    }
-  },
 
   actions: {
     /**

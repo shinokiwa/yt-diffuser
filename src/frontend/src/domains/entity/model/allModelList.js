@@ -15,17 +15,21 @@ export class AllModelList {
     this.loraModels = []
     this.controlnetModels = []
 
-    if (Array.isArray(data?.models)) {
-      data.models.forEach((v) => {
-        const modelClass = new ModelClass(v.model_class)
+    if (Array.isArray(data?.baseModels)) {
+      data.baseModels.forEach((v) => {
+        this.baseModels.push(new BaseModel(v))
+      })
+    }
 
-        if (modelClass.isBaseModel()) {
-          this.baseModels.push(new BaseModel(v))
-        } else if (modelClass.isLoraModel()) {
-          this.loraModels.push(new BaseModel(v))
-        } else {
-          this.controlnetModels.push(new BaseModel(v))
-        }
+    if (Array.isArray(data?.loraModels)) {
+      data.loraModels.forEach((v) => {
+        this.loraModels.push(new BaseModel(v))
+      })
+    }
+
+    if (Array.isArray(data?.controlnetModels)) {
+      data.controlnetModels.forEach((v) => {
+        this.controlnetModels.push(new BaseModel(v))
       })
     }
   }
