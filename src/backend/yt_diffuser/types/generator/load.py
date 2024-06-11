@@ -6,6 +6,6 @@ class GeneratorLoadData(BaseModel):
 
     Pydanticの都合、model_から始まる名前は使えない点に注意
     """
-    base_model_name: str
+    base_model_id: str
     base_revision: str
     compile: bool

@@ -1,4 +1,4 @@
-import { ModelClass } from '@/domains/value/model/modelClass'
+import { type } from '@/domains/value/model/type'
 
 /**
  * 基本モデルのエンティティ
@@ -14,7 +14,7 @@ export class BaseModel {
      * モデル名
      * @type {string}
      */
-    this.modelName = data?.modelName
+    this.id = data?.id
 
     /**
      * 表示名
@@ -31,9 +31,9 @@ export class BaseModel {
     /**
      * モデルクラス
      * このクラスがbase-modelなので、現実的に固定値
-     * @type {ModelClass}
+     * @type {type}
      */
-    this.modelClass = new ModelClass(data?.modelClass)
+    this.type = new type(data?.type)
 
     /**
      * リビジョン
@@ -62,10 +62,10 @@ export class BaseModel {
    */
   getValues() {
     return {
-      modelName: this.modelName,
+      id: this.id,
       screenName: this.screenName,
       source: this.source,
-      modelClass: this.modelClass.toString(),
+      type: this.type.toString(),
       revisions: this.revisions,
       appends: this.appends
     }

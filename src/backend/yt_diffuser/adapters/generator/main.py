@@ -3,7 +3,7 @@
 """
 import os
 import sys
-import logging; logger = logging.getLogger(__name__)
+import logging; logger = logging.getLogger('yt_diffuser')
 logging.basicConfig(stream=sys.stdout)
 import multiprocessing
 

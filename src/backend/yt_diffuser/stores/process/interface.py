@@ -73,6 +73,12 @@ class IProcessStore(metaclass=ABCMeta):
         """
         pass
 
+    def remove_all_process(self):
+        """
+        全てのプロセスデータを削除する。
+        """
+        pass
+
 class IProcessQueueStore(metaclass=ABCMeta):
     """
     プロセスキューストアのインターフェース

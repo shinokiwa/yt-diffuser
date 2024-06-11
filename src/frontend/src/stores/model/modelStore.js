@@ -2,17 +2,17 @@
  * モデルデータ管理のストア
  */
 import { defineStore } from 'pinia'
-import { ModelClass } from '@/domains/value/model/modelClass'
+import { type } from '@/domains/value/model/type'
 
 /**
  * モデルデータを整形する
  */
 export function createModelData(data) {
   return {
-    modelName: data?.modelName,
+    id: data?.id,
     screenName: data?.screenName,
     source: data?.source,
-    modelClass: new ModelClass(data?.modelClass),
+    type: new type(data?.type),
     revisions: data?.revisions || [],
     appends: data?.appends
   }
@@ -69,22 +69,20 @@ export const useModelStore = defineStore('model', {
     },
 
     /**
-     * モデル名でモデルデータを取得する
+     * モデルIDでモデルデータを取得する
      */
-    findModelByName(modelName) {
-      const baseModel = this.data.baseModels.find((model) => model.modelName === modelName)
+    findModelByID(id) {
+      const baseModel = this.data.baseModels.find((model) => model.id === id)
       if (baseModel) {
         return baseModel
       }
 
-      const loraModel = this.data.loraModels.find((model) => model.modelName === modelName)
+      const loraModel = this.data.loraModels.find((model) => model.id === id)
       if (loraModel) {
         return loraModel
       }
 
-      const controlnetModel = this.data.controlnetModels.find(
-        (model) => model.modelName === modelName
-      )
+      const controlnetModel = this.data.controlnetModels.find((model) => model.id === id)
       if (controlnetModel) {
         return controlnetModel
       }

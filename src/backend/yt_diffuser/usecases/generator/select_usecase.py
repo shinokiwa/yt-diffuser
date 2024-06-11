@@ -12,6 +12,7 @@ from yt_diffuser.stores.pipeline.interface import IPipelineStore
 
 from .pipeline import (
     IPipelineUseCase,
+    PipelineUtilUseCase,
     StableDiffusionXLTextToImageUseCase
 )
 
@@ -24,7 +25,8 @@ class UseCaseSelector:
     def __init__(
         self,
         path:AppPath,
-        pipeline_store:IPipelineStore
+        pipeline_store:IPipelineStore,
+        pipeline_util:PipelineUtilUseCase
     ) -> None:
         """
         コンストラクタ
@@ -35,6 +37,7 @@ class UseCaseSelector:
         """
         self.path = path
         self.pipeline_store = pipeline_store
+        self.pipeline_util = pipeline_util
 
     def create_usecase(self, generate_type:GenerateType) -> IPipelineUseCase:
         """
@@ -48,6 +51,6 @@ class UseCaseSelector:
         usecase = None
         if isinstance(pipeline, StableDiffusionXLPipeline):
             if generate_type == GenerateType.TEXT_TO_IMAGE:
-                usecase = StableDiffusionXLTextToImageUseCase(self.path, pipeline)
+                usecase = StableDiffusionXLTextToImageUseCase(self.path, pipeline, self.pipeline_util)
         
         return usecase

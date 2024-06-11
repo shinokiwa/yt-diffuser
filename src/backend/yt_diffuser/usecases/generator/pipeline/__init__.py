@@ -1,3 +1,4 @@
 from .interface import IPipelineUseCase
+from .util_usecase import PipelineUtilUseCase
 
 from .stable_diffusion_xl.text_to_image import StableDiffusionXLTextToImageUseCase

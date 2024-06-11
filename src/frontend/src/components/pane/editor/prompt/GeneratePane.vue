@@ -4,40 +4,16 @@
  */
 import { ref } from 'vue'
 
-// 未整理
-import { useFormUseCase } from '@/composables/form/formUseCase'
-//import { useGenerateImage } from '@/composables/api/generate/image'
+import { useGenerateUseCase } from '@/composables/generate/generateUseCase'
 
 const generateCount = ref(1)
 
 function submit() {
   start(generateCount.value)
 }
-function start(count) {
-  const { start_generate } = useGenerateImage()
-  const {
-    generateType,
-    width,
-    height,
-    prompt,
-    negativePrompt,
-    scheduler,
-    inferenceSteps,
-    guidanceScale,
-    strength
-  } = useFormUseCase().getRefs()
-  start_generate(
-    generateType.value,
-    count,
-    width.value,
-    height.value,
-    prompt.value,
-    negativePrompt.value,
-    scheduler.value,
-    inferenceSteps.value,
-    guidanceScale.value,
-    strength.value
-  )
+async function start(count) {
+  const { text_to_image } = useGenerateUseCase()
+  await text_to_image(count)
 }
 </script>
 

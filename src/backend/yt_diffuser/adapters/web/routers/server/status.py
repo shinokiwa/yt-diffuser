@@ -19,7 +19,7 @@ class ServerStatusOutput(BaseModel):
     generator: str
 
 @router.get("/api/server/status", response_model=ResponseModel[ServerStatusOutput])
-async def get_server_status():
+def get_server_status():
     """
     現在のサーバーのステータスを取得する
 

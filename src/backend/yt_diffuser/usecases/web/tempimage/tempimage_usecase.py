@@ -26,4 +26,6 @@ class TempImageUseCase:
         一時保存画像の一覧を取得する。
         """
         self.path.mkdir(parents=True, exist_ok=True)
-        return [str(p.relative_to(self.path)) for p in self.path.glob('*')]
+        list = [str(p.relative_to(self.path)) for p in self.path.glob('*')]
+        list = sorted(list, reverse=True)
+        return list

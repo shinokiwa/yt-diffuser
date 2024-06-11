@@ -2,7 +2,7 @@
 /**
  * エディタービュー 生成結果表示エリア 一時保存ギャラリー
  */
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 import ImageThumb from '@/components/element/ImageThumb.vue'
 
@@ -15,7 +15,9 @@ const imageList = tempImage.getImageList()
 
 //import { useTemp } from '@/composables/api/res/output/temp'
 //const { imageList, refresh, close, deleteAll } = useTemp()
-const { refresh, close, deleteAll } = {}
+const { close, deleteAll } = {}
+
+const galleryItem = ref(null)
 
 onMounted(async () => {
   await tempImage.update()
@@ -34,12 +36,18 @@ function clickDeleteAll() {
     deleteAll()
   }
 }
+
+const reloadSwitch = ref(false)
+async function reload() {
+  await tempImage.update()
+  reloadSwitch.value = !reloadSwitch.value
+}
 </script>
 
 <template>
   <div id="EditorResultTempPane">
     <div class="button-area">
-      <button @click="tempImage.update()" title="リロード">
+      <button @click="reload" title="リロード">
         <i class="bi-arrow-clockwise"></i>
       </button>
       <button>
@@ -51,12 +59,12 @@ function clickDeleteAll() {
     </div>
 
     <div class="gallery-wrapper">
-      <div class="gallery">
+      <div class="gallery" :key="reloadSwitch">
         <div
           class="gallery-item"
           v-for="(image, index) in imageList"
-          :key="image.id"
-          ref="galleryItems"
+          :key="index"
+          ref="galleryItem"
         >
           <ImageThumb :src="'output/temp/' + image" :cacheBuster="true" @click="selectImage" />
         </div>

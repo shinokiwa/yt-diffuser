@@ -35,7 +35,7 @@ export function useImageObserver(image) {
   onUnmounted(() => {
     const { observer } = useImageObserver()
 
-    if (image.value) {
+    if (image?.value) {
       observer.unobserve(image.value)
     }
   })

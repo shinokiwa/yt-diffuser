@@ -58,20 +58,27 @@ export function ModelUseCase(store, api) {
      * モデル名からモデルデータを取得する
      *
      */
-    findModelByName(name) {
-      const model = store.findModelByName(name)
+    findModelByID(id) {
+      const model = store.findModelByID(id)
       return model
     },
 
     /**
      * モデルをロードする
      */
-    async loadModel(model_name, revision, compile) {
+    async loadModel(base_model_id, base_revision, compile) {
       await api.post('/api/model/load', {
-        model_name,
-        revision,
+        base_model_id,
+        base_revision,
         compile
       })
+    },
+
+    /**
+     * モデルを解放する
+     */
+    async releaseModel() {
+      await api.get('/api/model/exit')
     }
   }
 }

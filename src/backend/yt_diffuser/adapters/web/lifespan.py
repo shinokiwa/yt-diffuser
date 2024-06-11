@@ -24,4 +24,4 @@ async def lifespan(app: FastAPI, container:Injector = get_container()):
     try:
         yield
     finally:
-        pass
+        startup.shutdown()

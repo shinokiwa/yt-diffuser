@@ -14,15 +14,15 @@ export const useFormStore = defineStore('form', {
      * フォームデータ
      */
     data: {
-      baseModelName: '',
+      baseModelID: '',
       baseModelRevision: '',
       compile: 0,
 
-      loraModelName: '',
+      loraModelID: '',
       loraModelRevision: '',
       loraModelWeight: '',
 
-      controlnetModelName: '',
+      controlnetModelID: '',
       controlnetModelRevision: '',
       controlnetModelWeight: '',
 

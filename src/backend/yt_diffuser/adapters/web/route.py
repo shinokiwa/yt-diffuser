@@ -9,6 +9,8 @@ def setup_routes(app:FastAPI):
     """
     ルーティング設定
     """
+    app.include_router(import_module('yt_diffuser.adapters.web.routers.generate.text_to_image').router)
+
     app.include_router(import_module('yt_diffuser.adapters.web.routers.form.index').router)
 
     app.include_router(import_module('yt_diffuser.adapters.web.routers.model.index').router)

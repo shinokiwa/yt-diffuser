@@ -16,10 +16,10 @@ class ResponseDataModel(BaseModel):
     """
     レスポンスデータモデル個別
     """
-    res_model_name:str = Field(alias='model_name')
+    id:str
     screen_name: str
     source: ModelSource
-    res_model_class: ModelType = Field(alias='model_class')
+    type: ModelType
     revisions: List[str]
     appends: Dict
 

@@ -20,7 +20,7 @@ def test_get_model(mocker: MockerFixture):
                 'id': 'mdl_id',
                 'screen_name': 'screen_name',
                 'source': ModelSource.HF,
-                'model_class': ModelType.BASE_MODEL,
+                'type': ModelType.BASE_MODEL,
                 'revisions': ['revisions'],
                 'appends': {'appends': 'appends'}
             }
@@ -38,7 +38,7 @@ def test_get_model(mocker: MockerFixture):
                 'id': 'mdl_id',
                 'screen_name': 'screen_name',
                 'source': ModelSource.HF,
-                'model_class': ModelType.BASE_MODEL,
+                'type': ModelType.BASE_MODEL,
                 'revisions': ['revisions'],
                 'appends': {'appends': 'appends'}
             }

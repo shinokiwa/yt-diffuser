@@ -1,5 +1,4 @@
 import { BaseModel } from '@/domains/entity/model/baseModel'
-import { ModelClass } from '@/domains/value/model/modelClass'
 
 /**
  * 全モデルリストのエンティティ

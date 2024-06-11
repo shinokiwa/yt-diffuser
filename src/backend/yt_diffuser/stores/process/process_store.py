@@ -1,6 +1,7 @@
+import logging; logger = logging.getLogger(__name__)
+
 from typing import Dict
 from logging import getLogger; logger = getLogger(__name__)
-import atexit
 from multiprocessing.context import SpawnProcess
 
 from injector import inject
@@ -65,24 +66,25 @@ class ProcessStore(IProcessStore):
         Args:
             key (ProcessKey): プロセス名
         """
+        logger.debug(f"remove_process: {key}")
         process = self.get_process(key)
         if process is not None and process.is_alive():
+
             process.join(timeout=30)
             process.terminate()
+            logger.debug(f"terminate: {key}")
 
         self.__class__._processes.pop(key, None)
     
-    @classmethod
-    def remove_all_processes(cls) -> None:
+    def remove_all_process(self) -> None:
         """
         全てのプロセスデータを削除する。
         """
-        for key, process in cls._processes.items():
-            if process.is_alive():
-                process.join(timeout=30)
-                process.terminate()
-        cls._processes.clear()
+        logger.debug("remove_all_processes")
+        for key in self.__class__._processes.keys():
+            self.remove_process(key)
+
+        self.__class__._processes.clear()
             
 
-atexit.register(ProcessStore.remove_all_processes)
 

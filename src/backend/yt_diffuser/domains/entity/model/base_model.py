@@ -3,57 +3,47 @@
 """
 from typing import List, Dict
 
+from pydantic import BaseModel
 from huggingface_hub.utils import CachedRepoInfo
 
 from yt_diffuser.types.enum.model import ModelType, ModelSource
 
-class BaseModel:
+class BaseModelEntity(BaseModel):
     """
-    ベースモデル
+    ベースモデルのエンティティ
     """
-    def __init__(self, data:Dict):
-        """
-        コンストラクタ
 
-        args:
-            data: Dict モデルデータ
-        """
+    id:str = None
+    """
+    モデル名
+    """
 
-        self.od = data.get('id')
-        """
-        モデル名
-        """
+    screen_name:str = None
+    """
+    表示名
+    """
 
-        self.screen_name = data.get('screen_name')
-        """
-        表示名
-        """
+    source:ModelSource = ModelSource.HF
+    """
+    ソース
+    """
 
-        self.source = ModelSource(data.get('source', ModelSource.HF.value))
-        """
-        ソース
-        """
+    type:ModelType = ModelType.BASE_MODEL
+    """
+    モデル種類
+    """
 
-        self.model_class:ModelType = ModelType(data.get('model_class', ModelType.BASE_MODEL.value))
-        """
-        モデルクラス
-        """
+    revisions:List[str] = []
+    """
+    リビジョン
+    """
 
-        self.revisions = []
-        """
-        リビジョン
-        """
+    appends:Dict = {}
+    """
+    追加情報
 
-        if isinstance(data.get('revisions'), list):
-            for revision in data.get('revisions'):
-                self.revisions.append(revision)
-
-        self.appends:Dict = data.get('appends', {})
-        """
-        追加情報
-
-        @todo いまのところ使っていないので型定義していないが、使う場合は型定義する
-        """
+    @todo いまのところ使っていないので型定義していないが、使う場合は型定義する
+    """
     
     def add_revision(self, revision:str):
         """
@@ -61,21 +51,8 @@ class BaseModel:
         """
         self.revisions.append(revision)
     
-    def to_dict(self) -> Dict:
-        """
-        エンティティを辞書に変換する
-        """
-        return {
-            'id': self.id,
-            'screen_name': self.screen_name,
-            'source': self.source.value,
-            'model_class': self.model_class.value,
-            'revisions': self.revisions,
-            'appends': self.appends
-        }
-    
     @classmethod
-    def from_cached_repo_info(cls, repo_info:CachedRepoInfo) -> 'BaseModel':
+    def from_cached_repo_info(cls, repo_info:CachedRepoInfo) -> 'BaseModelEntity':
         """
         Huggingface_hubのCacheRepoInfoからモデル情報を生成する
 
@@ -83,14 +60,14 @@ class BaseModel:
             repo_info: CachedRepoInfo キャッシュリポジトリ情報
 
         """
-        model = BaseModel({ 
-            'model_name': repo_info.repo_id,
-            'screen_name': repo_info.repo_id,
-            'source': ModelSource.HF.value,
-            'model_class': ModelType.BASE_MODEL.value,
-            'revisions': [],
-            'appends': {}
-        })
+        model = BaseModelEntity( 
+            id=repo_info.repo_id,
+            screen_name= repo_info.repo_id,
+            source= ModelSource.HF.value,
+            type= ModelType.BASE_MODEL.value,
+            revisions= [],
+            appends= {}
+        )
 
 
         for revision in repo_info.revisions:

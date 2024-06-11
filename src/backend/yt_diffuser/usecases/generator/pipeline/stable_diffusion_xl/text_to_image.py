@@ -1,4 +1,5 @@
 from typing import Dict
+import logging; logger = logging.getLogger(__name__)
 
 import torch
 from diffusers import StableDiffusionXLPipeline
@@ -10,13 +11,17 @@ from yt_diffuser.types.generator import GeneratorTextToImageData
 from yt_diffuser.types.error import ErrorMessageSignal
 from yt_diffuser.types.path import AppPath
 
+from ..util_usecase import PipelineUtilUseCase
+
+import datetime
+
 class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
     """
 
     """
 
     @inject
-    def __init__(self, path: AppPath, pipeline:StableDiffusionXLPipeline):
+    def __init__(self, path: AppPath, pipeline:StableDiffusionXLPipeline, util:PipelineUtilUseCase):
         """
         コンストラクタ
 
@@ -25,23 +30,51 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
         """
         self.path = path
         self.pipeline = pipeline
+        self.util = util
 
     def forward(self, input_data: Dict) -> None:
         """
 
         """
-        print("StableDiffusionXLTextToImageUseCase.forward")
+        logger.debug("StableDiffusionXLTextToImageUseCase.forward")
+        data = GeneratorTextToImageData(**input_data)
+
+        self.util.set_scheduler(self.pipeline, data.scheduler)
+        output_dir = self.path.OUTPUT_TEMP_DIR
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        i = 0
+        for cnt in range(0, data.generate_count):
+            (seed, seed_generator) = self.util.init_seed_generator(self.pipeline, input_seed=None)
+
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
+            while True:
+                filename = f"{timestamp}-{i:04}-{seed}.png"
+                
+                if not (output_dir / filename).exists():
+                    break
+                else:
+                    i += 1
+            
+            output_path = output_dir / filename
+
+            image = self.pipeline(
+                prompt=data.prompt,
+                negative_prompt=data.negative_prompt,
+                width=1024,
+                height=1024,
+                num_inference_steps=30,
+                generator=seed_generator,
+                guidance_scale=7.8
+            ).images[0]
+
+
+            self.util.save_image(image, output_path, "", seed, data.model_dump())
+
+            logger.debug(f"Generated image: {output_path}")
+
 
         return
-        data = GeneratorTextToImageMessage(**input_data)
-
-        # SEED値の設定
-        initial_seed = torch.Generator(device=self.pipeline.device)
-        if input_data.seed is None:
-            seed = initial_seed.seed()
-        else:
-            seed = input_data.seed
-        initial_seed.manual_seed(seed)
 
         # 0. Default height and width to unet
         height = height or self.default_sample_size * self.vae_scale_factor
@@ -283,6 +316,3 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
             return (image,)
 
         return StableDiffusionXLPipelineOutput(images=image)
-
-
-

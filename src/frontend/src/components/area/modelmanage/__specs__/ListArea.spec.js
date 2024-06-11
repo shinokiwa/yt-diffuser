@@ -27,9 +27,9 @@ describe('ModelListArea モデル一覧', () => {
       const { baseModels, loraModels, controlNetModels } = ModelUseCase.getRefs()
 
       baseModels.value = [
-        { modelName: 'テスト1', modelClass: 'base-model' },
-        { modelName: 'テスト2', modelClass: 'lora-model' },
-        { modelName: 'テスト3', modelClass: 'controlnet-model' }
+        { id: 'テスト1', type: 'base-model' },
+        { id: 'テスト2', type: 'lora-model' },
+        { id: 'テスト3', type: 'controlnet-model' }
       ]
 
       await com.vm.$nextTick()
@@ -77,9 +77,9 @@ describe('ModelListArea モデル一覧', () => {
       let selectedModel = ''
       const { baseModels } = ModelUseCase.getRefs()
       baseModels.value = [
-        { modelName: 'テスト1', modelClass: 'base-model' },
-        { modelName: 'テスト2', modelClass: 'lora-model' },
-        { modelName: 'テスト3', modelClass: 'controlnet-model' }
+        { id: 'テスト1', type: 'base-model' },
+        { id: 'テスト2', type: 'lora-model' },
+        { id: 'テスト3', type: 'controlnet-model' }
       ]
       const com = mount(ListArea, {
         props: {

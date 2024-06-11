@@ -5,7 +5,7 @@ from typing import List, Dict
 
 from huggingface_hub.utils import HFCacheInfo
 
-from .base_model import BaseModel
+from .base_model import BaseModelEntity
 
 class AllModelList:
     """
@@ -13,15 +13,15 @@ class AllModelList:
     """
 
     def __init__(self, data: Dict = {}):
-        self.base_models:List[BaseModel] = []
+        self.base_models:List[BaseModelEntity] = []
 
         self.lora_models = []
         self.controlnet_models = []
 
         for base_model_data in data.get('base_models', []):
-            self.base_models.append(BaseModel(base_model_data))
+            self.base_models.append(BaseModelEntity(**base_model_data))
     
-    def add_base_model(self, base_model:BaseModel):
+    def add_base_model(self, base_model:BaseModelEntity):
         """
         ベースモデルを追加する
         """
@@ -33,7 +33,7 @@ class AllModelList:
         """
 
         for hf_repo in hf_cache_info.repos:
-            self.add_base_model(BaseModel.from_cached_repo_info(hf_repo))
+            self.add_base_model(BaseModelEntity.from_cached_repo_info(hf_repo))
 
         return self
     
@@ -42,7 +42,7 @@ class AllModelList:
         エンティティを辞書に変換する
         """
         return {
-            'base_models': [base_model.to_dict() for base_model in self.base_models],
+            'base_models': [base_model.model_dump() for base_model in self.base_models],
             'lora_models': self.lora_models,
             'controlnet_models': self.controlnet_models
         }

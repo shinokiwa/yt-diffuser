@@ -13,10 +13,10 @@ import { useModelUseCase } from '@/composables/model/modelUseCase'
 import { useFormUseCase } from '@/composables/form/formUseCase'
 
 const { getRefs } = useFormUseCase()
-const { baseModelName } = getRefs()
+const { baseModelID } = getRefs()
 
-const { findModelByName } = useModelUseCase()
-const selectedModel = ref(findModelByName(baseModelName))
+const { findModelByID } = useModelUseCase()
+const selectedModel = ref(findModelByID(baseModelID))
 
 const viewMode = ref('add')
 if (selectedModel.value) {

@@ -15,7 +15,7 @@ class RequestData(BaseModel):
     """
     リクエストデータ
     """
-    base_model_name:str
+    base_model_id:str
     base_revision: str
     compile: bool
 
@@ -28,6 +28,17 @@ def load_model (
     """
     モデルを読み込む。
     """
-    loader.load(data.base_model_name, data.base_revision, data.compile)
+    loader.load(data.base_model_id, data.base_revision, data.compile)
 
     return ResponseModel[str](meta=ResponseMeta(), data='success')
+
+@router.get('/api/model/exit', response_model=ResponseModel[str])
+def exit_model (
+    loader:ModelLoadUseCase = Depends(get_depends(ModelLoadUseCase))
+):
+    """
+    生成プロセスを終了する。
+    """
+    loader.exit()
+
+    return ResponseModel[str](meta=ResponseMeta(), data='success')  

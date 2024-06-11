@@ -56,8 +56,8 @@ class GeneratorLoadUseCase:
         logger.debug("Load start.")
 
         pipeline = DiffusionPipeline.from_pretrained(
-            pretrained_model_name_or_path=data.res_model_name,
-            revision=data.revision,
+            pretrained_model_name_or_path=data.base_model_id,
+            revision=data.base_revision,
             cache_dir=self.path.STORE_HF_MODEL_DIR,
             torch_dtype=torch.bfloat16,
             use_safetensors=True,

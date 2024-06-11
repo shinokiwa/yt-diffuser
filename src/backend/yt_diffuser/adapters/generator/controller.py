@@ -57,7 +57,7 @@ class GeneratorController:
             raise GeneratorExitSignal()
 
         elif message.message_type == GeneratorMessageType.LOAD:
-            self.load.load(**message.data)
+            self.load.load(message.data)
         
         elif message.message_type == GeneratorMessageType.TEXT_TO_IMAGE:
             usecase = self.selector.create_usecase(GenerateType.TEXT_TO_IMAGE)

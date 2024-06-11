@@ -19,7 +19,7 @@ onMounted(async () => {
 
 function selectModel(model) {
   viewMode.value = 'detail'
-  selectedModel.value = model.modelName
+  selectedModel.value = model.id
 }
 </script>
 
@@ -29,13 +29,13 @@ function selectModel(model) {
     <ul>
       <li
         v-for="model in baseModels"
-        :key="model.modelName"
+        :key="model.id"
         class="model-item clickable"
-        :class="{ 'selected-model': model.modelName === selectedModel }"
+        :class="{ 'selected-model': model.id === selectedModel }"
         @click="selectModel(model)"
       >
         <div class="model-name">
-          {{ model.screenName || model.modelName }}
+          {{ model.screenName || model.id }}
         </div>
         <div class="last-used">
           <i class="bi-star"></i>

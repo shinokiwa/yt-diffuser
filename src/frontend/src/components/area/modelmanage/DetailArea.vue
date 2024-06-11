@@ -11,25 +11,26 @@ const props = defineProps({
   }
 })
 
-const { findModelByName, loadModel } = useModelUseCase()
-const model = ref(findModelByName(props.selectedModel))
+const { findModelByID, loadModel, releaseModel } = useModelUseCase()
+const model = ref(findModelByID(props.selectedModel))
 
 const screenName = ref(model.value.screenName)
 
 watch(props, () => {
-  model.value = findModelByName(props.selectedModel)
+  model.value = findModelByID(props.selectedModel)
 })
 
 async function load() {
-  await loadModel(model.value.modelName, model.value.revisions[0], false)
+  await loadModel(model.value.id, model.value.revisions[0], false)
 }
 </script>
 
 <template>
   <div id="ModelDetailArea">
-    <h3>{{ model.screenName || model.modelName }}</h3>
+    <h3>{{ model.screenName || model.id }}</h3>
     <nav>
       <ButtonPrimary @click="load">読み込み</ButtonPrimary>
+      <ButtonPrimary @click="releaseModel">解放</ButtonPrimary>
     </nav>
     <div class="detail-grid">
       <div class="grid-label">表示名</div>
@@ -43,7 +44,7 @@ async function load() {
       </div>
 
       <div class="grid-label">モデル名</div>
-      <div class="grid-desc">{{ model.modelName }}</div>
+      <div class="grid-desc">{{ model.id }}</div>
 
       <div class="grid-label">モデル種別</div>
       <div class="gird-desc">

@@ -10,15 +10,14 @@ from yt_diffuser.usecases.web.generate.text_to_image_usecase import GenerateText
 
 router = APIRouter()
 
-
 class RequestData(BaseModel):
     """
     リクエストデータ
     """
-    req_model_name:str = Field(alias='model_name')
-    revision: str
-    compile: bool
-
+    generate_count: int
+    prompt: str
+    negative_prompt: str
+    scheduler: str
 
 @router.post('/api/generate/text_to_image', response_model=ResponseModel[str])
 def generate_text_to_image (data:RequestData, usecase:GenerateTextToImageUseCase = Depends(get_depends(GenerateTextToImageUseCase))):
@@ -26,9 +25,10 @@ def generate_text_to_image (data:RequestData, usecase:GenerateTextToImageUseCase
     text to imageで画像を生成する。
     """
     usecase.text_to_image(
-        data.req_model_name,
-        data.revision,
-        data.compile
+        generate_count=data.generate_count,
+        prompt=data.prompt,
+        negative_prompt=data.negative_prompt,
+        scheduler=data.scheduler
     )
 
     return ResponseModel[str](meta=ResponseMeta(), data='success')

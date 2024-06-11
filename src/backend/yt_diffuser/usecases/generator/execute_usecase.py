@@ -25,13 +25,12 @@ class GeneratorExecuteUseCase:
         self.path = path
         self.thread = thread
 
-    def forward(self, usecase:IPipelineUseCase, pipeline:DiffusionPipeline, data:Dict) -> None:
+    def forward(self, usecase:IPipelineUseCase, data:Dict) -> None:
         """
         パイプラインを実行する。
 
         Args:
             usecase (IPipelineUseCase): パイプラインを実行するユースケース
-            pipeline (DiffusionPipeline): パイプライン
             data (dict): データ
         """
         if self.thread.is_alive(ThreadKeys.GENERATOR) == True:

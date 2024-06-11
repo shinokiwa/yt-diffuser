@@ -13,7 +13,7 @@ def test_load_model(mocker: MockerFixture):
     """
     mock_usecase = mocker.Mock(spec=ModelLoadUseCase)
 
-    data = RequestData(base_model_name='test', base_revision='1', compile=False)
+    data = RequestData(base_model_id='test', base_revision='1', compile=False)
 
     res = load_model(data, mock_usecase)
 

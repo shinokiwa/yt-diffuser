@@ -48,8 +48,8 @@ describe('ModelUseCase', () => {
       const modelUseCase = useModelUseCase()
       const modelList = {
         models: [
-          { modelName: 'model1', modelClass: 'base-model' },
-          { modelName: 'model2', modelClass: 'base-model' }
+          { id: 'model1', type: 'base-model' },
+          { id: 'model2', type: 'base-model' }
         ]
       }
       API.get.mockResolvedValue(modelList)

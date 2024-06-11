@@ -59,4 +59,4 @@ class ThreadStore(IThreadStore):
         thread_data = self.get_thread(key)
         if thread_data is None:
             return False
-        return thread_data['thread'].is_alive()
+        return thread_data.is_alive()
