@@ -7,26 +7,22 @@ import { ref, watch } from 'vue'
 
 import ProgressBar from '@/components/element/ProgressBar.vue'
 
-import { useServerStatusUseCase } from '@/composables/server/statusUseCase'
-import { useInitializeUseCase } from '@/composables/init/initializeUseCase'
+import { useInitializeUseCase, useAppStateUseCase } from '@/composables/app'
 
-const { connected } = useServerStatusUseCase()
+const { isConnected } = useAppStateUseCase().getRefs()
 
 const statusMessage = ref('待機中...')
 const progress = ref(0)
 
-watch(connected, async (curVal, oldVal) => {
-  // ヘルスチェック結果がfalseからtrueに変わった際に初期化を実行
-  if ((oldVal === false || typeof oldVal === 'undefined') && curVal === true) {
+watch(isConnected, async (value) => {
+  if (value) {
+    // ヘルスチェック結果がfalseからtrueに変わった際に初期化を実行
     statusMessage.value = '初期化中...'
     progress.value = 50
 
     const { init } = useInitializeUseCase()
     await init()
     progress.value = 100
-  } else {
-    statusMessage.value = 'サーバーの起動を待っています...'
-    progress.value = 0
   }
 })
 </script>

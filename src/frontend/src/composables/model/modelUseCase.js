@@ -1,16 +1,17 @@
 /**
  * モデル関連の処理を扱うユースケース
  */
-import { ref } from 'vue'
-import { useModelStore } from '@/stores/model/modelStore'
-import { AllModelList } from '@/domains/entity/model/allModelList'
+import { toRef } from 'vue'
 import { useAPI } from '@/adapters/api'
+import { useModelStore } from '@/stores/model/modelStore'
+import { AllModelData } from '@/types/model'
 
 /**
  * モデル関連のユースケースを生成する
  *
  * @param {ReturnType<typeof useAPIModelStore>} store
- * @returns {function(): Promise<ModelList>}
+ * @param {ReturnType<typeof useAPI>} api
+ * @returns {ReturnType<typeof ModelUseCase>}
  */
 export function useModelUseCase() {
   return ModelUseCase(useModelStore(), useAPI())
@@ -22,36 +23,27 @@ export function useModelUseCase() {
  * @param {ReturnType<typeof useModelStore>} store
  */
 export function ModelUseCase(store, api) {
-  const baseModels = ref([])
-  const loraModels = ref([])
-  const controlnetModels = ref([])
-
   return {
     /**
      * リアクティブなモデル一覧を取得する
      */
     getRefs() {
       return {
-        baseModels,
-        loraModels,
-        controlnetModels
+        baseModels: toRef(store.data, 'baseModels'),
+        loraModels: toRef(store.data, 'loraModels'),
+        controlnetModels: toRef(store.data, 'controlnetModels')
       }
     },
 
     /**
      * APIから全モデルデータを取得する
-     * @returns {Promise<AllModelList>}
+     * @returns {Promise <AllModelData>}
      */
     async fetchAll() {
       const data = await api.get('/api/model')
-      const modelList = new AllModelList(data)
-      store.setData(modelList.getValues())
-
-      baseModels.value = store.data.baseModels
-      loraModels.value = store.data.loraModels
-      controlnetModels.value = store.data.controlnetModels
-
-      return modelList
+      const allModels = new AllModelData(data)
+      store.setData(allModels)
+      return allModels
     },
 
     /**

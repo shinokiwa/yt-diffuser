@@ -1,6 +1,5 @@
-/**
- * フロントエンド全体の状態を管理するユースケース
- */
+import { toRef } from 'vue'
+
 import { useAppStateStore } from '@/stores/app/appStateStore'
 
 /**
@@ -25,7 +24,10 @@ export function AppStateUseCase(store) {
      *
      * @returns {Object} フロントエンド状態
      */
-    getRefs: () => store.refs,
+    getRefs: () => ({
+      currentView: toRef(store, 'currentView'),
+      isConnected: toRef(store, 'isConnected')
+    }),
 
     /**
      * ビューを変更する

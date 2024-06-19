@@ -1,16 +1,22 @@
-from typing import Dict
 import logging; logger = logging.getLogger(__name__)
+from queue import Queue
 
 import torch
 from diffusers import DiffusionPipeline
 from injector import inject
 
 from yt_diffuser.types.path import AppPath
-from yt_diffuser.types.error import ErrorMessageSignal
-from yt_diffuser.types.generator import GeneratorLoadData
-
-from yt_diffuser.stores.thread.interface import IThreadStore, ThreadKeys
+from yt_diffuser.stores.generator.interface import IGeneratorStatusStore
 from yt_diffuser.stores.pipeline.interface import IPipelineStore
+
+from yt_diffuser.types.error import GeneratorExitSignal
+
+from yt_diffuser.types.generator.message import (
+    GenerateMessage,
+    GeneratorArgsLoad,
+    GeneratorStatus,
+    GenerateMessageResult
+)
 
 
 class GeneratorLoadUseCase:
@@ -19,45 +25,39 @@ class GeneratorLoadUseCase:
     """
 
     @inject
-    def __init__(self, path:AppPath, pipeline:IPipelineStore, thread:IThreadStore):
+    def __init__(
+        self,
+        path:AppPath,
+        pipeline:IPipelineStore,
+        store:IGeneratorStatusStore
+    ):
         """
         コンストラクタ
 
         Args:
             path (AppPath): パス設定
             pipeline (IPipelineStore): パイプラインストア
-            thread (IThreadStore): スレッドストア
         """
         self.path = path
         self.pipeline = pipeline
-        self.thread = thread
+        self.store = store
 
-    def load(self, input_data:Dict) -> None:
+    def load(self, task:GenerateMessage, result_queue:Queue) -> None:
         """
         モデルを読み込む
         """
-        if self.thread.is_alive(ThreadKeys.GENERATOR):
-            raise ErrorMessageSignal("Generator is already running")
-        
-        data = GeneratorLoadData(**input_data)
+        args = GeneratorArgsLoad(**task.args)
+        result = GenerateMessageResult(
+            status=GeneratorStatus.LOADING,
+            base_model_id=args.base_model_id,
+        )
+        result_queue.put(result)
 
         self.pipeline.clear_pipeline()
-        thread = self.thread.create_thread(ThreadKeys.GENERATOR, self.thread_load, args=(data,))
-        logger.debug("Load thread start.")
-        thread.start()
-    
-    def thread_load(self, data:GeneratorLoadData) -> None:
-        """
-        loadの処理実体
-
-        Args:
-            data (GenerateLoadLoadMessage): ロードデータ
-        """
-        logger.debug("Load start.")
 
         pipeline = DiffusionPipeline.from_pretrained(
-            pretrained_model_name_or_path=data.base_model_id,
-            revision=data.base_revision,
+            pretrained_model_name_or_path=args.base_model_id,
+            revision=args.base_revision,
             cache_dir=self.path.STORE_HF_MODEL_DIR,
             torch_dtype=torch.bfloat16,
             use_safetensors=True,
@@ -73,5 +73,9 @@ class GeneratorLoadUseCase:
             pass
 
         self.pipeline.set_pipeline(pipeline)
-        logger.debug("Load complete.")
+
+        self.store.state.base_model_id = args.base_model_id
+        result.status = GeneratorStatus.LOADED
+        result_queue.put(result)
+
         return

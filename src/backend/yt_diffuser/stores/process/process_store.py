@@ -81,7 +81,8 @@ class ProcessStore(IProcessStore):
         全てのプロセスデータを削除する。
         """
         logger.debug("remove_all_processes")
-        for key in self.__class__._processes.keys():
+        keys = list(self.__class__._processes.keys())
+        for key in keys:
             self.remove_process(key)
 
         self.__class__._processes.clear()

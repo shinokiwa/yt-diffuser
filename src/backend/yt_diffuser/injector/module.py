@@ -3,6 +3,7 @@ import logging; logger = logging.getLogger(__name__)
 from injector import Binder, Module
 
 from .stores.store_module import StoreInjectModule
+from .adapters.adapter_module import AdapterInjectModule
 
 class AppInjectModule(Module):
     """
@@ -15,3 +16,4 @@ class AppInjectModule(Module):
         """
 
         binder.install(StoreInjectModule)
+        binder.install(AdapterInjectModule)

@@ -1,8 +1,3 @@
-/**
- * エディターの状態を管理するストア
- *
- * 仮実装
- */
 import { defineStore } from 'pinia'
 
 export const useEditorStateStore = defineStore('editor-state', {

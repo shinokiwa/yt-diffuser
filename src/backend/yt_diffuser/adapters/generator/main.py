@@ -8,7 +8,7 @@ logging.basicConfig(stream=sys.stdout)
 import multiprocessing
 
 from yt_diffuser.injector import get_container
-from .controller import GeneratorController
+from yt_diffuser.usecases.generator.startup_usecase import GeneratorStartupUsecase
 
 def generator_main (send_queue:multiprocessing.Queue = None, recv_queue:multiprocessing.Queue = None):
     """
@@ -19,5 +19,5 @@ def generator_main (send_queue:multiprocessing.Queue = None, recv_queue:multipro
 
     logger.debug("generator_main start")
 
-    controller = get_container().get(GeneratorController)
-    controller.main_loop(recv_queue, send_queue)
+    usecase = get_container().get(GeneratorStartupUsecase)
+    usecase.execute(send_queue, recv_queue)

@@ -1,4 +1,4 @@
-from injector import Binder, Module
+from injector import Binder, Module, singleton
 
 from yt_diffuser.stores.database.store import IDBStore, DBStore
 from yt_diffuser.stores.database.connection import IDBConnection, DBConnection
@@ -11,7 +11,7 @@ from yt_diffuser.stores.process.process_context_store import IProcessContextStor
 from yt_diffuser.stores.process.process_store import IProcessStore, ProcessStore
 from yt_diffuser.stores.process.process_queue_store import IProcessQueueStore, ProcessQueueStore
 
-from yt_diffuser.stores.thread.thread_store import IThreadStore, ThreadStore
+from yt_diffuser.stores.generator.generator_status_store import IGeneratorStatusStore, GeneratorStatusStore
 
 class StoreInjectModule(Module):
     """
@@ -25,7 +25,7 @@ class StoreInjectModule(Module):
         binder.bind(IEventListnerStore, to=EventListenerStore)
 
         binder.bind(IDBStore, to=DBStore)
-        binder.bind(IDBConnection, to=DBConnection)
+        binder.bind(IDBConnection, to=DBConnection, scope=singleton)
 
         binder.bind(IPipelineStore, to=PipelineStore)
 
@@ -33,4 +33,4 @@ class StoreInjectModule(Module):
         binder.bind(IProcessQueueStore, to=ProcessQueueStore)
         binder.bind(IProcessStore, to=ProcessStore)
 
-        binder.bind(IThreadStore, to=ThreadStore)
+        binder.bind(IGeneratorStatusStore, to=GeneratorStatusStore)

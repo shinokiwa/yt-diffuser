@@ -1,13 +1,10 @@
 import logging; logger = logging.getLogger(__name__)
+from typing import Dict
 
 from injector import inject
 
-from yt_diffuser.types.generator import (
-    GeneratorMessage,
-    GeneratorMessageType,
-    GeneratorTextToImageData
-)
 from yt_diffuser.types.error import NoProcessError
+from yt_diffuser.types.generator.message import GenerateMessage, GeneratorCommand, GeneratorArgsTextToImage
 from yt_diffuser.usecases.process import ProcessUseCase, ProcessKey
 
 class GenerateTextToImageUseCase:
@@ -30,29 +27,21 @@ class GenerateTextToImageUseCase:
     
     def text_to_image(
             self,
-            generate_count:int,
-            prompt:str,
-            negative_prompt:str,
-            scheduler:str
+            input_data: Dict
         ) -> None:
         """
         TextToImage生成メッセージを送信する。
         
         Args:
+            input_data (Dict): 入力データ GenerateMessageTextToImageEntityに変換可能であること
         """
         if self.process.is_running(ProcessKey.GENERATOR) is False:
             raise NoProcessError("Generator process is not running.")
 
         send_queue = self.process.get_send_queue(ProcessKey.GENERATOR)
-
-        message = GeneratorMessage(
-            message_type=GeneratorMessageType.TEXT_TO_IMAGE,
-            data=GeneratorTextToImageData(
-                generate_count=generate_count,
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-                scheduler=scheduler
-            ).model_dump())
-
+        message = GenerateMessage(
+            command=GeneratorCommand.TEXT_TO_IMAGE,
+            args=GeneratorArgsTextToImage(**input_data).model_dump()
+        )
         send_queue.put(message.model_dump())
 

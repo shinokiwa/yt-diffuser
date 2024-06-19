@@ -2,11 +2,12 @@
 /**
  * 生成結果表示エリア
  */
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
 import TempPane from '@/components/pane/editor/result/TempPane.vue'
 
 import ProgressPane from '@/components/pane/editor/result/ProgressPane.vue'
+import LogPane from '@/components/pane/editor/result/LogPane.vue'
 
 const selectedTab = ref('gallery')
 </script>
@@ -18,7 +19,9 @@ const selectedTab = ref('gallery')
         <TempPane />
       </div>
 
-      <div v-else-if="selectedTab === 'log'" class="result log"></div>
+      <div v-else-if="selectedTab === 'log'" class="result log">
+        <LogPane />
+      </div>
 
       <div class="tab-area">
         <button :class="{ active: selectedTab === 'gallery' }" @click="selectedTab = 'gallery'">

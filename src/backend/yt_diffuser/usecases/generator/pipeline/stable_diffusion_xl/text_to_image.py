@@ -1,5 +1,6 @@
 from typing import Dict
 import logging; logger = logging.getLogger(__name__)
+from queue import Queue
 
 import torch
 from diffusers import StableDiffusionXLPipeline
@@ -7,13 +8,22 @@ from diffusers import StableDiffusionXLPipeline
 from injector import inject
 
 from ..interface import IPipelineUseCase
-from yt_diffuser.types.generator import GeneratorTextToImageData
+
 from yt_diffuser.types.error import ErrorMessageSignal
 from yt_diffuser.types.path import AppPath
 
 from ..util_usecase import PipelineUtilUseCase
 
+from yt_diffuser.stores.generator.interface import IGeneratorStatusStore
+
 import datetime
+
+from yt_diffuser.types.generator.message import (
+    GenerateMessage,
+    GeneratorArgsTextToImage,
+    GenerateMessageResult,
+    GeneratorStatus
+)
 
 class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
     """
@@ -21,7 +31,13 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
     """
 
     @inject
-    def __init__(self, path: AppPath, pipeline:StableDiffusionXLPipeline, util:PipelineUtilUseCase):
+    def __init__(
+        self,
+        path: AppPath,
+        pipeline:StableDiffusionXLPipeline,
+        util:PipelineUtilUseCase,
+        status:IGeneratorStatusStore
+    ):
         """
         コンストラクタ
 
@@ -31,20 +47,30 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
         self.path = path
         self.pipeline = pipeline
         self.util = util
+        self.status = status
 
-    def forward(self, input_data: Dict) -> None:
+    def forward(self, task:GenerateMessage, result_queue:Queue) -> None:
         """
 
         """
         logger.debug("StableDiffusionXLTextToImageUseCase.forward")
-        data = GeneratorTextToImageData(**input_data)
+        args = GeneratorArgsTextToImage(**task.args)
 
-        self.util.set_scheduler(self.pipeline, data.scheduler)
+        self.status.add_generate_total(args.generate_count)
+
+        result = GenerateMessageResult(
+            status=GeneratorStatus.PROCESSING,
+            generate_total=self.status.state.generate_total,
+            generate_count=self.status.state.generate_count
+        )
+        result_queue.put(result)
+
+        self.util.set_scheduler(self.pipeline, args.scheduler)
         output_dir = self.path.OUTPUT_TEMP_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
 
         i = 0
-        for cnt in range(0, data.generate_count):
+        for cnt in range(0, args.generate_count):
             (seed, seed_generator) = self.util.init_seed_generator(self.pipeline, input_seed=None)
 
             timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
@@ -59,8 +85,8 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
             output_path = output_dir / filename
 
             image = self.pipeline(
-                prompt=data.prompt,
-                negative_prompt=data.negative_prompt,
+                prompt=args.prompt,
+                negative_prompt=args.negative_prompt,
                 width=1024,
                 height=1024,
                 num_inference_steps=30,
@@ -69,10 +95,14 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
             ).images[0]
 
 
-            self.util.save_image(image, output_path, "", seed, data.model_dump())
+            self.util.save_image(image, output_path, "", seed, args.model_dump())
 
             logger.debug(f"Generated image: {output_path}")
 
+            self.status.add_generate_count(1)
+            result.generate_count = self.status.state.generate_count
+            result.last_file_name = filename
+            result_queue.put(result)
 
         return
 

@@ -2,40 +2,92 @@
  * apiFormStore.js のテスト
  */
 import { describe, it, expect } from 'vitest'
-import { isRef } from 'vue'
+import { toRef } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 
+import { AllFormData } from '@/types/form'
 import { useFormStore } from '../formStore'
 
 describe('useFormStore フォームストア ', async () => {
   const pinia = createPinia()
   setActivePinia(pinia)
 
-  describe('refs', () => {
-    it('リアクティブなフォームデータを取得する', () => {
+  describe('state', () => {
+    it('デフォルト値', () => {
       const store = useFormStore()
-      const refs = store.refs
+      store.$reset()
 
-      expect(isRef(refs.baseModelName)).toBe(true)
-      expect(isRef(refs.baseModelRevision)).toBe(true)
-      expect(isRef(refs.compile)).toBe(true)
-      expect(isRef(refs.loraModelName)).toBe(true)
-      expect(isRef(refs.loraModelRevision)).toBe(true)
-      expect(isRef(refs.loraModelWeight)).toBe(true)
-      expect(isRef(refs.controlnetModelName)).toBe(true)
-      expect(isRef(refs.controlnetModelRevision)).toBe(true)
-      expect(isRef(refs.controlnetModelWeight)).toBe(true)
-      expect(isRef(refs.seed)).toBe(true)
-      expect(isRef(refs.generateType)).toBe(true)
-      expect(isRef(refs.width)).toBe(true)
-      expect(isRef(refs.height)).toBe(true)
-      expect(isRef(refs.strength)).toBe(true)
-      expect(isRef(refs.prompt)).toBe(true)
-      expect(isRef(refs.negativePrompt)).toBe(true)
-      expect(isRef(refs.scheduler)).toBe(true)
-      expect(isRef(refs.inferenceSteps)).toBe(true)
-      expect(isRef(refs.guidanceScale)).toBe(true)
-      expect(isRef(refs.memo)).toBe(true)
+      expect(store.data).instanceOf(AllFormData)
+    })
+  })
+
+  describe('setData', () => {
+    it('データをセットする。', () => {
+      const store = useFormStore()
+      store.$reset()
+
+      store.setData({
+        baseModelID: 'base_model_id',
+        baseModelRevision: 'base_model_revision',
+        compile: 1,
+        loraModelID: 'lora_model_id',
+        loraModelRevision: 'lora_model_revision',
+        loraModelWeight: 'lora_model_weight',
+        controlnetModelID: 'controlnet_model_id',
+        controlnetModelRevision: 'controlnet_model_revision',
+        controlnetModelWeight: 'controlnet_model_weight',
+        seed: 'seed',
+        generateType: 'generate_type',
+        width: 100,
+        height: 200,
+        strength: 0.5,
+        prompt: 'prompt',
+        negativePrompt: 'negative_prompt',
+        scheduler: 'scheduler',
+        inferenceSteps: 50,
+        guidanceScale: 10.0,
+        memo: 'memo'
+      })
+
+      expect(store.data.baseModelID).toBe('base_model_id')
+      expect(store.data.baseModelRevision).toBe('base_model_revision')
+      expect(store.data.compile).toBe(1)
+    })
+
+    it('データのリアクティブは維持される。', () => {
+      const store = useFormStore()
+      store.$reset()
+
+      store.setData({
+        baseModelID: 'base_model_id',
+        baseModelRevision: 'base_model_revision',
+        compile: 1,
+        loraModelID: 'lora_model_id',
+        loraModelRevision: 'lora_model_revision',
+        loraModelWeight: 'lora_model_weight',
+        controlnetModelID: 'controlnet_model_id',
+        controlnetModelRevision: 'controlnet_model_revision',
+        controlnetModelWeight: 'controlnet_model_weight',
+        seed: 'seed',
+        generateType: 'generate_type',
+        width: 100,
+        height: 200,
+        strength: 0.5,
+        prompt: 'prompt',
+        negativePrompt: 'negative_prompt',
+        scheduler: 'scheduler',
+        inferenceSteps: 50,
+        guidanceScale: 10.0,
+        memo: 'memo'
+      })
+
+      const baseModelID = toRef(store.data, 'baseModelID')
+
+      store.setData({
+        baseModelID: 'base_model_id_2'
+      })
+
+      expect(baseModelID.value).toBe('base_model_id_2')
     })
   })
 })

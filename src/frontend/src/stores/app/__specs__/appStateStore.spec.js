@@ -1,6 +1,3 @@
-/**
- * appStateStore.js のテスト
- */
 import { describe, it, expect } from 'vitest'
 import { createApp } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'

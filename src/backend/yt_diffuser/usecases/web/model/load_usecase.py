@@ -1,13 +1,10 @@
 import logging; logger = logging.getLogger(__name__)
+from typing import Dict
 
 from injector import inject
 
 from yt_diffuser.usecases.process import ProcessUseCase, ProcessKey
-from yt_diffuser.types.generator import (
-    GeneratorMessage,
-    GeneratorMessageType,
-    GeneratorLoadData
-)
+from yt_diffuser.types.generator.message import GenerateMessage, GeneratorCommand, GeneratorArgsLoad
 
 class ModelLoadUseCase:
     """
@@ -27,27 +24,22 @@ class ModelLoadUseCase:
         """
         self.process = process
     
-    def load(self, base_model_id:str, base_revision:str, compile:bool) -> None:
+    def load(self, input_data:Dict) -> None:
         """
         モデルを読み込む
         
         Args:
-            base_model_id (str): モデル名
-            base_revision (str): リビジョン
-            compile (bool): コンパイルするかどうか
+            input_data (Dict): 入力データ GenerateMessageLoadEntityに変換可能であること
         """
         self.process.run(ProcessKey.GENERATOR)
         send_queue = self.process.get_send_queue(ProcessKey.GENERATOR)
 
-        message = GeneratorMessage(
-            message_type=GeneratorMessageType.LOAD,
-            data=GeneratorLoadData(
-                base_model_id=base_model_id,
-                base_revision=base_revision,
-                compile=compile
-            ).model_dump())
+        message = GenerateMessage(
+            command=GeneratorCommand.LOAD,
+            args=GeneratorArgsLoad(**input_data).model_dump()
+        )
 
-        logger.debug(f"Load model: {message.data}")
+        logger.debug(f"Load model: {message.args['base_model_id']}")
         send_queue.put(message.model_dump())
     
     def exit(self) -> None:
@@ -61,11 +53,9 @@ class ModelLoadUseCase:
         if send_queue is None:
             return
 
-        message = GeneratorMessage(
-            message_type=GeneratorMessageType.EXIT,
-            data={}
+        message = GenerateMessage(
+            command=GeneratorCommand.EXIT
         )
 
-        logger.debug(f"Load model: {message.data}")
         send_queue.put(message.model_dump())
 

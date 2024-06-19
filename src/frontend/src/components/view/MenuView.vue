@@ -3,8 +3,8 @@
  * 左サイドバーのメニュー
  *
  */
-import { VIEW_IDS } from '@/utils/enum/view'
-import { useAppStateUseCase } from '@/composables/app/appStateUseCase'
+import { VIEW_IDS } from '@/types/enum/view'
+import { useAppStateUseCase } from '@/composables/app'
 const appState = useAppStateUseCase()
 const { currentView } = appState.getRefs()
 </script>

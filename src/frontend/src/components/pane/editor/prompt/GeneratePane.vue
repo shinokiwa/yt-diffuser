@@ -5,6 +5,7 @@
 import { ref } from 'vue'
 
 import { useGenerateUseCase } from '@/composables/generate/generateUseCase'
+import { useFormUseCase } from '@/composables/form/formUseCase'
 
 const generateCount = ref(1)
 
@@ -12,6 +13,9 @@ function submit() {
   start(generateCount.value)
 }
 async function start(count) {
+  const { save } = useFormUseCase()
+  save()
+
   const { text_to_image } = useGenerateUseCase()
   await text_to_image(count)
 }

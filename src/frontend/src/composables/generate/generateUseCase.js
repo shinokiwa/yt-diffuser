@@ -21,9 +21,16 @@ export function GenerateUseCase(store, api) {
       try {
         await api.post('/api/generate/text_to_image', {
           generate_count: count,
+          height: store.data.height,
+          width: store.data.width,
+          seed: store.data.seed || null,
+
           prompt: store.data.prompt,
           negative_prompt: store.data.negativePrompt,
-          scheduler: store.data.scheduler
+
+          scheduler: store.data.scheduler,
+          inferenceSteps: store.data.inferenceSteps,
+          guidanceScale: store.data.guidanceScale
         })
       } catch (e) {
         console.error(e)

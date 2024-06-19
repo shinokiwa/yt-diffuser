@@ -1,4 +1,5 @@
 from logging import getLogger; logger = getLogger(__name__)
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 
@@ -15,21 +16,24 @@ class RequestData(BaseModel):
     リクエストデータ
     """
     generate_count: int
+
+    height: int
+    width: int
+    seed: Optional[int] = None
+
     prompt: str
     negative_prompt: str
+
     scheduler: str
+    inference_steps: int
+    guidance_scale: float
 
 @router.post('/api/generate/text_to_image', response_model=ResponseModel[str])
 def generate_text_to_image (data:RequestData, usecase:GenerateTextToImageUseCase = Depends(get_depends(GenerateTextToImageUseCase))):
     """
     text to imageで画像を生成する。
     """
-    usecase.text_to_image(
-        generate_count=data.generate_count,
-        prompt=data.prompt,
-        negative_prompt=data.negative_prompt,
-        scheduler=data.scheduler
-    )
+    usecase.text_to_image(data.model_dump())
 
     return ResponseModel[str](meta=ResponseMeta(), data='success')
 

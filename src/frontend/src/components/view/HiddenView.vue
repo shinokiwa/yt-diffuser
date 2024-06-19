@@ -5,12 +5,12 @@
  * 通常時は非表示のセクションと、常駐するコンポーザブルを管理する
  */
 import HealthCheckArea from '@/components/area/hidden/HealthCheckArea.vue'
-import EventArea from '@/components/area/hidden/EventArea.vue'
+import ToastArea from '@/components/area/hidden/ToastArea.vue'
 </script>
 
 <template>
   <div>
+    <ToastArea />
     <HealthCheckArea />
-    <EventArea />
   </div>
 </template>

@@ -1,22 +1,5 @@
-/**
- * モデルデータ管理のストア
- */
 import { defineStore } from 'pinia'
-import { type } from '@/domains/value/model/type'
-
-/**
- * モデルデータを整形する
- */
-export function createModelData(data) {
-  return {
-    id: data?.id,
-    screenName: data?.screenName,
-    source: data?.source,
-    type: new type(data?.type),
-    revisions: data?.revisions || [],
-    appends: data?.appends
-  }
-}
+import { AllModelData } from '@/types/model/'
 
 /**
  * モデルデータ管理のストアを返す
@@ -25,47 +8,19 @@ export const useModelStore = defineStore('model', {
   state: () => ({
     /**
      * モデルデータ
+     *
+     * @type {AllModelData}
      */
-    data: {
-      /**
-       * @type {ReturnType<typeof createModelData>[]}
-       */
-      baseModels: [],
-      /**
-       * @type {ReturnType<typeof createModelData>[]}
-       */
-      loraModels: [],
-      /**
-       * @type {ReturnType<typeof createModelData>[]}
-       */
-      controlnetModels: []
-    }
+    data: new AllModelData()
   }),
   actions: {
     /**
      * モデルデータをセットする
      *
-     * @param {Object} data モデルデータ
+     * @param {AllModel | Object} data モデルデータ
      */
     setData(data) {
-      if (Array.isArray(data.baseModels)) {
-        this.data.baseModels = []
-        data.baseModels.forEach((model) => {
-          this.data.baseModels.push(createModelData(model))
-        })
-      }
-      if (Array.isArray(data.loraModels)) {
-        this.data.loraModels = []
-        data.loraModels.forEach((model) => {
-          this.data.loraModels.push(createModelData(model))
-        })
-      }
-      if (Array.isArray(data.controlnetModels)) {
-        this.data.controlnetModels = []
-        data.controlnetModels.forEach((model) => {
-          this.data.controlnetModels.push(createModelData(model))
-        })
-      }
+      this.data.setData(data)
     },
 
     /**

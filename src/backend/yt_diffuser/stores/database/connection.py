@@ -39,10 +39,10 @@ class DBConnection(IDBConnection):
         """
         DB接続を閉じる
         """
-        if self.conn.in_transaction:
+        if self.conn is not None and self.conn.in_transaction:
             self.conn.commit()
+            self.conn.close()
 
-        self.conn.close()
         self.conn = None
     
     def execute(self, sql:str, params:tuple=()) -> 'IDBCursor':

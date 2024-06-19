@@ -2,7 +2,7 @@ from logging import getLogger; logger = getLogger(__name__)
 
 from fastapi import APIRouter, Depends
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from yt_diffuser.injector import get_depends
 from yt_diffuser.types.web.response import ResponseModel, ResponseMeta
@@ -28,7 +28,7 @@ def load_model (
     """
     モデルを読み込む。
     """
-    loader.load(data.base_model_id, data.base_revision, data.compile)
+    loader.load(data.model_dump())
 
     return ResponseModel[str](meta=ResponseMeta(), data='success')
 

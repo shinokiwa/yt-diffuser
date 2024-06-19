@@ -4,7 +4,7 @@
  *
  * メインビューの切り替えも行う。
  */
-import { VIEW_IDS } from '@/utils/enum/view'
+import { VIEW_IDS } from '@/types/enum/view'
 import { useAppStateUseCase } from '@/composables/app/appStateUseCase'
 const { currentView } = useAppStateUseCase().getRefs()
 

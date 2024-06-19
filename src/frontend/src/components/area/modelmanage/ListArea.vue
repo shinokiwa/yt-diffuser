@@ -15,13 +15,7 @@ const selectedModel = defineModel('selectedModel', { type: String })
       <AddModelPane @click="viewMode = 'add'" />
     </div>
     <div class="model-list">
-      <ModelListPane
-        :base-models="baseModels"
-        :lora-models="loraModels"
-        :controlnet-models="controlnetModels"
-        v-model:viewMode="viewMode"
-        v-model:selected-model="selectedModel"
-      />
+      <ModelListPane v-model:viewMode="viewMode" v-model:selected-model="selectedModel" />
     </div>
   </div>
 </template>

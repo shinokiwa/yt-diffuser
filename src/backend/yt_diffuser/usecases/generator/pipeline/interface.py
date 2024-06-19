@@ -1,7 +1,9 @@
 from typing import Dict
 from abc import ABCMeta, abstractmethod
 
-from diffusers import DiffusionPipeline
+from queue import Queue
+
+from yt_diffuser.types.generator.message import GenerateMessage
 
 class IPipelineUseCase (metaclass=ABCMeta):
     """
@@ -9,7 +11,7 @@ class IPipelineUseCase (metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def forward(self, input_data: Dict) -> None:
+    def forward(self, task:GenerateMessage, result_queue: Queue) -> None:
         """
         パイプラインを実行する
 

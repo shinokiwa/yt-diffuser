@@ -1,27 +1,17 @@
 /**
  * フロントエンドのアプリケーションの状態を管理するストア
  */
-import { defineStore, storeToRefs } from 'pinia'
-import { VIEW_IDS } from '@/utils/enum/view'
+import { defineStore } from 'pinia'
+import { VIEW_IDS } from '@/types/enum/view'
 
 export const useAppStateStore = defineStore('app-state', {
   state: () => ({
     /**
      * 現在のビュー
      */
-    currentView: VIEW_IDS.INITIALIZING
+    currentView: VIEW_IDS.INITIALIZING,
+    isConnected: false
   }),
-
-  getters: {
-    /**
-     * リアクティブなフロントエンド状態を取得する
-     *
-     * @returns {Object} フロントエンド状態
-     */
-    refs() {
-      return storeToRefs(this)
-    }
-  },
 
   actions: {
     /**

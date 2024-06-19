@@ -61,7 +61,7 @@ class TestProcessStore:
         assert store.get_process(ProcessKey.WEB) == None
         assert process.is_alive() == False
     
-    def test_remove_all_processes(self):
+    def test_remove_all_process(self):
         """
         全てのプロセスデータを削除する。
         """
@@ -79,7 +79,7 @@ class TestProcessStore:
         store.__class__._processes[ProcessKey.GENERATOR] = process2
         store.__class__._processes[ProcessKey.WEB] = process3
 
-        ProcessStore.remove_all_processes()
+        store.remove_all_process()
 
         assert store.__class__._processes == {}
         assert process1.is_alive() == False
