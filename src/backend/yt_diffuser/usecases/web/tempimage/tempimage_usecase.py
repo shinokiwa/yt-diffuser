@@ -4,7 +4,7 @@ from pathlib import Path
 from injector import inject
 
 from yt_diffuser.types.path import AppPath
-
+from yt_diffuser.utils.file_path import is_child
 
 class TempImageUseCase:
     """
@@ -29,3 +29,14 @@ class TempImageUseCase:
         list = [str(p.relative_to(self.path)) for p in self.path.glob('*')]
         list = sorted(list, reverse=True)
         return list
+
+    def delete(self, filename:str):
+        """
+        一時保存画像を削除する。
+
+        Args:
+            filename (str): ファイル名
+        """
+        path = self.path / filename
+        if is_child(self.path, path) and path.exists():
+            path.unlink(True)

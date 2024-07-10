@@ -33,11 +33,4 @@ class AppPath:
         # 出力データ関連
         self.OUTPUT_DIR: Path = self.DATA_DIR / "output"
         self.OUTPUT_TEMP_DIR: Path = self.OUTPUT_DIR / "temp"
-        self.OUTPUT_IMAGE_DIR: Path = self.OUTPUT_DIR / "images"
-        self.OUTPUT_PREVIEW_PATH: Path = self.OUTPUT_DIR / "preview/preview.png"
-
-        # 入力データ関連
-        self.INPUT_DIR: Path = self.DATA_DIR / "input"
-        self.INPUT_SOURCE_FILE: Path = self.INPUT_DIR / "source.png"
-        self.INPUT_MASK_FILE: Path = self.INPUT_DIR / "mask.png"
-        self.INPUT_CONTROLNET_FILE: Path = self.INPUT_DIR / "controlnet.png"
+        self.OUTPUT_PROJECT_DIR: Path = self.OUTPUT_DIR / "project"

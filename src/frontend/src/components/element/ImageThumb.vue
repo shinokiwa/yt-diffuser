@@ -5,9 +5,10 @@
  */
 import { defineProps, ref } from 'vue'
 
-import { useImageObserver } from '@/composables/app/imageobserver'
+import { useImageObserver } from '@/composables/imageobserver'
 
 const props = defineProps({
+  uuid: String,
   src: String,
   cacheBuster: {
     type: Boolean,
@@ -22,10 +23,12 @@ useImageObserver(image)
 
 <template>
   <img
+    tabindex="-1"
     ref="image"
+    :data-uuid="props.uuid"
     :data-src="props.src"
     :data-cache-buster="props.cacheBuster ? Date.now() : null"
-    @click="$emit('click', props.src)"
+    @click="$emit('click', image)"
   />
 </template>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { useLogUseCase } from '@/composables/app/'
+import { useLogUseCase } from '@/composables/'
 const useCase = useLogUseCase()
 
 const { logs } = useCase.getRefs()

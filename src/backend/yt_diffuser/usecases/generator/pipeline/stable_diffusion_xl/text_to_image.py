@@ -87,11 +87,11 @@ class StableDiffusionXLTextToImageUseCase(IPipelineUseCase):
             image = self.pipeline(
                 prompt=args.prompt,
                 negative_prompt=args.negative_prompt,
-                width=1024,
-                height=1024,
-                num_inference_steps=30,
+                width=args.width,
+                height=args.height,
+                num_inference_steps=args.inference_steps,
                 generator=seed_generator,
-                guidance_scale=7.8
+                guidance_scale=args.guidance_scale
             ).images[0]
 
 

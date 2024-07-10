@@ -4,7 +4,8 @@
  */
 import { ref } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
-import TempPane from '@/components/pane/editor/result/TempPane.vue'
+import TempMenuPane from '@/components/pane/editor/result/TempMenuPane.vue'
+import TempGalleryPane from '@/components/pane/editor/result/TempGalleryPane.vue'
 
 import ProgressPane from '@/components/pane/editor/result/ProgressPane.vue'
 import LogPane from '@/components/pane/editor/result/LogPane.vue'
@@ -15,8 +16,9 @@ const selectedTab = ref('gallery')
 <template>
   <WindowFrame id="EditorResultArea">
     <div class="result-area">
-      <div v-if="selectedTab === 'gallery'" class="result gallery">
-        <TempPane />
+      <div id="EditorResultTempPane" v-if="selectedTab === 'gallery'" class="result gallery">
+        <TempMenuPane />
+        <TempGalleryPane />
       </div>
 
       <div v-else-if="selectedTab === 'log'" class="result log">
@@ -59,6 +61,13 @@ const selectedTab = ref('gallery')
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
   padding: 10px;
+}
+
+#EditorResultTempPane {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
 }
 
 .tab-area {

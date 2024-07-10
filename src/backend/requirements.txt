@@ -15,6 +15,7 @@ fastapi>=0.111,<0.112
 uvicorn>=0.29,<0.30
 pydantic>=2.7,<2.8
 injector>=0.21,<0.22
+watchdog>=3.0,<3.1
 
 datasets>=2.9,<2.10
 bitsandbytes==0.37.0

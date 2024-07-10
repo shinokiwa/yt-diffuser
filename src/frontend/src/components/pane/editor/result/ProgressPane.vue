@@ -3,7 +3,8 @@
  * エディタービュー 生成結果表示エリア 進捗表示
  */
 import ProgressBar from '@/components/element/ProgressBar.vue'
-//import { useGenerateProgress } from '@/composables/api/generate/progress'
+import { useGenerateStatusEventUseCase } from '@/composables/generate/statusUseCase'
+const useCase = useGenerateStatusEventUseCase()
 
 const {
   generateTotal,
@@ -13,7 +14,7 @@ const {
   elapsed,
   remaining,
   average
-} = { elapsed: 1.0, remaining: 1.0, average: 1.0 } /* = useGenerateProgress()*/
+} = useCase.getRefs()
 </script>
 
 <template>

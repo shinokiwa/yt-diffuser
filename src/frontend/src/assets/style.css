@@ -1,8 +1,8 @@
 :root {
     --color-bg-back: #e2e2e2;
     --color-bg-base: #ffffff;
-    --color-bg-header: #001166;
-    --color-bg-menu: #000322;
+    --color-bg-accent: #001166;
+    --color-bg-dark: #000322;
 
     --color-bg-activewindow: #0033ff;
     --color-bg-weight: #d3d3f3;

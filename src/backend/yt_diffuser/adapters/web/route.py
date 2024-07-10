@@ -17,5 +17,7 @@ def setup_routes(app:FastAPI):
     app.include_router(import_module('yt_diffuser.adapters.web.routers.model.index').router)
     app.include_router(import_module('yt_diffuser.adapters.web.routers.model.load').router)
 
-
     app.include_router(import_module('yt_diffuser.adapters.web.routers.temp.index').router)
+    app.include_router(import_module('yt_diffuser.adapters.web.routers.temp.file').router)
+
+    app.include_router(import_module('yt_diffuser.adapters.web.routers.project.index').router)

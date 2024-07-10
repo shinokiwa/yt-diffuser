@@ -2,12 +2,41 @@
 /**
  * メイン表示エリア
  */
-import { ref, onMounted, onUnmounted } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
+import LayerMenuPane from '@/components/pane/editor/layer/LayerMenuPane.vue'
+import LayerListPane from '@/components/pane/editor/layer/LayerListPane.vue'
 </script>
 
 <template>
-  <WindowFrame id="GalleryView" window-title="プロンプト">
-    <div class="gallery"></div>
+  <WindowFrame id="EditorLayerArea">
+    <div class="layer-area">
+      <div class="menu">
+        <LayerMenuPane />
+      </div>
+      <div class="list">
+        <LayerListPane />
+      </div>
+    </div>
   </WindowFrame>
 </template>
+
+<style scoped>
+#EditorLayerArea {
+  height: 100%;
+}
+
+.layer-area {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.menu {
+  height: 50px;
+}
+.list {
+  flex-grow: 1;
+  border: 1px solid var(--color-border-window);
+  overflow-y: scroll;
+}
+</style>

@@ -4,7 +4,7 @@
  *
  */
 import { VIEW_IDS } from '@/types/enum/view'
-import { useAppStateUseCase } from '@/composables/app'
+import { useAppStateUseCase } from '@/composables'
 const appState = useAppStateUseCase()
 const { currentView } = appState.getRefs()
 </script>
@@ -44,7 +44,7 @@ const { currentView } = appState.getRefs()
 
 <style scoped>
 nav {
-  background-color: var(--color-bg-menu);
+  background-color: var(--color-bg-dark);
   color: var(--font-color-light);
   padding-top: 10px;
 }
@@ -64,14 +64,14 @@ li {
   width: 40px;
   transition: width 0.5s ease;
   overflow: hidden;
-  background-color: var(--color-bg-header);
+  background-color: var(--color-bg-accent);
   cursor: pointer;
   border-radius: 4px;
 }
 
 li.active {
   padding: 3px 8px;
-  border: 2px solid var(--color-bg-focus);
+  border: 2px solid var(--color-bg-accent);
 }
 
 li:hover {

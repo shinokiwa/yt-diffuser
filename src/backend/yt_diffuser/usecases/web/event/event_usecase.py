@@ -42,8 +42,7 @@ class EventUseCase:
 
         for listener in listeners:
 
-            logger.debug(f"Put message to listener. id={id(listener)}")
-            listener.put_nowait(data)
+            listener.put_nowait(event.args)
         
     def remove_listener(self, key:WebEventType, listener: asyncio.Queue):
         """

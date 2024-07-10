@@ -1,21 +1,20 @@
 import { defineStore } from 'pinia'
+import { ImageFile } from '@/types/image'
 
 export const useEditorStateStore = defineStore('editor-state', {
   state: () => ({
     /**
-     * 現在のメインイメージ
+     * メインエリアの表示状態
      */
-    mainImage: ''
+    mainArea: 'image'
   }),
 
   actions: {
     /**
-     * メインイメージを変更する
-     *
-     * @param {string} url
+     * メインエリアの表示状態を変更する
      */
-    changeMainImage(url) {
-      this.mainImage = url
+    changeMainArea(area) {
+      this.mainArea = area
     }
   }
 })

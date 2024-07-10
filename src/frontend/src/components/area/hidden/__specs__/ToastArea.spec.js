@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createTestingPinia } from '@pinia/testing'
 import { mount } from '@vue/test-utils'
 
-vi.mock('@/composables/app/logUseCase')
+vi.mock('@/composables/logUseCase')
 import { useLogUseCase } from '@/composables/app'
 
 import ToastArea from '../ToastArea.vue'

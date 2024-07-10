@@ -10,8 +10,8 @@ vi.mock('@/components/view/ModelManageView.vue', () => ({ default: { name: 'Mode
 vi.mock('@/components/view/ModelView.vue', () => ({ default: { name: 'ModelView' } }))
 vi.mock('@/components/view/GalleryView.vue', () => ({ default: { name: 'GalleryView' } }))
 
-vi.mock('@/composables/app/appStateUseCase')
-import { Refs } from '@/composables/app/appStateUseCase'
+vi.mock('@/composables/appStateUseCase')
+import { Refs } from '@/composables/appStateUseCase'
 
 import App from '@/App.vue'
 import { VIEW_IDS } from '@/utils/enum/view'

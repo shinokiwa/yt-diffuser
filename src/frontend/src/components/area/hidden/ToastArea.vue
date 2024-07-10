@@ -3,7 +3,7 @@
  * トースト表示のコンポーネント
  */
 import { ref, watch } from 'vue'
-import { useLogUseCase } from '@/composables/app'
+import { useLogUseCase } from '@/composables'
 const { getRefs, getToast } = useLogUseCase()
 
 const { hasToast } = getRefs()
@@ -63,7 +63,7 @@ watch(hasToast, (value) => {
   border-radius: 5px;
   box-sizing: content-box;
   padding: 10px;
-  background-color: var(--color-bg-menu);
+  background-color: var(--color-bg-accent);
   color: var(--font-color-light);
 
   transition:

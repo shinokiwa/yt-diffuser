@@ -13,6 +13,7 @@ class WebEventType(Enum):
     Webプロセスのイベントタイプ
     """
     GENERATOR = 'generator'
+    TEMPFILE = 'tempfile'
 
 class WebEvent(BaseModel):
     """

@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from injector import inject
 
 from yt_diffuser.usecases.web.startup_usecase import StartUpUseCase
+from yt_diffuser.usecases.web.tempimage.tempimage_stream_usecase import TempImageStreamUseCase
 from yt_diffuser.usecases.web.event.message_listener_usecase import WebMessageListenerUseCase
 
 class LifeSpan:
@@ -17,9 +18,10 @@ class LifeSpan:
     """
 
     @inject
-    def __init__(self, startup:StartUpUseCase, process_event:WebMessageListenerUseCase):
+    def __init__(self, startup:StartUpUseCase, process_event:WebMessageListenerUseCase, tempimage_event:TempImageStreamUseCase):
         self.startup = startup
         self.process_event = process_event
+        self.tempimage_event = tempimage_event
         
     @asynccontextmanager
     async def execute(self, app: FastAPI):
@@ -33,6 +35,9 @@ class LifeSpan:
 
         listener = Thread(target=self.process_event.listen)
         listener.start()
+
+        watcher = Thread(target=self.tempimage_event.run)
+        watcher.start()
 
         try:
             yield

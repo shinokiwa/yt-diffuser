@@ -72,7 +72,7 @@ export function API(fetch) {
      * @param {Object} data 送信するデータ
      */
     async upload(path, data) {
-      const response = await this.fetch(path, {
+      const response = await fetch(path, {
         method: 'POST',
         body: data
       })
@@ -87,7 +87,7 @@ export function API(fetch) {
      * @returns {Promise<Object>} APIのレスポンス(JSONオブジェクト)
      */
     async del(path) {
-      const response = await this.fetch(path, {
+      const response = await fetch(path, {
         method: 'DELETE'
       })
       return await response.json()

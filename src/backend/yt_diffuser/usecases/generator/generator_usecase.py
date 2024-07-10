@@ -1,5 +1,5 @@
 import logging; logger = logging.getLogger(__name__)
-from queue import Queue
+from queue import Queue, Empty
 
 from injector import inject
 
@@ -66,6 +66,8 @@ class GeneratorUseCase:
                 ))
 
         except TimeoutError:
+            pass
+        except Empty:
             pass
         
         # 終了シグナルが有効化されている場合は終了する

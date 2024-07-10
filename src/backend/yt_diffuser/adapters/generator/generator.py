@@ -29,7 +29,7 @@ class Generator(IGenerator):
             except GeneratorExitSignal:
                 break
             except Exception as e:
-                logger.error(f"Error: {e}", stack_info=True)
+                logger.error(f"Error: {e.__class__} {e}\n {e.__traceback__}")
 
         logger.debug("End generator...")
  

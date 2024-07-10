@@ -5,7 +5,7 @@
  * メインビューの切り替えも行う。
  */
 import { VIEW_IDS } from '@/types/enum/view'
-import { useAppStateUseCase } from '@/composables/app/appStateUseCase'
+import { useAppStateUseCase } from '@/composables/appStateUseCase'
 const { currentView } = useAppStateUseCase().getRefs()
 
 import HiddenView from '@/components/view/HiddenView.vue'
@@ -54,7 +54,7 @@ const views = {
 header {
   width: 100%;
   height: var(--size-header-height);
-  background-color: var(--color-bg-header);
+  background-color: var(--color-bg-accent);
   padding: 4px 5px;
   color: var(--font-color-light);
   display: flex;

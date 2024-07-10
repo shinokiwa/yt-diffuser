@@ -7,7 +7,7 @@ import { ref, watch } from 'vue'
 
 import ProgressBar from '@/components/element/ProgressBar.vue'
 
-import { useInitializeUseCase, useAppStateUseCase } from '@/composables/app'
+import { useInitializeUseCase, useAppStateUseCase } from '@/composables'
 
 const { isConnected } = useAppStateUseCase().getRefs()
 
