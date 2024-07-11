@@ -5,14 +5,20 @@
 import { ref, onMounted } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
 
-import { useProjectUseCase } from '@/composables/projectUseCase'
-const usecase = useProjectUseCase()
+import { useProjectListUseCase, useAppStateUseCase } from '@/composables/'
+import { VIEW_IDS } from '@/types/enum/view'
+const usecase = useProjectListUseCase()
 
 const gallery = ref([])
 
 onMounted(async () => {
   gallery.value = await usecase.fetchAll()
 })
+
+async function select(name) {
+  await usecase.load(name)
+  useAppStateUseCase().changeView(VIEW_IDS.EDITOR)
+}
 </script>
 
 <template>
@@ -20,7 +26,7 @@ onMounted(async () => {
     <div class="gallery-wrapper">
       <div class="gallery-item" v-for="item in gallery" :key="item.name">
         <img v-if="item.thumbnail" :src="item.thumbnail" alt="thumbnail" />
-        <a href="#" @click="usecase.load(item.name)">{{ item.name }}</a>
+        <a href="#" @click="select(item.name)">{{ item.name }}</a>
       </div>
     </div>
   </WindowFrame>

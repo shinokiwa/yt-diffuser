@@ -1,13 +1,13 @@
 <script setup>
 /**
- * メイン表示エリア メニューペイン
+ * レイヤー表示エリア メニューペイン
  */
 import ButtonPrimary from '@/components/form/ButtonPrimary.vue'
-import { useEditorStateUseCase } from '@/composables/editorStateUseCase'
+import { useProjectEditUseCase, useProjectListUseCase, useEditorStateUseCase } from '@/composables/'
 const editorState = useEditorStateUseCase()
-import { useProjectUseCase } from '@/composables/projectUseCase'
-const projectUseCase = useProjectUseCase()
-const { project } = projectUseCase.getRefs()
+const projectEdit = useProjectEditUseCase()
+const projectList = useProjectListUseCase()
+const { project } = projectEdit.getRefs()
 
 function createProject() {
   editorState.changeMainToProject()
@@ -21,7 +21,7 @@ function createProject() {
       プロジェクト新規作成
     </ButtonPrimary>
 
-    <ButtonPrimary v-if="project.projectName" @click="projectUseCase.close()">
+    <ButtonPrimary v-if="project.projectName" @click="projectList.close()">
       <i class="bi bi-plus"></i>
       閉じる
     </ButtonPrimary>

@@ -4,8 +4,8 @@
  */
 import { ref, watchEffect } from 'vue'
 
-import { useProjectUseCase } from '@/composables'
-const { getRefs, getImageUrl } = useProjectUseCase()
+import { useProjectEditUseCase } from '@/composables'
+const { getRefs, getImageUrl } = useProjectEditUseCase()
 const { project, isOpen, selectedLayer } = getRefs()
 
 const selectedTab = ref('image')
@@ -14,7 +14,7 @@ const source = ref('')
 watchEffect(() => {
   if (isOpen.value && selectedLayer.value) {
     source.value = getImageUrl(
-      project.value,
+      project.value.projectName,
       selectedLayer.value,
       project.value.layers.layers[selectedLayer.value].image
     )

@@ -8,7 +8,6 @@ export const useProjectStore = defineStore('project', {
   state: () => ({
     /**
      * 読み込み予約のプロジェクト名
-     * projectUseCaseを使う際にロードされる。
      */
     defferedName: '',
 

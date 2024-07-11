@@ -7,9 +7,9 @@ import MainLayerPane from '@/components/pane/editor/main/MainLayerPane.vue'
 import MainPreviewPane from '@/components/pane/editor/main/MainPreviewPane.vue'
 import MainProjectPane from '@/components/pane/editor/main/MainProjectPane.vue'
 
-import { useEditorStateUseCase, useProjectUseCase } from '@/composables'
+import { useEditorStateUseCase, useProjectEditUseCase } from '@/composables'
 const editorState = useEditorStateUseCase()
-const { project, isOpen } = useProjectUseCase().getRefs()
+const { project, isOpen } = useProjectEditUseCase().getRefs()
 
 const { mainArea } = editorState.getRefs()
 </script>
@@ -45,5 +45,6 @@ const { mainArea } = editorState.getRefs()
 }
 .main-area {
   flex-grow: 1;
+  max-height: calc(100% - 30px);
 }
 </style>

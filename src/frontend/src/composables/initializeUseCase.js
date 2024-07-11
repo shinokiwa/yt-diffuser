@@ -1,7 +1,7 @@
 /**
  * 初期化を実行するユースケース
  */
-import { useAppStateUseCase, useSessionStorageUseCase } from '@/composables'
+import { useAppStateUseCase, useSessionStorageUseCase, useProjectListUseCase } from '@/composables'
 import { useFormUseCase } from '@/composables/form/formUseCase'
 
 /**
@@ -10,7 +10,12 @@ import { useFormUseCase } from '@/composables/form/formUseCase'
  * @returns {ReturnType<typeof InitializeUseCase>}
  */
 export function useInitializeUseCase() {
-  return InitializeUseCase(useAppStateUseCase(), useFormUseCase(), useSessionStorageUseCase())
+  return InitializeUseCase(
+    useAppStateUseCase(),
+    useFormUseCase(),
+    useSessionStorageUseCase(),
+    useProjectListUseCase()
+  )
 }
 
 /**
@@ -18,9 +23,11 @@ export function useInitializeUseCase() {
  *
  * @param {ReturnType<typeof useAppStateUseCase>} appState
  * @param {ReturnType<typeof useFormUseCase>} form
+ * @param {ReturnType<typeof useSessionStorageUseCase>} session
+ * @param {ReturnType<typeof useProjectListUseCase>} project
  * @returns {Object}
  */
-export function InitializeUseCase(appState, form, session) {
+export function InitializeUseCase(appState, form, session, project) {
   return {
     /**
      * 初期化の実行
@@ -34,6 +41,8 @@ export function InitializeUseCase(appState, form, session) {
 
       // セッションストレージからデータを取得
       session.load()
+
+      await project.loadDeffered()
     }
   }
 }

@@ -7,8 +7,8 @@ import GridArea from '@/components/form/GridArea.vue'
 import GridElement from '@/components/form/GridElement.vue'
 import ButtonPrimary from '@/components/form/ButtonPrimary.vue'
 
-import { useProjectUseCase } from '@/composables/projectUseCase'
-const { createProject } = useProjectUseCase()
+import { useProjectListUseCase } from '@/composables'
+const { createProject } = useProjectListUseCase()
 
 const projectName = ref('')
 const width = ref('')
