@@ -1,6 +1,7 @@
 import { toRef } from 'vue'
 import { useAPI } from '@/adapters/api'
 import { useProjectStore } from '@/stores/app/'
+import { ProjectLayer } from '@/types/project'
 import { ImageFile } from '@/types/image'
 
 /**
@@ -43,6 +44,14 @@ export function ProjectEditUseCase(api, projectStore) {
      */
     selectLayer(layerId) {
       projectStore.selectLayer(layerId)
+    },
+
+    /**
+     * レイヤーを追加する
+     */
+    addLayer(layerName) {
+      const layer = new ProjectLayer({ layerName })
+      projectStore.addLayer(layer)
     }
   }
   return useCase

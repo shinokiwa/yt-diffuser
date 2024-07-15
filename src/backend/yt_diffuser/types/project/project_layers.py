@@ -30,3 +30,12 @@ class ProjectLayers(BaseModel):
         """
         self.layers[str(layer.layer_id)] = layer
         self.order.append(str(layer.layer_id))
+    
+    def is_exists(self, layer_id: str) -> bool:
+        """
+        指定したレイヤーIDが存在するか確認する。
+
+        Args:
+            layer_id (str): レイヤーID
+        """
+        return str(layer_id) in self.layers

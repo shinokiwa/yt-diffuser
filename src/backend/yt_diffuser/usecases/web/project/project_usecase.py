@@ -47,18 +47,3 @@ class ProjectUseCase:
         プロジェクトのリストを取得する
         """
         return self.dir.get_list()
-    
-    def add_layer(self, project_name: str, layer_name: str) -> None:
-        """
-        レイヤーを追加する
-        """
-        project = self.get_project(project_name)
-        if project.layers.is_exists(layer_name):
-            raise Exception(f"Layer {layer_name} already exists.")
-
-        layer = ProjectLayer(layer_name=layer_name)
-        self.dir.add_layer(project.project_name, layer.layer_id)
-
-        project.layers.add_layer(layer_name)
-        self.dir.update(project)
-        return

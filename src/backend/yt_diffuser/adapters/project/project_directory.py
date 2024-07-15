@@ -6,7 +6,7 @@ import json
 from injector import inject
 
 from yt_diffuser.types.path import AppPath
-from yt_diffuser.types.project import Project
+from yt_diffuser.types.project import Project, ProjectLayer
 
 from .interface import IProjectDirectoryAdapter
 
@@ -95,19 +95,39 @@ class ProjectDirectoryAdapter(IProjectDirectoryAdapter):
         return projects
 
     
-    def get_layer_path(self, project_name:str, layer_id:str) -> Path:
+    def get_layer_path(self, project:Project, layer_id:str) -> Path:
         """
         レイヤーのパスを取得する
         """
-        return self.get_path(project_name) / "layers" / layer_id
+        return self.get_path(project.project_name) / "layers" / layer_id
     
-    def add_layer(self, project_name:str, layer_id:str) -> None:
+    def is_exists_layer(self, project:Project, layer_id:str) -> bool:
+        """
+        レイヤーが存在するか確認する
+        """
+        return self.get_layer_path(project, layer_id).exists()
+    
+    def add_layer(self, project:Project, layer:ProjectLayer) -> Project:
         """
         レイヤーディレクトリを追加する
         """
-        if not self.is_exists(project_name):
-            return
+        if not self.is_exists(project.project_name):
+            raise Exception(f"Project {project.project_name} does not exists.")
+        
+        if self.is_exists_layer(project, layer.layer_id):
+            raise Exception(f"Layer {layer.layer_id} already exists.")
 
-        path = self.get_layer_path(project_name, layer_id)
+        path = self.get_layer_path(project, layer.layer_id)
         path.mkdir(parents=True, exist_ok=True)
+
+        project.layers.add_layer(layer)
+        self.update(project)
+        return project
+    
+    def remove_layer(self, project:Project, layer_id:str) -> None:
+        """
+        レイヤーディレクトリを削除する
+        """
+        path = self.get_layer_path(project, layer_id)
+        shutil.rmtree(path, ignore_errors=True)
         return

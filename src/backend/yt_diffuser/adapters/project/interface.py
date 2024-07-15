@@ -65,16 +65,29 @@ class IProjectDirectoryAdapter(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_layer_path(self, project_name:str, layer_name:str) -> Path:
+    def get_layer_path(self, project:Project, layer_id:str) -> Path:
         """
         レイヤーのパスを取得する
         """
         pass
 
     @abstractmethod
-    def add_layer(self, project_name:str, layer_name:str) -> None:
+    def is_exists_layer(self, project:Project, layer_id:str) -> bool:
+        """
+        レイヤーが存在するか確認する
+        """
+        pass
+
+    @abstractmethod
+    def add_layer(self, project:Project, layer_id:str) -> None:
         """
         レイヤーを新規作成する
         """
         pass
 
+    @abstractmethod
+    def remove_layer(self, project:Project, layer_id:str) -> None:
+        """
+        レイヤーを削除する
+        """
+        pass

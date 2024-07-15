@@ -21,6 +21,18 @@ export class ProjectLayers {
   }
 
   /**
+   * レイヤーを追加する
+   *
+   * レイヤーはorderの先頭に追加される
+   *
+   * @param { ProjectLayer } layer
+   */
+  addLayer(layer) {
+    this.layers[layer.id] = new ProjectLayer(layer)
+    this.order = [layer.id, ...this.order]
+  }
+
+  /**
    * イテレーター
    * orderの順番にlayerを返す
    */

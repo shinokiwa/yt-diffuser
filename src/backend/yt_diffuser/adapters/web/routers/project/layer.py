@@ -17,7 +17,7 @@ class RequestData(BaseModel):
     """
     layer_name:str
 
-@router.post('/api/project/{project_id}/layer', response_model=ResponseModel[str])
+@router.post('/api/project/{project_name}/layer', response_model=ResponseModel[str])
 def post_layer (data:RequestData, usecase:ProjectUseCase = Depends(get_depends(ProjectUseCase))):
     """
     レイヤーを作成する。
@@ -31,46 +31,10 @@ def post_layer (data:RequestData, usecase:ProjectUseCase = Depends(get_depends(P
 
     return response
 
-@router.get('/api/project', response_model=ResponseModel[List[Dict]])
-def get_project_list (usecase:ProjectUseCase = Depends(get_depends(ProjectUseCase))):
+@router.delete('/api/project/{project_name}/layer/{layer_id}', response_model=ResponseModel[str])
+def delete_layer (name:str, usecase:ProjectUseCase = Depends(get_depends(ProjectUseCase))):
     """
-    プロジェクトのリストを取得する。
-    """
-    projects = usecase.get_project_list()
-
-    response = ResponseModel[List[Dict]](
-        meta=ResponseMeta(),
-        data=[{
-            'name': project.project_name,
-            'width': project.width,
-            'height': project.height
-        } for project in projects]
-    )
-
-    return response
-
-@router.get('/api/project/{name}', response_model=ResponseModel[Dict])
-def get_project (name:str, usecase:ProjectUseCase = Depends(get_depends(ProjectUseCase))):
-    """
-    プロジェクトを取得する。
-    """
-    project = usecase.get_project(name)
-
-    response = ResponseModel[Dict](
-        meta=ResponseMeta(),
-        data={
-            'name': project.project_name,
-            'width': project.width,
-            'height': project.height
-        }
-    )
-
-    return response
-
-@router.delete('/api/project/{name}', response_model=ResponseModel[str])
-def delete_project (name:str, usecase:ProjectUseCase = Depends(get_depends(ProjectUseCase))):
-    """
-    プロジェクトを削除する。
+    レイヤーを削除する。
     """
     usecase.remove_project(name)
 

@@ -7,6 +7,7 @@ import { useProjectEditUseCase, useProjectListUseCase, useEditorStateUseCase } f
 const editorState = useEditorStateUseCase()
 const projectEdit = useProjectEditUseCase()
 const projectList = useProjectListUseCase()
+
 const { project } = projectEdit.getRefs()
 
 function createProject() {
@@ -26,7 +27,7 @@ function createProject() {
       閉じる
     </ButtonPrimary>
 
-    <ButtonPrimary v-if="project.projectName">
+    <ButtonPrimary v-if="project.projectName" @click="projectEdit.addLayer('新しいレイヤー')">
       <i class="bi bi-plus"></i>
       追加
     </ButtonPrimary>

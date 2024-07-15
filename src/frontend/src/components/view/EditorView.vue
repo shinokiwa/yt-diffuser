@@ -37,19 +37,16 @@ import ResultArea from '@/components/area/editor/ResultArea.vue'
   width: 500px;
   margin-left: 10px;
   height: 100%;
-  overflow: auto;
-
-  display: flex;
-  flex-direction: column;
 }
 
 .prompt {
-  margin-bottom: 10px;
   height: 300px;
+  margin-bottom: 10px;
 }
 
 .layer {
-  flex: 1;
+  height: calc(100% - 620px);
+  min-height: 200px;
   margin-bottom: 10px;
 }
 

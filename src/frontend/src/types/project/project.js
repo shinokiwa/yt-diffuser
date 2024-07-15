@@ -14,4 +14,11 @@ export class Project {
   setLayers(layers) {
     this.layers = new ProjectLayers(layers)
   }
+
+  /**
+   * レイヤーを追加する
+   */
+  addLayer(layer) {
+    this.layers.addLayer(layer)
+  }
 }

@@ -52,6 +52,15 @@ export const useProjectStore = defineStore('project', {
      */
     selectLayer(layerId) {
       this.selectedLayer = layerId
+    },
+
+    /**
+     * レイヤーを追加する
+     *
+     * @param {ProjectLayer} layer レイヤー
+     */
+    addLayer(layer) {
+      this.data.addLayer(layer)
     }
   }
 })

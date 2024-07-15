@@ -110,3 +110,20 @@ class TestProjectDirectory:
         projects = adapter.get_list()
         assert len(projects) > 0
         assert projects[0].project_name == "test"
+    
+    def test_update(self, container):
+        """
+        update
+
+        it:
+            - プロジェクトを更新する。
+        """
+        adapter = container.get(ProjectDirectoryAdapter)
+
+        project = Project(project_name="test", width=100, height=100)
+        adapter.create(project)
+        project.width = 200
+        adapter.update(project)
+
+        project = adapter.get_project("test")
+        assert project.width == 200
