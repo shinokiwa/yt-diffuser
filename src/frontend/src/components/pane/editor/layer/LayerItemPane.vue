@@ -4,28 +4,18 @@
  */
 import { ref } from 'vue'
 import ImageThumb from '@/components/element/ImageThumb.vue'
-import { ProjectLayer } from '@/types/project'
 
-import { useEditorStateUseCase } from '@/composables/editorStateUseCase'
+import { useEditorStateUseCase, useProjectLayerUseCase } from '@/composables'
 const { changeMainToLayer } = useEditorStateUseCase()
 
-import { useProjectEditUseCase } from '@/composables/'
-const { getRefs, getImageUrl, selectLayer } = useProjectEditUseCase()
+const { getRefs, getLayer, getImageUrl, selectLayer } = useProjectLayerUseCase()
 
 const { selectedLayer } = getRefs()
 
 const props = defineProps({
-  projectName: {
-    type: String,
-    default: ''
-  },
   layerId: {
     type: String,
     default: ''
-  },
-  layer: {
-    type: ProjectLayer,
-    default: new ProjectLayer()
   },
   mode: {
     type: String,
@@ -33,7 +23,8 @@ const props = defineProps({
   }
 })
 
-const name = ref(props.layer.layerName)
+const layer = getLayer(props.layerId)
+const name = ref(layer.layerName)
 const mode = ref(props.mode)
 const input = ref(null)
 
@@ -55,9 +46,10 @@ function toEdit() {
     @click="select"
     @dblclick="toEdit"
   >
-    <div class="layer-thumb">
-      <ImageThumb :src="getImageUrl(projectName, layerId, layer.image)" :cacheBuster="true" />
+    <div class="layer-thumb" v-if="layer.image">
+      <ImageThumb :src="getImageUrl(layerId, 'image')" :cacheBuster="true" />
     </div>
+    <div class="layer-thumb no-image" v-else><i class="bi-file-earmark-x"></i></div>
     <div class="layer-info">
       <input
         ref="input"
@@ -89,7 +81,15 @@ function toEdit() {
 .layer-thumb {
   width: 50px;
   height: 50px;
+  border: 1px solid var(--color-border-window);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+.layer-thumb.no-image {
+  size: 18px;
+}
+
 .layer-info {
   margin-left: 5px;
   display: flex;

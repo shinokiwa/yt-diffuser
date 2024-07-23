@@ -8,8 +8,8 @@ class Project(BaseModel):
     """
 
     project_name: str
-    height: int
-    width: int
+    height: int = 1024
+    width: int = 1024
     version: int = 1
 
     layers: ProjectLayers = ProjectLayers()

@@ -65,18 +65,25 @@ export function API(fetch) {
 
     /**
      * POSTリクエスト (ファイルアップロード用)
-     *
-     * もうちょっと工夫がいる
+     * キーのスネークケース変換は行わないので注意
      *
      * @param {String} path APIのパス
-     * @param {Object} data 送信するデータ
+     * @param {Object} params 送信するデータ
      */
-    async upload(path, data) {
+    async upload(path, params) {
+      const formData = new FormData()
+      for (const key in params) {
+        formData.append(key, params[key])
+      }
+
+      console.log(formData.get('file'))
       const response = await fetch(path, {
         method: 'POST',
-        body: data
+        body: formData
       })
-      return await response.json()
+      const json = toCamelCase(await response.json())
+      const outputData = json.data
+      return outputData
     },
 
     /**

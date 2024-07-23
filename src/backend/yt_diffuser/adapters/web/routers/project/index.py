@@ -25,7 +25,7 @@ def post_project (data:RequestData, usecase:ProjectUseCase = Depends(get_depends
     """
     プロジェクトを作成する。
     """
-    usecase.create_project(name=data.name, width=data.width, height=data.height)
+    usecase.create_project(project_name=data.name, width=data.width, height=data.height)
 
     response = ResponseModel[str](
         meta=ResponseMeta(),

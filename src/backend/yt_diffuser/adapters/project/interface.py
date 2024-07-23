@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from typing import List
+from typing import List, Union
 from pathlib import Path
+import uuid
 
-from yt_diffuser.types.project import Project
+from yt_diffuser.types.project import Project, ProjectLayer
 
-class IProjectDirectoryAdapter(metaclass=ABCMeta):
+class IProjectRepository(metaclass=ABCMeta):
     """
     プロジェクトディレクトリアダプタのインターフェース
     """
@@ -24,29 +25,19 @@ class IProjectDirectoryAdapter(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create(self, project:Project) -> None:
+    def save(self, project:Project) -> None:
         """
-        プロジェクトを新規作成する
+        プロジェクトを保存する
 
         Args:
             project (Project): 作成するプロジェクト
         """
         pass
-
+    
     @abstractmethod
-    def update(self, project:Project) -> None:
+    def load(self, name:str) -> Project:
         """
-        プロジェクトを更新する
-
-        Args:
-            project (Project): 更新するプロジェクト
-        """
-        pass
-
-    @abstractmethod
-    def get_project(self, name:str) -> Project:
-        """
-        プロジェクトを取得する
+        プロジェクトを読み込む
         """
         pass
 
@@ -57,6 +48,7 @@ class IProjectDirectoryAdapter(metaclass=ABCMeta):
         """
         pass
 
+class IProjectRootRepository(metaclass=ABCMeta):
     @abstractmethod
     def get_list(self) -> List[Project]:
         """
@@ -64,29 +56,41 @@ class IProjectDirectoryAdapter(metaclass=ABCMeta):
         """
         pass
 
+class IProjectLayerRepository(metaclass=ABCMeta):
+    """
+    プロジェクトレイヤーアダプタのインターフェース
+    """
+
     @abstractmethod
-    def get_layer_path(self, project:Project, layer_id:str) -> Path:
+    def get_path(self, project_name:str, layer_id:str) -> Path:
         """
         レイヤーのパスを取得する
         """
         pass
 
     @abstractmethod
-    def is_exists_layer(self, project:Project, layer_id:str) -> bool:
+    def is_exists(self, project_name:str, layer_id:str) -> bool:
         """
         レイヤーが存在するか確認する
         """
         pass
 
     @abstractmethod
-    def add_layer(self, project:Project, layer_id:str) -> None:
+    def create(self, project_name:str, layer:ProjectLayer) -> Project:
         """
-        レイヤーを新規作成する
+        レイヤーディレクトリを作成する
         """
         pass
 
     @abstractmethod
-    def remove_layer(self, project:Project, layer_id:str) -> None:
+    def save_image (self, project_name:str, layer_id:str, file_name:str, source_path:str, is_copy:bool = True) -> None:
+        """
+        画像を保存する
+        """
+        pass
+
+    @abstractmethod
+    def remove(self, project_name:str, layer:ProjectLayer) -> None:
         """
         レイヤーを削除する
         """

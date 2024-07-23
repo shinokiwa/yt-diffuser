@@ -1,11 +1,13 @@
 <script setup>
 /**
- * メイン表示エリア
+ * メイン表示エリア レイヤー表示
  */
 import { ref, watchEffect } from 'vue'
 
-import { useProjectEditUseCase } from '@/composables'
-const { getRefs, getImageUrl } = useProjectEditUseCase()
+import MainLayerMenuPane from './MainLayerMenuPane.vue'
+
+import { useProjectLayerUseCase } from '@/composables'
+const { getRefs, getImageUrl } = useProjectLayerUseCase()
 const { project, isOpen, selectedLayer } = getRefs()
 
 const selectedTab = ref('image')
@@ -13,11 +15,7 @@ const source = ref('')
 
 watchEffect(() => {
   if (isOpen.value && selectedLayer.value) {
-    source.value = getImageUrl(
-      project.value.projectName,
-      selectedLayer.value,
-      project.value.layers.layers[selectedLayer.value].image
-    )
+    source.value = getImageUrl(selectedLayer.value, 'image')
   } else {
     source.value = ''
   }
@@ -27,12 +25,23 @@ watchEffect(() => {
 <template>
   <div id="EditorMainLayer">
     <div v-if="isOpen" class="image-pane">
-      <img :src="source" />
+      <MainLayerMenuPane class="image-menu" />
+      <div v-if="source">
+        <img :src="source" />
+      </div>
+      <div v-else>
+        レイヤーに画像が設定されていません。<br />
+        以下の方法で画像を設定できます。<br />
+        ・他の画像をレイヤーに設定する<br />
+        ・画像ファイルをアップロードする<br />
+        ・クリップボードから貼り付ける
+      </div>
     </div>
     <div v-if="isOpen" class="tab-pane">
       <button :class="{ active: selectedTab === 'image' }" @click="selectedTab = 'image'">
         画像
       </button>
+      <button :class="{ active: selectedTab === 'i2i' }" @click="selectedTab = 'i2i'">i2i</button>
       <button :class="{ active: selectedTab === 'mask' }" @click="selectedTab = 'mask'">
         マスク
       </button>
@@ -51,6 +60,7 @@ watchEffect(() => {
 }
 
 .image-pane {
+  position: relative;
   flex-grow: 1;
   display: flex;
   justify-content: center;
@@ -61,6 +71,23 @@ watchEffect(() => {
   border-bottom-width: 0;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
+}
+
+.image-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+
+  transition: opacity 0.2s ease;
+}
+
+.image-pane:hover .image-menu {
+  opacity: 1;
 }
 
 .tab-pane {

@@ -1,8 +1,7 @@
 from injector import inject
 
 from yt_diffuser.types.project import Project, ProjectLayer
-from yt_diffuser.adapters.project.interface import IProjectDirectoryAdapter
-from .project_usecase import ProjectUseCase
+from yt_diffuser.adapters.project.interface import IProjectLayerRepository
 
 class ProjectLayerUseCase:
     """
@@ -10,25 +9,28 @@ class ProjectLayerUseCase:
     """
 
     @inject
-    def __init__(self, dir: IProjectDirectoryAdapter):
-        self.dir = dir
+    def __init__(self, layer_repository: IProjectLayerRepository):
+        self.layer_repository = layer_repository
 
-    def is_exists(self, project: Project, layer_id: str) -> bool:
+    def is_exists(self, project_name: str, layer: ProjectLayer) -> bool:
         """
         レイヤーが存在するか確認する
         """
-        return project.layers.is_exists(layer_id)
+        return self.layer_repository.is_exists(project_name, layer)
     
-    def add_layer(self, project:Project, layer_id: str) -> None:
+    def add_layer(self, project_name:str, layer: ProjectLayer) -> None:
         """
         レイヤーを追加する
         """
-        if self.is_exists(project, layer_id):
-            raise Exception(f"Layer {layer_id} already exists.")
+        if self.is_exists(project_name, layer):
+            raise Exception(f"Layer {layer.layer_id} already exists.")
 
-        layer = ProjectLayer(layer_name=layer_id)
-        self.dir.add_layer(project.project_name, layer.layer_id)
+        self.layer_repository.create(project_name, layer)
+        return
 
-        project.layers.add_layer(layer_id)
-        self.dir.update(project)
+    def upload_image(self, project_name:str, layer_id:str, file_name:str, source_path:str) -> None:
+        """
+        画像をアップロードする
+        """
+        self.layer_repository.save_image(project_name, layer_id, file_name, source_path, is_copy=False)
         return

@@ -1,7 +1,7 @@
 /**
  * 初期化を実行するユースケース
  */
-import { useAppStateUseCase, useSessionStorageUseCase, useProjectListUseCase } from '@/composables'
+import { useAppStateUseCase, useSessionStorageUseCase, useProjectUseCase } from '@/composables'
 import { useFormUseCase } from '@/composables/form/formUseCase'
 
 /**
@@ -14,7 +14,7 @@ export function useInitializeUseCase() {
     useAppStateUseCase(),
     useFormUseCase(),
     useSessionStorageUseCase(),
-    useProjectListUseCase()
+    useProjectUseCase()
   )
 }
 
@@ -24,7 +24,7 @@ export function useInitializeUseCase() {
  * @param {ReturnType<typeof useAppStateUseCase>} appState
  * @param {ReturnType<typeof useFormUseCase>} form
  * @param {ReturnType<typeof useSessionStorageUseCase>} session
- * @param {ReturnType<typeof useProjectListUseCase>} project
+ * @param {ReturnType<typeof useProjectUseCase>} project
  * @returns {Object}
  */
 export function InitializeUseCase(appState, form, session, project) {

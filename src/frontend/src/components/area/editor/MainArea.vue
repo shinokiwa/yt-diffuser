@@ -7,19 +7,34 @@ import MainLayerPane from '@/components/pane/editor/main/MainLayerPane.vue'
 import MainPreviewPane from '@/components/pane/editor/main/MainPreviewPane.vue'
 import MainProjectPane from '@/components/pane/editor/main/MainProjectPane.vue'
 
-import { useEditorStateUseCase, useProjectEditUseCase } from '@/composables'
+import { useEditorStateUseCase, useProjectUseCase } from '@/composables'
+const projectUseCase = useProjectUseCase()
 const editorState = useEditorStateUseCase()
-const { project, isOpen } = useProjectEditUseCase().getRefs()
 
+const { project, isOpen } = projectUseCase.getRefs()
 const { mainArea } = editorState.getRefs()
+
+function createProject() {
+  editorState.changeMainToProject()
+}
 </script>
 
 <template>
   <WindowFrame id="EditorMainArea">
     <div class="main">
-      <div class="project-info">
-        <div v-if="isOpen === false">プロジェクトが開かれていません</div>
-        <div v-else>プロジェクト名: {{ project.projectName }}</div>
+      <div class="project-info" v-if="isOpen === false">
+        <span>プロジェクトが開かれていません</span>
+        <button @click="createProject">
+          <i class="bi bi-plus"></i>
+          プロジェクト新規作成
+        </button>
+      </div>
+      <div class="project-info" v-else>
+        <span>プロジェクト名: {{ project.projectName }} </span>
+        <button @click="projectUseCase.close()">
+          <i class="bi bi-plus"></i>
+          プロジェクトを閉じる
+        </button>
       </div>
       <div class="main-area">
         <MainLayerPane v-if="mainArea === 'layer'" />
@@ -42,6 +57,9 @@ const { mainArea } = editorState.getRefs()
 .project-info {
   height: 30px;
   padding: 5px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 .main-area {
   flex-grow: 1;

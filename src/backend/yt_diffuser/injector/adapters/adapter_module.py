@@ -3,7 +3,9 @@ from injector import Binder, Module
 from yt_diffuser.adapters.generator.controller import GeneratorController, IGeneratorController
 from yt_diffuser.adapters.generator.generator import Generator, IGenerator
 from yt_diffuser.adapters.generator.presenter import GeneratorPresenter, IGeneratorPresenter
-from yt_diffuser.adapters.project.project_directory import ProjectDirectoryAdapter, IProjectDirectoryAdapter
+from yt_diffuser.adapters.project.project import ProjectRepository, IProjectRepository
+from yt_diffuser.adapters.project.root import ProjectRootRepository, IProjectRootRepository
+from yt_diffuser.adapters.project.layer import ProjectLayerRepository, IProjectLayerRepository
 
 class AdapterInjectModule(Module):
     """
@@ -15,4 +17,6 @@ class AdapterInjectModule(Module):
         binder.bind(IGenerator, to=Generator)
         binder.bind(IGeneratorPresenter, to=GeneratorPresenter)
 
-        binder.bind(IProjectDirectoryAdapter, to=ProjectDirectoryAdapter)
+        binder.bind(IProjectRepository, to=ProjectRepository)
+        binder.bind(IProjectRootRepository, to=ProjectRootRepository)
+        binder.bind(IProjectLayerRepository, to=ProjectLayerRepository)

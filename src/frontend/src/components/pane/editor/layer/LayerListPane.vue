@@ -4,8 +4,8 @@
  */
 import LayerItemPane from './LayerItemPane.vue'
 
-import { useProjectEditUseCase } from '@/composables'
-const { getRefs } = useProjectEditUseCase()
+import { useProjectUseCase } from '@/composables'
+const { getRefs } = useProjectUseCase()
 
 const { project, isOpen } = getRefs()
 </script>
@@ -14,15 +14,8 @@ const { project, isOpen } = getRefs()
   <div id="LayerListPane">
     <div v-if="isOpen === false">プロジェクトが開かれていません</div>
     <div v-else>
-      <div class="list-item">
-        <!--<LayerItemPane layerId="" />-->
-      </div>
       <div class="list-item" v-for="layerId in project.layers.order" :key="layerId">
-        <LayerItemPane
-          :projectName="project.projectName"
-          :layerId="layerId"
-          :layer="project.layers.layers[layerId]"
-        />
+        <LayerItemPane :layerId="layerId" />
       </div>
     </div>
   </div>

@@ -5,18 +5,19 @@
 import { ref, onMounted } from 'vue'
 import WindowFrame from '@/components/element/WindowFrame.vue'
 
-import { useProjectListUseCase, useAppStateUseCase } from '@/composables/'
+import { useProjectListUseCase, useProjectUseCase, useAppStateUseCase } from '@/composables/'
 import { VIEW_IDS } from '@/types/enum/view'
-const usecase = useProjectListUseCase()
+const projectUseCase = useProjectUseCase()
+const listUseCase = useProjectListUseCase()
 
 const gallery = ref([])
 
 onMounted(async () => {
-  gallery.value = await usecase.fetchAll()
+  gallery.value = await listUseCase.fetchAll()
 })
 
 async function select(name) {
-  await usecase.load(name)
+  await projectUseCase.load(name)
   useAppStateUseCase().changeView(VIEW_IDS.EDITOR)
 }
 </script>

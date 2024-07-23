@@ -26,10 +26,10 @@ class ProjectLayers(BaseModel):
 
     def add_layer(self, layer: ProjectLayer):
         """
-        レイヤーを追加する。
+        レイヤーを先頭に追加する。
         """
         self.layers[str(layer.layer_id)] = layer
-        self.order.append(str(layer.layer_id))
+        self.order.insert(0, str(layer.layer_id))
     
     def is_exists(self, layer_id: str) -> bool:
         """
@@ -39,3 +39,13 @@ class ProjectLayers(BaseModel):
             layer_id (str): レイヤーID
         """
         return str(layer_id) in self.layers
+    
+    def remove_layer(self, layer_id: str):
+        """
+        レイヤーを削除する。
+
+        Args:
+            layer_id (str): レイヤーID
+        """
+        self.layers.pop(str(layer_id))
+        self.order.remove(str(layer_id))

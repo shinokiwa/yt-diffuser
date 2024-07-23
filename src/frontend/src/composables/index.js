@@ -6,5 +6,6 @@ export { useLogUseCase } from './logUseCase'
 export { useTempImageUseCase } from './tempImageUseCase'
 export { useSessionStorageUseCase } from './sessionStorageUseCase'
 
+export { useProjectUseCase } from './project/projectUseCase'
 export { useProjectListUseCase } from './project/projectListUseCase'
-export { useProjectEditUseCase } from './project/projectEditUseCase'
+export { useProjectLayerUseCase } from './project/layerUseCase'

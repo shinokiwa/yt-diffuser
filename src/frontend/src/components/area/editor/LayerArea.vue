@@ -10,11 +10,12 @@ import LayerListPane from '@/components/pane/editor/layer/LayerListPane.vue'
 <template>
   <WindowFrame id="EditorLayerArea">
     <div class="layer-area">
-      <div class="menu">
-        <LayerMenuPane />
-      </div>
+      <div class="title">レイヤー</div>
       <div class="list">
         <LayerListPane />
+      </div>
+      <div class="menu">
+        <LayerMenuPane />
       </div>
     </div>
   </WindowFrame>
